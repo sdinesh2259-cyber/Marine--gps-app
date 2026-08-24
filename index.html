@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marine GPS & Smart Sonar Fish Finder</title>
+  
+  <!-- பிரத்யேக கடல் & படகு ஐகான் (App Icon) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230077b6'/><circle cx='50' cy='50' r='38' fill='%23023e8a'/><path d='M50 18 L60 45 L50 40 L40 45 Z' fill='%2300ffcc'/><path d='M50 82 L60 55 L50 60 L40 55 Z' fill='%23ffffff'/><circle cx='50' cy='50' r='5' fill='%23ffcc00'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230077b6'/><circle cx='50' cy='50' r='38' fill='%23023e8a'/><path d='M50 18 L60 45 L50 40 L40 45 Z' fill='%2300ffcc'/><path d='M50 82 L60 55 L50 60 L40 55 Z' fill='%23ffffff'/><circle cx='50' cy='50' r='5' fill='%23ffcc00'/></svg>">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
@@ -108,7 +113,6 @@
       cursor: pointer;
     }
 
-    /* லைவ் சோனார் ஸ்கிரீன் ஸ்டைல் */
     .sonar-panel {
       position: absolute;
       bottom: 48px;
@@ -280,7 +284,6 @@
 
   <div id="map"></div>
 
-  <!-- லைவ் சோனார் மற்றும் பிஷ் பைண்டர் டிஸ்ப்ளே -->
   <div class="sonar-panel">
     <div class="sonar-info">
       <div>
@@ -723,9 +726,6 @@
 
     loadSavedReefs();
 
-    // ==========================================
-    // லைவ் சோனார் கேன்வாஸ் வரைபடம் (Sonar Engine)
-    // ==========================================
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
     let sonarData = [];
@@ -753,18 +753,15 @@
         fishes.push({ x: canvas.width - 5, y: (depthMeters * 0.4 + Math.random() * 8) });
       }
 
-      // வரைதல் (Drawing Sonar Display)
       ctx.fillStyle = '#010810';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // கிரிட் வரிகள்
       ctx.strokeStyle = '#05233a';
       ctx.lineWidth = 1;
       for (let y = 15; y < canvas.height; y += 20) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
       }
 
-      // கடலின் தரை அமைப்பு (Seabed Floor)
       ctx.beginPath();
       ctx.moveTo(0, canvas.height);
       for (let i = 0; i < sonarData.length; i++) {
@@ -775,7 +772,6 @@
       ctx.fillStyle = '#8b5a2b';
       ctx.fill();
 
-      // தரை மேல் அடுக்கு (பாறை என்றால் சிவப்பு/பச்சை, மணல் என்றால் மஞ்சள்)
       ctx.beginPath();
       for (let i = 0; i < sonarData.length; i++) {
         let yPos = (sonarData[i].depth / 40.0) * canvas.height;
@@ -785,7 +781,6 @@
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // மீன்கள் வரைதல் (Fish Icons)
       ctx.fillStyle = '#ffcc00';
       ctx.font = '11px sans-serif';
       for (let f = 0; f < fishes.length; f++) {
@@ -796,7 +791,6 @@
       fishes = fishes.filter(f => f.x > 0);
     }
 
-    // சோனார் சிமுலேஷன் (Demo Loop)
     setInterval(() => {
       simDepthMeters += (Math.random() - 0.5) * 0.6;
       if (simDepthMeters < 8) simDepthMeters = 8;
@@ -805,9 +799,6 @@
       updateSonarFrame(simDepthMeters, isReef, false);
     }, 200);
 
-    // ==========================================
-    // Web Bluetooth API மூலம் ESP32 சோனார் இணைத்தல்
-    // ==========================================
     async function connectBluetoothSonar() {
       try {
         const device = await navigator.bluetooth.requestDevice({
@@ -824,7 +815,6 @@
         characteristic.startNotifications();
         characteristic.addEventListener('characteristicvaluechanged', (e) => {
           const val = new TextDecoder().decode(e.target.value);
-          // ESP32-லிருந்து வரும் தரவு: "DEPTH:22.5,HARD:1,FISH:1"
           const parts = val.split(',');
           let d = parseFloat(parts[0].split(':')[1]);
           let h = parts[1].split(':')[1] === '1';
