@@ -280,12 +280,12 @@
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* எந்தவித பெட்டியும் (Box) இல்லாமல் தனித்து நிற்கும் வெள்ளை நிற 3D பின் */
+    /* எந்தவித பெட்டியும் (Box) இல்லாமல் தனித்து நிற்கும் சிவப்பு நிற 3D பின் */
     .transparent-pin-container {
       background: transparent !important;
       border: none !important;
     }
-    .pure-white-pin {
+    .pure-red-pin {
       width: 32px;
       height: 42px;
       filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9));
@@ -383,7 +383,7 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D வெள்ளை பின் (White Pin)</option>
+          <option value="Pin">📍 3D சிவப்பு பின் (Red Pin)</option>
           <option value="Fish">🐟 மீன்</option>
           <option value="Net">🕸️ வலை</option>
           <option value="Squid">🦑 கணவா</option>
@@ -581,7 +581,7 @@
       saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Pin' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("📍 பார் (3D வெள்ளை பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் (3D சிவப்பு பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -650,16 +650,16 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; classNameStr = ''; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; classNameStr = ''; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; classNameStr = ''; break;
-          default: // 3D வெள்ளை நிற பின் (பெட்டி இல்லாதது)
+          default: // 3D சிவப்பு நிற பின் (பெட்டி இல்லாதது)
             iconHtml = `
-              <svg class="pure-white-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#whiteGrad)" stroke="#1F2937" stroke-width="1.5"/>
-                <circle cx="12" cy="12" r="4.5" fill="#1F2937" stroke="#FFFFFF" stroke-width="1"/>
+              <svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/>
+                <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/>
                 <defs>
-                  <radialGradient id="whiteGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stop-color="#FFFFFF"/>
-                    <stop offset="60%" stop-color="#F3F4F6"/>
-                    <stop offset="100%" stop-color="#D1D5DB"/>
+                  <radialGradient id="redGrad" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="#F87171"/>
+                    <stop offset="50%" stop-color="#EF4444"/>
+                    <stop offset="100%" stop-color="#B91C1C"/>
                   </radialGradient>
                 </defs>
               </svg>`;
