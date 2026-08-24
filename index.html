@@ -280,11 +280,11 @@
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* 3D ஸ்டைல் தூய ஊதா பின் (Background கட்டம் இல்லாதது) */
+    /* சுத்தமான 3D நீல நிற பின் (எந்தவித பின்புலக் கட்டமும் இல்லாதது) */
     .clean-3d-pin {
       width: 32px;
       height: 42px;
-      filter: drop-shadow(2px 5px 6px rgba(0,0,0,0.8));
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.9));
       cursor: pointer;
     }
   </style>
@@ -379,7 +379,7 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D ஊதா பின் (Purple Pin)</option>
+          <option value="Pin">📍 3D நீல பின் (Blue Pin)</option>
           <option value="Fish">🐟 மீன்</option>
           <option value="Net">🕸️ வலை</option>
           <option value="Squid">🦑 கணவா</option>
@@ -577,7 +577,7 @@
       saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Pin' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("📍 பார் (3D ஊதா பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் (3D நீல பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -645,16 +645,16 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; break;
-          default: // 3D தூய ஊதா பின் ஐகான் (சதுர கட்டங்கள் இல்லாதது)
+          default: // 3D நீல நிற பின் ஐகான் (சுத்தமானது)
             iconHtml = `
               <svg class="clean-3d-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#purpleGrad)" stroke="#1a0033" stroke-width="1.5"/>
-                <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#4C1D95" stroke-width="1"/>
+                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#blueGrad)" stroke="#001E3D" stroke-width="1.5"/>
+                <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#004080" stroke-width="1"/>
                 <defs>
-                  <radialGradient id="purpleGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stop-color="#C084FC"/>
-                    <stop offset="50%" stop-color="#9333EA"/>
-                    <stop offset="100%" stop-color="#581C87"/>
+                  <radialGradient id="blueGrad" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stop-color="#38BDF8"/>
+                    <stop offset="50%" stop-color="#0284C7"/>
+                    <stop offset="100%" stop-color="#0369A1"/>
                   </radialGradient>
                 </defs>
               </svg>`;
