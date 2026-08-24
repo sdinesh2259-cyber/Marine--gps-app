@@ -387,12 +387,11 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-cache-v1';
+          const CACHE_NAME = 'marine-gps-cache-v2';
           const urlsToCache = [
             './',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
           ];
           self.addEventListener('install', event => {
             event.waitUntil(
@@ -1194,7 +1193,7 @@
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2);
-        f.fill();
+        ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(f.x + f.size - 1, f.y);
