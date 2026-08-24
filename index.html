@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marine GPS & Fish Finder</title>
   
-  <!-- உயர்தர படகு மற்றும் கடல் ஐகான் (HD Marine Boat Icon) -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230077b6'/><path d='M10 70 Q 25 60 40 70 T 70 70 T 100 70 L 100 100 L 0 100 Z' fill='%23023e8a'/><path d='M20 55 L80 55 L70 70 L30 70 Z' fill='%23ffffff'/><path d='M50 25 L50 55 L75 55 Z' fill='%2300ffcc'/><circle cx='50' cy='20' r='6' fill='%23ffcc00'/></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230077b6'/><path d='M10 70 Q 25 60 40 70 T 70 70 T 100 70 L 100 100 L 0 100 Z' fill='%23023e8a'/><path d='M20 55 L80 55 L70 70 L30 70 Z' fill='%23ffffff'/><path d='M50 25 L50 55 L75 55 Z' fill='%2300ffcc'/><circle cx='50' cy='20' r='6' fill='%23ffcc00'/></svg>">
 
@@ -112,7 +111,6 @@
       cursor: pointer;
     }
 
-    /* புதிய மிதக்கும் அம்சங்கள் (வலதுபுறம்) */
     .marine-tools-panel {
       position: absolute;
       right: 12px;
@@ -308,7 +306,6 @@
 
   <div id="map"></div>
 
-  <!-- வலதுபுற மிதக்கும் சிறப்பு பட்டன்கள் & விட்ஜெட் -->
   <div class="marine-tools-panel">
     <div class="tool-btn" onclick="toggleWeatherWidget()" title="காற்று & அலை விவரம்">🌊</div>
     <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🚨</div>
@@ -433,13 +430,11 @@
       return (brng + 360) % 360;
     }
 
-    // வானிலை விட்ஜெட் ஆன்/ஆஃப் செய்ய
     function toggleWeatherWidget() {
       const widget = document.getElementById('weatherWidget');
       widget.style.display = (widget.style.display === 'block') ? 'none' : 'block';
     }
 
-    // அவசர SOS மெசேஜ் வாட்ஸ்அப் மூலம் அனுப்ப
     function sendSOS() {
       const msg = `🚨 SOS! எனது படகு நடுக்கடலில் ஆபத்தில் உள்ளது. தற்போதைய ஜிபிஎஸ் இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
       window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
@@ -537,7 +532,6 @@
       }
     };
 
-    // ஜிபிஎஸ் டிராக்கிங்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         currentLat = pos.coords.latitude;
@@ -564,7 +558,6 @@
       }, err => console.log(err), { enableHighAccuracy: true });
     }
 
-    // சோனார் கேன்வாஸ் அனிமேஷன்
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
     function drawSonar() {
