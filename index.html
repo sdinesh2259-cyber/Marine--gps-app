@@ -129,15 +129,46 @@
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
     }
 
+    /* --- விரிவாங்கும் மெனு சிஸ்டம் (Expandable Floating Menu) --- */
     .marine-tools-panel {
       position: absolute;
       right: 12px;
       top: 135px;
       display: flex;
       flex-direction: column;
+      align-items: flex-end;
       gap: 6px;
       z-index: 1000;
     }
+    .main-menu-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #1d3557;
+      border: 2px solid #ffcc00;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+    }
+    .sub-tools {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    .marine-tools-panel.open .sub-tools {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .tool-btn {
       width: 40px;
       height: 40px;
@@ -153,14 +184,14 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .tool-btn:active { transform: scale(0.92); }
-    .tool-sonar { border-color: #0077b6; background: rgba(0, 119, 182, 0.85); }
-    .tool-sat { border-color: #d90429; background: rgba(217, 4, 41, 0.85); }
-    .tool-walkie { border-color: #7b2cbf; background: rgba(123, 44, 191, 0.85); }
+    .tool-sonar { border-color: #0077b6; background: rgba(0, 119, 182, 0.9); }
+    .tool-sat { border-color: #d90429; background: rgba(217, 4, 41, 0.9); }
+    .tool-walkie { border-color: #7b2cbf; background: rgba(123, 44, 191, 0.9); }
 
     .weather-widget {
       position: absolute;
       top: 135px;
-      right: 60px;
+      right: 65px;
       background: rgba(11, 19, 43, 0.95);
       border: 1px solid #00ffcc;
       border-radius: 8px;
@@ -324,13 +355,16 @@
 
   <div id="map"></div>
 
-  <!-- வலது பக்கக் கருவிகள் மற்றும் இணைப்பு பட்டன்கள் -->
-  <div class="marine-tools-panel">
-    <div class="tool-btn" onclick="toggleWeatherWidget()" title="காற்று & அலை விவரம்">🌊</div>
-    <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🚨</div>
-    <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="சோனார் இணை">📡</div>
-    <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()" title="சாட்டிலைட் இணை">🛰️</div>
-    <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()" title="வாக்கி-டாகி">🎙️</div>
+  <!-- ஒற்றை பட்டனில் விரிவடையும் கருவிகள் மெனு (Collapsible Tools Menu) -->
+  <div class="marine-tools-panel" id="toolsPanel">
+    <div class="main-menu-btn" onclick="toggleToolsMenu()" title="கருவிகள் மெனு">⚙️</div>
+    <div class="sub-tools">
+      <div class="tool-btn" onclick="toggleWeatherWidget()" title="காற்று & அலை விவரம்">🌊</div>
+      <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🚨</div>
+      <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="சோனார் இணை">📡</div>
+      <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()" title="சாட்டிலைட் இணை">🛰️</div>
+      <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()" title="வாக்கி-டாகி">🎙️</div>
+    </div>
   </div>
 
   <div class="weather-widget" id="weatherWidget">
@@ -340,7 +374,6 @@
     <div>வானிலை: <span style="color:#fff;">தெளிவான காற்று</span></div>
   </div>
 
-  <!-- மீன் மற்றும் தரை மட்டும் தெளிவாகத் தெரியும் பெரிய சோனார் திரை -->
   <div class="sonar-panel">
     <div class="sonar-info">
       <div>
@@ -499,6 +532,11 @@
       return (brng + 360) % 360;
     }
 
+    function toggleToolsMenu() {
+      const panel = document.getElementById('toolsPanel');
+      panel.classList.toggle('open');
+    }
+
     function toggleWeatherWidget() {
       const widget = document.getElementById('weatherWidget');
       widget.style.display = (widget.style.display === 'block') ? 'none' : 'block';
@@ -552,7 +590,7 @@
           mediaRecorder.stop();
         }
         walkieActive = false;
-        btn.style.background = "rgba(123, 44, 191, 0.85)";
+        btn.style.background = "rgba(123, 44, 191, 0.9)";
       }
     }
 
