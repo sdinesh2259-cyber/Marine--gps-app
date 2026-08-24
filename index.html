@@ -384,7 +384,7 @@
   </div>
 
   <div class="btn-container">
-    <!-- சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Custom Spot' (டாட் ஐகான்) ஆக சேவ் ஆகும் -->
+    <!-- சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Dot' (புள்ளி ஐகான்) ஆக சேவ் ஆகும் -->
     <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
@@ -508,7 +508,6 @@
       map.closePopup();
     }
 
-    // வரைபடத்தில் தொடும்போது வரும் பாப்-அப் (தீவு, பாறை, புள்ளி தேர்வு செய்ய)
     function triggerSavePopup(latlng) {
       if (!latlng) return;
       const lat = latlng.lat;
@@ -545,11 +544,11 @@
       removeTempMarker();
     };
 
-    // சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Custom' (டாட் ஐகான்) ஆக சேவ் ஆகும்
+    // சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Dot' (புள்ளி ஐகான்) ஆக சேவ் ஆகும்
     window.saveCurrentBoatSpotDirect = function() {
       let autoName = "பார் " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Custom' });
+      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Dot' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
       alert("📍 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
@@ -570,12 +569,16 @@
       savedLayer.clearLayers();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
-        // Custom வகைக்கு டாட் (📍) அல்லது சிறிய புள்ளி ஐகான் வரும்
-        let iconHtml = item.type === 'Island' ? '🌴' : (item.type === 'Reef' ? '🪨' : '📍');
+        // 'Dot' வகைக்கு சிறிய புள்ளி ஐகான் வரும், மற்றவைகளுக்கு தீவு அல்லது பாறை ஐகான் வரும்
+        let iconHtml;
+        if(item.type === 'Island') iconHtml = '🌴';
+        else if(item.type === 'Reef') iconHtml = '🪨';
+        else iconHtml = '<div style="width:12px; height:12px; background:#00ffcc; border:2px solid #000; border-radius:50%; box-shadow:0 0 5px #00ffcc;"></div>';
+
         let customMarker = L.divIcon({
-          html: `<div style="font-size:24px; filter:drop-shadow(0 2px 4px #000); cursor:pointer;">${iconHtml}</div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
+          html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
         });
         L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
           .bindPopup(`
