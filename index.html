@@ -14,7 +14,6 @@
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
     #map { height: calc(100vh - 165px); width: 100vw; z-index: 1; transition: filter 0.3s ease; }
     
-    /* பார்வை முறைகள் */
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
     body.mode-night-red .dashboard, body.mode-night-red .sonar-panel { background: rgba(35, 0, 0, 0.96); border-color: #ff0044; }
     
@@ -255,9 +254,25 @@
       z-index: 1000;
       display: none;
       box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-      width: 170px;
+      width: 175px;
     }
-    .weather-title { font-weight: bold; color: #ffcc00; margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 2px; }
+    .weather-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+      margin-bottom: 5px;
+    }
+    .weather-title { font-weight: bold; color: #ffcc00; }
+    .close-widget-btn {
+      background: transparent;
+      border: none;
+      color: #ff4444;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
     .sonar-panel {
       position: absolute;
@@ -427,8 +442,12 @@
 
   <div id="map"></div>
 
+  <!-- மூடக்கூடிய விட்ஜெட் பாக்ஸ் -->
   <div class="weather-widget" id="weatherWidget">
-    <div class="weather-title" id="infoBoxTitle">⚡ நடுக்கடல் நிலை</div>
+    <div class="weather-header">
+      <div class="weather-title" id="infoBoxTitle">⚡ நடுக்கடல் நிலை</div>
+      <button class="close-widget-btn" onclick="closeInfoWidget()">✖</button>
+    </div>
     <div id="infoBoxContent">
       <div>காற்றின் வேகம்: <span id="wind-speed" style="color:#00ffcc;">12 கிமீ/மணி</span></div>
       <div>அலை உயரம்: <span id="wave-height" style="color:#ffcc00;">1.2 மீட்டர்</span></div>
@@ -548,6 +567,7 @@
     let audioCtx = null;
     let beepInterval = null;
     let currentViewMode = 0;
+    let currentActiveWidget = null;
 
     let connectedSatelliteDevice = null;
     let connectedSonarDevice = null;
@@ -711,10 +731,21 @@
       }
     }
 
+    function closeInfoWidget() {
+      document.getElementById('weatherWidget').style.display = 'none';
+      currentActiveWidget = null;
+    }
+
     function showMoonSolunarData() {
       const widget = document.getElementById('weatherWidget');
       const title = document.getElementById('infoBoxTitle');
       const content = document.getElementById('infoBoxContent');
+
+      if (widget.style.display === 'block' && currentActiveWidget === 'moon') {
+        closeInfoWidget();
+        return;
+      }
+
       title.innerText = "🌕 சந்திரன் & மீன் கணிப்பு";
       content.innerHTML = `
         <div>நிலவு: <span style="color:#ffcc00;">வளர்பிறை (78%)</span></div>
@@ -723,19 +754,27 @@
         <div>நீரோட்டம்: <span style="color:#fff;">1.8 Knots</span></div>
       `;
       widget.style.display = 'block';
+      currentActiveWidget = 'moon';
     }
 
     function toggleWeatherWidget() {
       const widget = document.getElementById('weatherWidget');
       const title = document.getElementById('infoBoxTitle');
       const content = document.getElementById('infoBoxContent');
+
+      if (widget.style.display === 'block' && currentActiveWidget === 'weather') {
+        closeInfoWidget();
+        return;
+      }
+
       title.innerText = "⚡ நடுக்கடல் நிலை";
       content.innerHTML = `
         <div>காற்றின் வேகம்: <span id="wind-speed" style="color:#00ffcc;">12 கிமீ/மணி</span></div>
         <div>அலை உயரம்: <span id="wave-height" style="color:#ffcc00;">1.2 மீட்டர்</span></div>
         <div>வானிலை: <span style="color:#fff;">தெளிவான காற்று</span></div>
       `;
-      widget.style.display = (widget.style.display === 'block') ? 'none' : 'block';
+      widget.style.display = 'block';
+      currentActiveWidget = 'weather';
     }
 
     function sendSOS() {
