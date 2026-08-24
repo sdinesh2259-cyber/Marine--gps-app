@@ -382,6 +382,40 @@
 </head>
 <body>
 
+  <!-- Service Worker பதிவுக்கான ஸ்கிரிப்ட் -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'marine-gps-cache-v1';
+          const urlsToCache = [
+            './',
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+            'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'
+          ];
+          self.addEventListener('install', event => {
+            event.waitUntil(
+              caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache).catch(() => {}))
+            );
+          });
+          self.addEventListener('fetch', event => {
+            event.respondWith(
+              caches.match(event.request).then(response => {
+                return response || fetch(event.request).catch(() => caches.match('./'));
+              })
+            );
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'text/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl)
+          .then(() => console.log('Service Worker Registered Successfully!'))
+          .catch(err => console.log('SW Registration Failed', err));
+      });
+    }
+  </script>
+
   <div class="border-alert-banner" id="borderAlert">
     <div class="border-alert-content">
       <span>🚨 எச்சரிக்கை! சர்வதேச கடல் எல்லை அருகில்!</span>
@@ -442,7 +476,6 @@
 
   <div id="map"></div>
 
-  <!-- மூடக்கூடிய விட்ஜெட் பாக்ஸ் -->
   <div class="weather-widget" id="weatherWidget">
     <div class="weather-header">
       <div class="weather-title" id="infoBoxTitle">⚡ நடுக்கடல் நிலை</div>
@@ -1161,7 +1194,7 @@
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2);
-        ctx.fill();
+        f.fill();
 
         ctx.beginPath();
         ctx.moveTo(f.x + f.size - 1, f.y);
