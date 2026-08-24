@@ -169,7 +169,7 @@
     /* Custom Modal for Coordinate Input */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7); z-index: 2000; display: none;
+      background: rgba(0,0,0,0.75); z-index: 2000; display: none;
       align-items: center; justify-content: center;
     }
     .modal-content {
@@ -180,14 +180,15 @@
     .input-group { margin-bottom: 10px; }
     .input-group label { font-size: 11px; color: #00ffcc; display: block; margin-bottom: 3px; }
     .input-row { display: flex; align-items: center; gap: 6px; }
-    .fixed-deg { background: #222; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; border: 1px solid #551; }
+    .fixed-deg { background: #222; padding: 6px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; border: 1px solid #551; }
     .input-box {
       flex: 1; background: #000; color: #00ffcc; border: 1px solid #444; padding: 6px 8px;
       border-radius: 6px; font-size: 14px; font-family: monospace; font-weight: bold;
     }
     .modal-btn-row { display: flex; gap: 8px; margin-top: 14px; }
-    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .btn-search { background: #2a9d8f; color: #fff; }
+    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
+    .btn-island { background: #2a9d8f; color: #fff; }
+    .btn-reef { background: #333; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
     .boat-icon-div { background: transparent; border: none; }
@@ -243,10 +244,10 @@
     </div>
   </div>
 
-  <!-- Custom Coordinate Input Modal -->
+  <!-- Custom Coordinate Input Modal with Direct Save Option -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title">🧭 ஜிபிஎஸ் எண் உள்ளிடவும்</div>
+      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமிக்க</div>
       
       <div class="input-group">
         <label>Latitude (N):</label>
@@ -267,8 +268,11 @@
       </div>
 
       <div class="modal-btn-row">
-        <button class="modal-btn btn-search" onclick="submitCoordSearch()">தேடு & காட்டு</button>
-        <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
+        <button class="modal-btn btn-island" onclick="saveCoordSpot('Island')">🌴 தீவாக சேமி</button>
+        <button class="modal-btn btn-reef" onclick="saveCoordSpot('Reef')">🪨 பாறையாக சேமி</button>
+      </div>
+      <div style="margin-top: 6px;">
+        <button class="modal-btn btn-cancel" style="width:100%;" onclick="closeCoordModal()">ரத்து</button>
       </div>
     </div>
   </div>
@@ -403,30 +407,37 @@
       document.getElementById('coordModal').style.display = 'none';
     };
 
-    window.submitCoordSearch = function() {
+    window.saveCoordSpot = function(type) {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
 
       if (!isNaN(latMin) && !isNaN(lngMin)) {
-        // 8 டிகிரி மற்றும் 78 டிகிரியை அடிப்படையாக வைத்து முழு லொகேஷனைக் கணக்கிடுதல்
         let lat = 8.0 + (latMin / 60.0);
         let lng = 78.0 + (lngMin / 60.0);
 
-        map.setView([lat, lng], 15);
-        closeCoordModal();
-
-        if (clickMarker) { map.removeLayer(clickMarker); }
-        clickMarker = L.marker([lat, lng]).addTo(map)
-          .bindPopup(`
-            <div class="popup-box">
-              <b>🎯 தேடிய இடம்</b>
-              <div class="popup-coord">${formatCoord(lat, true)}<br>${formatCoord(lng, false)}</div>
-              <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
-              <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
-              <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
-            </div>
-          `, { autoClose: false })
-          .openPopup();
+        const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
+        const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும் (எ.கா: 12 பாவம் பாறை):`, typeName + " " + new Date().toLocaleDateString());
+        
+        if (spotName) {
+          const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+          const newId = Date.now();
+          saved.push({ 
+            id: newId, 
+            name: spotName, 
+            lat: lat, 
+            lng: lng,
+            type: type,
+            nautical_lat: formatCoord(lat, true),
+            nautical_lng: formatCoord(lng, false)
+          });
+          localStorage.setItem('marineReefs', JSON.stringify(saved, null, 2));
+          loadSavedReefs();
+          closeCoordModal();
+          
+          map.setView([lat, lng], 15);
+          startNavigation(lat, lng);
+          alert(`${typeName} வெற்றிகரமாக சேமிக்கப்பட்டு வழிகாட்டல் தொடங்கப்பட்டது!`);
+        }
       } else {
         alert("தயவுசெய்து எண்களைச் சரியாக உள்ளிடவும்!");
       }
