@@ -64,7 +64,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.5s ease-out; /* மென்மையான இயக்கம் */
+      transition: transform 0.6s ease-out;
     }
     .arrow-head {
       width: 0; height: 0;
@@ -115,7 +115,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.5s ease-out;
+      transition: transform 0.6s ease-out;
     }
     .boat-heading-arrow::before {
       content: '';
@@ -292,8 +292,8 @@
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">Boat Location / Speed</div>
-        <div class="coord-val" id="lat-coord">--° --.---' N</div>
-        <div class="coord-val" id="lng-coord">--° --.---' E</div>
+        <div class="coord-val" id="lat-coord">8° 49.406' N</div>
+        <div class="coord-val" id="lng-coord">78° 8.971' E</div>
       </div>
       <div class="compass-container">
         <div class="compass-dial">
@@ -324,7 +324,6 @@
   <div class="marine-tools-panel">
     <div class="tool-btn" onclick="toggleWeatherWidget()" title="காற்று & அலை விவரம்">🌊</div>
     <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🚨</div>
-    <!-- 🎯 பட்டன் நீக்கப்பட்டது -->
   </div>
 
   <div class="weather-widget" id="weatherWidget">
@@ -375,17 +374,18 @@
       </div>
       <div class="modal-btn-row">
         <div class="modal-btn-grid">
-          <button class="modal-btn btn-island" onclick="saveCoordSpot('Island')">🌴 தீவாக சேமி</button>
-          <button class="modal-btn btn-reef" onclick="saveCoordSpot('Reef')">🪨 பாறையாக சேமி</button>
+          <button class="modal-btn btn-island" onclick="saveCoordSpotModal('Island')">🌴 தீவாக சேமி</button>
+          <button class="modal-btn btn-reef" onclick="saveCoordSpotModal('Reef')">🪨 பாறையாக சேமி</button>
         </div>
-        <button class="modal-btn btn-custom" onclick="saveCoordSpot('Custom')">📍 பொதுவாக சேமி</button>
+        <button class="modal-btn btn-custom" onclick="saveCoordSpotModal('Custom')">📍 பொதுவாக சேமி</button>
         <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
       </div>
     </div>
   </div>
 
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="saveCurrentBoatSpot()">📍 பார் சேமி</button>
+    <!-- சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Custom Spot' (டாட் ஐகான்) ஆக சேவ் ஆகும் -->
+    <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
@@ -405,7 +405,7 @@
     let navLine = null;
     let targetTarget = null;
     let savedLayer = L.layerGroup();
-    let followBoat = true; // ஆட்டோமேடிக் மேப் மூவ்மெண்ட்
+    let followBoat = true;
 
     const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false }).setView([currentLat, currentLng], 14);
     savedLayer.addTo(map);
@@ -421,7 +421,6 @@
 
     boatMarker = L.marker([currentLat, currentLng], { icon: boatArrowIcon }).addTo(map);
 
-    // பயனர் மேப்பை நகர்த்தினால் ஆட்டோ-பாலோ தற்காலிகமாக நிற்கும்
     map.on('movestart', function() { followBoat = false; });
     
     function formatCoord(val, isLat) {
@@ -466,11 +465,6 @@
       window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
     }
 
-    function centerBoatLocation() {
-      followBoat = true; // மீண்டும் ஆட்டோ-பாலோ ஆன்
-      map.setView([currentLat, currentLng], 16);
-    }
-
     window.startNavigation = function(tLat, tLng) {
       targetTarget = { lat: tLat, lng: tLng };
       document.getElementById('nav-info').style.display = 'flex';
@@ -505,7 +499,6 @@
       }
     }
 
-    // வரைபடத்தில் தொட்டால் பாப்-அப் வரும்
     map.on('click', function(e) {
       triggerSavePopup(e.latlng);
     });
@@ -515,7 +508,7 @@
       map.closePopup();
     }
 
-    // புதிய இடத்திற்கான பாப்-அப் (ரத்து செய் பட்டன் சேர்க்கப்பட்டது)
+    // வரைபடத்தில் தொடும்போது வரும் பாப்-அப் (தீவு, பாறை, புள்ளி தேர்வு செய்ய)
     function triggerSavePopup(latlng) {
       if (!latlng) return;
       const lat = latlng.lat;
@@ -528,32 +521,38 @@
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
           <div class="popup-box">
-            <b style="color:#ffcc00;">🎯 புதிய புள்ளி?</b>
+            <b style="color:#ffcc00;">🎯 புதிய புள்ளி</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
             <div style="display:flex; gap:3px;">
-              <button class="popup-btn popup-save-island" onclick="saveSpotFromClick(${lat}, ${lng}, 'Island')">🌴 தீவு</button>
-              <button class="popup-btn popup-save-reef" onclick="saveSpotFromClick(${lat}, ${lng}, 'Reef')">🪨 பாறை</button>
+              <button class="popup-btn popup-save-island" onclick="saveDirectly(${lat}, ${lng}, 'Island')">🌴 தீவு சேமி</button>
+              <button class="popup-btn popup-save-reef" onclick="saveDirectly(${lat}, ${lng}, 'Reef')">🪨 பாறை சேமி</button>
             </div>
-            <button class="popup-btn popup-save-custom" onclick="saveSpotFromClick(${lat}, ${lng}, 'Custom')">📍 பொதுவாக சேமி</button>
-            <!-- ரத்து செய் பட்டன் -->
-            <button class="popup-btn popup-close-btn" onclick="removeTempMarker()">❌ ரத்து செய் (Cancel)</button>
+            <button class="popup-btn popup-save-custom" onclick="saveDirectly(${lat}, ${lng}, 'Custom')">📍 புள்ளி சேமி</button>
+            <button class="popup-btn popup-close-btn" onclick="removeTempMarker()">❌ ரத்து செய்</button>
           </div>
         `, { closeButton: false }).openPopup();
     }
 
-    window.saveSpotFromClick = function(lat, lng, type) {
-      let defaultName = (type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி')) + " " + new Date().toLocaleDateString();
-      let name = prompt("இடத்தின் பெயரை உள்ளிடவும்:", defaultName);
-      if (name) {
-        const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-        saved.push({ id: Date.now(), name: name, lat: lat, lng: lng, type: type });
-        localStorage.setItem('marineReefs', JSON.stringify(saved));
-        loadSavedReefs();
-        removeTempMarker();
-      } else {
-         removeTempMarker(); // பெயர் கொடுக்காவிட்டால் மார்க்கரை நீக்கு
-      }
+    window.saveDirectly = function(lat, lng, type) {
+      let typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி');
+      let autoName = typeName + " " + new Date().toLocaleDateString();
+      
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      saved.push({ id: Date.now(), name: autoName, lat: lat, lng: lng, type: type });
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
+      removeTempMarker();
+    };
+
+    // சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Custom' (டாட் ஐகான்) ஆக சேவ் ஆகும்
+    window.saveCurrentBoatSpotDirect = function() {
+      let autoName = "பார் " + new Date().toLocaleDateString();
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Custom' });
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
+      alert("📍 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     window.deleteSpot = function(id) {
@@ -567,18 +566,11 @@
       }
     };
 
-    function saveCurrentBoatSpot() {
-      if(boatValid) {
-          saveSpotFromClick(currentLat, currentLng, 'Reef');
-      } else {
-          alert("ஜிபிஎஸ் சிக்னல் இன்னும் கிடைக்கவில்லை!");
-      }
-    }
-
     function loadSavedReefs() {
       savedLayer.clearLayers();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
+        // Custom வகைக்கு டாட் (📍) அல்லது சிறிய புள்ளி ஐகான் வரும்
         let iconHtml = item.type === 'Island' ? '🌴' : (item.type === 'Reef' ? '🪨' : '📍');
         let customMarker = L.divIcon({
           html: `<div style="font-size:24px; filter:drop-shadow(0 2px 4px #000); cursor:pointer;">${iconHtml}</div>`,
@@ -601,13 +593,16 @@
     function openCoordModal() { document.getElementById('coordModal').style.display = 'flex'; }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
 
-    function saveCoordSpot(type) {
+    function saveCoordSpotModal(type) {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
-      let name = document.getElementById('inputSpotName').value.trim() || 'புள்ளி';
+      let customName = document.getElementById('inputSpotName').value.trim();
       if (!isNaN(latMin) && !isNaN(lngMin)) {
         let lat = 8.0 + (latMin / 60.0);
         let lng = 78.0 + (lngMin / 60.0);
+        let typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி');
+        let name = customName ? customName : (typeName + " " + new Date().toLocaleDateString());
+        
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ id: Date.now(), name: name, lat: lat, lng: lng, type: type });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -635,7 +630,7 @@
       const reader = new FileReader();
       reader.onload = function(evt) {
         try {
-            JSON.parse(evt.target.result); // JSON சரியானதா என செக் செய்ய
+            JSON.parse(evt.target.result);
             localStorage.setItem('marineReefs', evt.target.result);
             loadSavedReefs();
             alert('தரவு வெற்றிகரமாக ஏற்றப்பட்டது!');
@@ -674,81 +669,62 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    // ஜிபிஎஸ் வடிகட்டி மாறிகள்
-    let lastLat = null, lastLng = null, lastSpeed = 0, lastHead = 0;
-    let boatValid = false;
+    let lastLat = null, lastLng = null, lastHead = 0;
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
-        boatValid = true;
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
         
         let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
         let headVal = pos.coords.heading ? Math.round(pos.coords.heading) : lastHead;
 
-        // --- 강력மான ஜிபிஎஸ் வடிகட்டி (Dampening Filter) ---
-        
-        // 1. வேகம் பில்டர்: 0.7 நாட்ஸ்க்கு கீழே இருந்தால் '0' எனக் காட்டு (நிற்கும் போது ஆடாது)
-        if (speedVal < 0.7) {
+        if (speedVal < 0.8) {
           speedVal = 0.0;
-          headVal = lastHead; // நின்றால் பழைய திசையிலேயே நில்
+          headVal = lastHead;
         } else {
-          // 2. திசை பில்டர்: வேகம் இருந்தால் மட்டும் காம்பஸை மெதுவாக மாற்று
           let headDiff = Math.abs(headVal - lastHead);
           if (headDiff > 180) headDiff = 360 - headDiff;
-          
-          if (headDiff < 4 && speedVal < 2) { 
-             headVal = lastHead; // மிகச்சிறிய மாற்றங்களை புறக்கணி
+          if (headDiff < 6) { 
+             headVal = lastHead;
           } else {
-             currentHeading = headVal; // திசையை அப்டேட் செய்
+             currentHeading = headVal;
           }
         }
         
-        // 3. லொகேஷன் பில்டர்: படகு நகராமல் ஜிபிஎஸ் புள்ளி மட்டும் குதித்தால் புறக்கணி
-        if(lastLat !== null && lastLng !== null && speedVal < 0.5) {
+        if(lastLat !== null && lastLng !== null && speedVal < 0.6) {
             let distMoved = calcDistanceNM(lastLat, lastLng, currentLat, currentLng);
-            if(distMoved < 0.002) { // மிகச்சிறிய டிரிஃப்ட்
+            if(distMoved < 0.003) {
                 currentLat = lastLat;
                 currentLng = lastLng;
             }
         }
 
-        // டேஷ்போர்டு அப்டேட்
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
         document.getElementById('boat-speed').innerText = `வேகம்: ${speedVal.toFixed(1)} kts`;
 
-        // காம்பஸ் நீடில் சுழற்சி
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-        // மேப்பில் படகு மார்க்கர்
         const newPos = [currentLat, currentLng];
         boatMarker.setLatLng(newPos);
 
-        // படகு அம்புக்குறி சுழற்சி
         const arrowEl = document.getElementById('boatArrow');
         if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
 
-        // ஆட்டோ-பாலோ ஆன் செய்திருந்தால் மேப்பை நகர்த்து
         if (followBoat) {
-          map.panTo(newPos, { animate: true, duration: 0.5 });
+          map.panTo(newPos, { animate: true, duration: 0.6 });
         }
 
-        // நேவிகேஷன் கோடு அப்டேட்
         if (targetTarget) updateNavigation();
 
-        // பழைய மதிப்புகளை சேமி
-        lastLat = currentLat; lastLng = currentLng; lastSpeed = speedVal; lastHead = currentHeading;
+        lastLat = currentLat; lastLng = currentLng; lastHead = currentHeading;
         
       }, err => {
           console.log("GPS Error:", err);
-          document.getElementById('lat-coord').innerText = "ஜிபிஎஸ் முடக்கப்பட்டுள்ளது";
-      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
-    } else {
-        alert("உங்கள் போனில் ஜிபிஎஸ் வசதி இல்லை!");
+      }, { enableHighAccuracy: true, maximumAge: 1500, timeout: 6000 });
     }
 
     const canvas = document.getElementById('sonarCanvas');
