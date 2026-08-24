@@ -280,29 +280,12 @@
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* பனித்துளி வடிவ பின் மார்க்கர் (Pin Marker) */
-    .pin-marker {
-      width: 24px;
-      height: 24px;
-      border-radius: 50% 50% 50% 0;
-      background: #00e5ff;
-      position: absolute;
-      transform: rotate(-45deg);
-      left: 50%;
-      top: 50%;
-      margin: -16px 0 0 -12px;
-      box-shadow: -2px 2px 6px rgba(0,0,0,0.8);
-      border: 2px solid #ffffff;
+    /* உங்கள் படத்தில் உள்ள பச்சை நிற மேப் பின் ஐகான் */
+    .green-pin-svg {
+      width: 28px;
+      height: 38px;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
       cursor: pointer;
-    }
-    .pin-marker::after {
-      content: '';
-      width: 8px;
-      height: 8px;
-      margin: 6px 0 0 6px;
-      background: #020b14;
-      position: absolute;
-      border-radius: 50%;
     }
   </style>
 </head>
@@ -397,7 +380,7 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 மேப் பின் (பனித்துளி)</option>
+          <option value="Pin">📍 பச்சை பின் (Green Pin)</option>
           <option value="Fish">🐟 மீன்</option>
           <option value="Net">🕸️ வலை</option>
           <option value="Squid">🦑 கணவா</option>
@@ -551,7 +534,7 @@
       }
     }
 
-    // --- லாங் பிரஸ் செய்தால் உடனே பனித்துளி பின் விழும் & நகர்த்திக்கொள்ளலாம் ---
+    // --- லாங் பிரஸ் (Long Press) வசதி ---
     let touchTimer = null;
 
     map.on('contextmenu', function(e) {
@@ -590,14 +573,14 @@
       loadSavedReefs();
     }
 
-    // பார் சேமி பட்டனை அழுத்தினால் உடனே பனித்துளி பின் சேவ் ஆகும்
+    // பார் சேமி பட்டன் - பச்சை பின் சேமிக்கும்
     window.saveCurrentBoatSpotDirect = function() {
       let autoName = "பார் " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Pin' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("📍 பார் (மேப் பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் (பச்சை பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -655,6 +638,9 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
         let iconHtml;
+        let iSize = [26, 26];
+        let iAnchor = [13, 13];
+
         switch(item.type) {
           case 'Fish': iconHtml = '<div style="font-size:24px;">🐟</div>'; break;
           case 'Net': iconHtml = '<div style="font-size:24px;">🕸️</div>'; break;
@@ -662,16 +648,22 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; break;
-          default: // 'Pin' அல்லது பழைய புள்ளிகளுக்கு பனித்துளி மார்க்கர்
-            iconHtml = '<div class="pin-marker"></div>';
+          default: // பச்சை நிற கிளாசிக் பின் ஐகான்
+            iconHtml = `
+              <svg class="green-pin-svg" viewBox="0 0 24 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 34 12 34C12 34 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="#00E640" stroke="#000000" stroke-width="2"/>
+                <circle cx="12" cy="12" r="5" fill="#000000"/>
+              </svg>`;
+            iSize = [28, 38];
+            iAnchor = [14, 38];
             break;
         }
 
         let customMarker = L.marker([item.lat, item.lng], {
           icon: L.divIcon({
             html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
-            iconSize: [26, 26],
-            iconAnchor: [13, 13]
+            iconSize: iSize,
+            iconAnchor: iAnchor
           }),
           draggable: true
         }).addTo(savedLayer);
