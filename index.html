@@ -342,7 +342,7 @@
       let h = now.getHours();
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
-    const ampm = h >= 12 ? 'PM' : 'AM';
+      const ampm = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
@@ -451,6 +451,7 @@
 
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
+          .popup-box { text-align: center; font-size: 12px; }
           <div class="popup-box">
             <b>📍 தொட்ட இடம் (Location)</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
@@ -535,8 +536,11 @@
       });
     }
 
-    function saveCurrentSpot() {
-      const spotName = prompt("தற்போதைய இடத்தின் பெயர்:", "பார் " + new Date().toLocaleDateString());
+    // படகு தற்போதைய இருக்கும் இடத்தைச் சேமிக்க (Current Boat Spot Save)
+    window.saveCurrentSpot = function() {
+      const latTxt = formatCoord(currentLat, true);
+      const lngTxt = formatCoord(currentLng, false);
+      const spotName = prompt("இந்த நின்ற இடத்தின் (Boat Stop) பெயர் என்ன?:", "பார் " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
@@ -545,14 +549,14 @@
           lat: currentLat, 
           lng: currentLng,
           type: 'Reef',
-          nautical_lat: formatCoord(currentLat, true),
-          nautical_lng: formatCoord(currentLng, false)
+          nautical_lat: latTxt,
+          nautical_lng: lngTxt
         });
         localStorage.setItem('marineReefs', JSON.stringify(saved, null, 2));
         loadSavedReefs();
-        alert("தற்போதைய இடம் சேமிக்கப்பட்டது!");
+        alert(`படகு நின்ற இடம் (${latTxt}, ${lngTxt}) வெற்றிகரமாக சேமிக்கப்பட்டது!`);
       }
-    }
+    };
 
     function exportData() {
       const data = localStorage.getItem('marineReefs') || '[]';
