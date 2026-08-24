@@ -190,6 +190,19 @@
     .btn-reef { background: #333; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
+    /* படகுக்கு மேலே எண்கள் காட்டும் லேபிள் ஸ்டைல் */
+    .boat-label {
+      background: rgba(0, 0, 0, 0.85);
+      color: #00ffcc;
+      border: 1px solid #00ffcc;
+      padding: 2px 6px;
+      font-size: 10px;
+      font-family: monospace;
+      font-weight: bold;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
     .boat-icon-div { background: transparent; border: none; }
     .boat-heading-arrow {
       width: 26px; height: 26px;
@@ -438,27 +451,23 @@
       }
     };
 
-    // மேப்பில் எங்கு தொட்டாலும் (Click/Tap) அந்த இடத்தின் நாட்டிக்கல் எண்கள் மற்றும் தூரத்தைக் காட்டுவது
-    map.on('click', function(e) {
+    // சாதாரண டச் (Tap) நீக்கப்பட்டு, நீண்ட நேரம் அழுத்துவது (Long Press / contextmenu) மட்டுமே வைக்கப்பட்டுள்ளது
+    map.on('contextmenu', function(e) {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
       const latTxt = formatCoord(lat, true);
       const lngTxt = formatCoord(lng, false);
-      const dist = calcDistanceNM(currentLat, currentLng, lat, lng);
-      const brng = calcBearing(currentLat, currentLng, lat, lng);
 
       if (clickMarker) { map.removeLayer(clickMarker); }
 
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
-          .popup-box { text-align: center; font-size: 12px; }
           <div class="popup-box">
-            <b>📍 தொட்ட இடம் (Location)</b>
+            <b>🎯 புதிய இடம்</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
-            <div style="font-size:11px; color:#e63946; font-weight:bold; margin: 4px 0;">📏 தூரம்: ${dist} NM | கோணம்: ${Math.round(brng)}°</div>
             <button class="popup-btn popup-save-island" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
-            <button class="popup-btn popup-save-island" style="background:#2a9d8f;" onclick="saveSpotFromClick(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
-            <button class="popup-btn popup-save-reef" onclick="saveSpotFromClick(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
+            <button class="popup-btn popup-save-island" style="background:#2a9d8f;" onclick="saveSpotFromLongPress(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
+            <button class="popup-btn popup-save-reef" onclick="saveSpotFromLongPress(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
             <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
           </div>
         `, { autoClose: false })
@@ -469,7 +478,7 @@
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
     };
 
-    window.saveSpotFromClick = function(lat, lng, type) {
+    window.saveSpotFromLongPress = function(lat, lng, type) {
       const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
       const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும்:`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
@@ -536,7 +545,6 @@
       });
     }
 
-    // படகு தற்போதைய இருக்கும் இடத்தைச் சேமிக்க (Current Boat Spot Save)
     window.saveCurrentSpot = function() {
       const latTxt = formatCoord(currentLat, true);
       const lngTxt = formatCoord(currentLng, false);
@@ -601,22 +609,33 @@
             lastHeading = heading;
           }
 
-          document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
-          document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
+          const latTxt = formatCoord(currentLat, true);
+          const lngTxt = formatCoord(currentLng, false);
+
+          document.getElementById('lat-coord').innerText = latTxt;
+          document.getElementById('lng-coord').innerText = lngTxt;
           document.getElementById('boat-speed').innerText = `வேகம்: ${speedKnots} kts`;
 
           updateCompass(heading);
 
-          const boatIconHtml = `<div class="boat-icon-div"><div class="boat-heading-arrow" id="boat-arrow-icon" style="transform: rotate(${heading}deg);"></div></div>`;
+          // படகு அம்புக்குறிக்கு நேராக மேலேவே எண்கள் தெரியும் படி அமைப்பு (Boat Icon + Live Tooltip)
+          const boatIconHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+              <div class="boat-label">${latTxt}<br>${lngTxt}</div>
+              <div class="boat-icon-div" style="margin-top: 2px;">
+                <div class="boat-heading-arrow" id="boat-arrow-icon" style="transform: rotate(${heading}deg);"></div>
+              </div>
+            </div>`;
+
           const customBoatIcon = L.divIcon({
             html: boatIconHtml,
             className: '',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
+            iconSize: [120, 50],
+            iconAnchor: [60, 25]
           });
 
           if (!boatMarker) {
-            boatMarker = L.marker([currentLat, currentLng], { icon: customBoatIcon }).addTo(map).bindPopup("உங்கள் படகு");
+            boatMarker = L.marker([currentLat, currentLng], { icon: customBoatIcon }).addTo(map);
           } else {
             boatMarker.setLatLng([currentLat, currentLng]);
             boatMarker.setIcon(customBoatIcon);
