@@ -249,32 +249,9 @@
       display: block;
     }
     
-    .icon-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3px;
-      margin: 4px 0;
-    }
-    .grid-btn {
-      background: #222;
-      border: 1px solid #444;
-      color: #fff;
-      padding: 5px 2px;
-      font-size: 10px;
-      font-weight: bold;
-      border-radius: 4px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-    .grid-btn:active { background: #00ffcc; color: #000; }
-
     .popup-nav-btn { background: #e63946; }
     .popup-edit-btn { background: #0077b6; margin-top: 4px; }
     .popup-del-btn { background: #d90429; margin-top: 4px; }
-    .popup-close-btn { background: #444; color:#fff; margin-top: 4px; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -367,10 +344,10 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- எடிட் மற்றும் சேமிக்கும் மோடல் (Modal) -->
+  <!-- எடிட் செய்யும் மோடல் (Modal) -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
-      <div class="modal-title" id="modalTitle">📍 இடத்தை சேமி / மாற்று</div>
+      <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
       <input type="hidden" id="editSpotId">
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
@@ -405,7 +382,7 @@
         </select>
       </div>
       <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="saveSpotFromModal()">💾 சேமி</button>
+        <button class="modal-btn btn-save" onclick="saveSpotFromModal()">💾 மாற்றி சேமி</button>
         <button class="modal-btn btn-cancel" onclick="closeSpotModal()">ரத்து</button>
       </div>
     </div>
@@ -413,7 +390,7 @@
 
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமிக்க</div>
+      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் தேட</div>
       <div class="input-group">
         <label>Latitude (N):</label>
         <div class="input-row">
@@ -430,24 +407,13 @@
           <span style="font-weight:bold; color:#ffcc00;">' E</span>
         </div>
       </div>
-      <div class="input-group">
-        <label>இடத்தின் பெயர்:</label>
-        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா: 12 பாவம் பாறை">
-      </div>
-      <div class="icon-grid">
-        <button class="grid-btn" onclick="saveCoordModalQuick('Fish')"><span>🐟</span>மீன்</button>
-        <button class="grid-btn" onclick="saveCoordModalQuick('Net')"><span>🕸️</span>வலை</button>
-        <button class="grid-btn" onclick="saveCoordModalQuick('Squid')"><span>🦑</span>கணவா</button>
-        <button class="grid-btn" onclick="saveCoordModalQuick('Ray')"><span>🪼</span>திருக்கை</button>
-        <button class="grid-btn" onclick="saveCoordModalQuick('Reef')"><span>🪨</span>பாறை</button>
-        <button class="grid-btn" onclick="saveCoordModalQuick('Island')"><span>🌴</span>தீவு</button>
-      </div>
-      <button class="modal-btn-cancel" onclick="closeCoordModal()" style="width:100%; margin-top:8px;">ரத்து</button>
+      <button class="modal-btn btn-save" onclick="searchCoord()" style="width:100%; margin-top:5px;">🔍 இடத்திற்கு செல்</button>
+      <button class="modal-btn btn-cancel" onclick="closeCoordModal()" style="width:100%; margin-top:8px;">ரத்து</button>
     </div>
   </div>
 
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="openModalForCurrentSpot()">📍 பார் சேமி</button>
+    <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
@@ -463,7 +429,6 @@
     let currentLng = 78.1567;
     let currentHeading = 0;
     let boatMarker = null;
-    let clickMarker = null;
     let navLine = null;
     let targetTarget = null;
     let savedLayer = L.layerGroup();
@@ -561,16 +526,16 @@
       }
     }
 
-    // --- மேம்படுத்தப்பட்ட லாங் பிரஸ் (Long Press) வசதி ---
+    // --- லாங் பிரஸ் செய்தால் உடனே ஐகானாக சேவ் ஆகும் & நகர்த்திக்கொள்ளலாம் (Draggable) ---
     let touchTimer = null;
 
     map.on('contextmenu', function(e) {
-      openSpotModalForCoord(e.latlng.lat, e.latlng.lng);
+      createDraggableMarker(e.latlng.lat, e.latlng.lng);
     });
 
     map.on('mousedown', function(e) {
       touchTimer = setTimeout(() => {
-        openSpotModalForCoord(e.latlng.lat, e.latlng.lng);
+        createDraggableMarker(e.latlng.lat, e.latlng.lng);
       }, 700);
     });
 
@@ -582,7 +547,7 @@
       if (e.originalEvent.touches.length === 1) {
         let touchCoord = map.mouseEventToLatLng(e.originalEvent);
         touchTimer = setTimeout(() => {
-          openSpotModalForCoord(touchCoord.lat, touchCoord.lng);
+          createDraggableMarker(touchCoord.lat, touchCoord.lng);
         }, 700);
       }
     });
@@ -591,18 +556,31 @@
       if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
     });
 
-    // மோடல் (Modal) திறக்கும் மற்றும் சேமிக்கும் फंக்சன்கள்
-    function openModalForCurrentSpot() {
-      openSpotModalForCoord(currentLat, currentLng, "பார் " + new Date().toLocaleDateString(), 'Dot');
+    function createDraggableMarker(lat, lng) {
+      let autoName = "புள்ளி " + new Date().toLocaleDateString();
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let newSpot = { id: Date.now(), name: autoName, lat: lat, lng: lng, type: 'Dot' };
+      saved.push(newSpot);
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
     }
 
-    function openSpotModalForCoord(lat, lng, name = "புதிய புள்ளி", type = 'Dot', id = null) {
-      document.getElementById('editSpotId').value = id || '';
+    // பார் சேமி பட்டனை அழுத்தினால் உடனே டாட் சேவ் ஆகும்
+    window.saveCurrentBoatSpotDirect = function() {
+      let autoName = "பார் " + new Date().toLocaleDateString();
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Dot' });
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
+      alert("🟢 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
+    };
+
+    function openSpotModalForCoord(lat, lng, name, type, id) {
+      document.getElementById('editSpotId').value = id;
       document.getElementById('modalLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('modalLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
       document.getElementById('modalSpotName').value = name;
       document.getElementById('modalSpotType').value = type;
-      document.getElementById('modalTitle').innerText = id ? "✏️ இடத்தை எடிட் செய்" : "📍 புதிய இடம் சேமி";
       document.getElementById('spotModal').style.display = 'flex';
     }
 
@@ -626,15 +604,9 @@
       let lng = 78.0 + (minLng / 60.0);
 
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      if(id) {
-        // எடிட் செய்தல்
-        let idx = saved.findIndex(item => item.id == id);
-        if(idx !== -1) {
-          saved[idx] = { id: Number(id), name: name, lat: lat, lng: lng, type: type };
-        }
-      } else {
-        // புதிதாக சேமித்தல்
-        saved.push({ id: Date.now(), name: name, lat: lat, lng: lng, type: type });
+      let idx = saved.findIndex(item => item.id == id);
+      if(idx !== -1) {
+        saved[idx] = { id: Number(id), name: name, lat: lat, lng: lng, type: type };
       }
 
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -670,22 +642,36 @@
             break;
         }
 
-        let customMarker = L.divIcon({
-          html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
+        let customMarker = L.marker([item.lat, item.lng], {
+          icon: L.divIcon({
+            html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          }),
+          draggable: true // ஐகானை எங்கு வேண்டுமானாலும் நகர்த்தலாம்
+        }).addTo(savedLayer);
+
+        // ஐகானை நகர்த்தி விட்டால் புதிய Lat/Lng சேவ் ஆகும்
+        customMarker.on('dragend', function(e) {
+          let newPos = e.target.getLatLng();
+          let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+          let target = allSpots.find(s => s.id == item.id);
+          if(target) {
+            target.lat = newPos.lat;
+            target.lng = newPos.lng;
+            localStorage.setItem('marineReefs', JSON.stringify(allSpots));
+          }
         });
 
-        L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
-          .bindPopup(`
-            <div class="popup-box">
-              <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
-              <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
-              <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
-              <button class="popup-btn popup-edit-btn" onclick="openSpotModalForCoord(${item.lat}, ${item.lng}, '${item.name}', '${item.type}', ${item.id}); map.closePopup();">✏️ எடிட் / பெயர் மாற்று</button>
-              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு (Delete)</button>
-            </div>
-          `, { closeButton: true });
+        customMarker.bindPopup(`
+          <div class="popup-box">
+            <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
+            <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
+            <button class="popup-btn popup-edit-btn" onclick="openSpotModalForCoord(${item.lat}, ${item.lng}, '${item.name}', '${item.type}', ${item.id}); map.closePopup();">✏️ எடிட் / பெயர் மாற்று</button>
+            <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு (Delete)</button>
+          </div>
+        `, { closeButton: true });
       });
     }
     loadSavedReefs();
@@ -693,24 +679,16 @@
     function openCoordModal() { document.getElementById('coordModal').style.display = 'flex'; }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
 
-    function saveCoordModalQuick(type) {
+    function searchCoord() {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
-      let customName = document.getElementById('inputSpotName').value.trim();
       if (!isNaN(latMin) && !isNaN(lngMin)) {
         let lat = 8.0 + (latMin / 60.0);
         let lng = 78.0 + (lngMin / 60.0);
-        let typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'மீன்');
-        let name = customName ? customName : (typeName + " " + new Date().toLocaleDateString());
-        
-        const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-        saved.push({ id: Date.now(), name: name, lat: lat, lng: lng, type: type });
-        localStorage.setItem('marineReefs', JSON.stringify(saved));
-        loadSavedReefs();
+        map.setView([lat, lng], 16);
         closeCoordModal();
-        map.setView([lat, lng], 15);
       } else {
-          alert("சரியான எண்களை உள்ளிடவும்!");
+        alert("சரியான எண்களை உள்ளிடவும்!");
       }
     }
 
