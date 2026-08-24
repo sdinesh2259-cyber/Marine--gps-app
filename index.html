@@ -32,7 +32,7 @@
       text-align: left;
     }
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
-    .coord-val { font-size: 15px; font-weight: bold; color: #00ffcc; font-family: monospace; }
+    .coord-val { font-size: 14px; font-weight: bold; color: #00ffcc; font-family: monospace; }
     
     .compass-container {
       display: flex;
@@ -46,8 +46,8 @@
       border: 1px solid #444;
     }
     .compass-dial {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 2px solid #ffcc00;
       background: #000;
@@ -56,15 +56,15 @@
       align-items: center;
       justify-content: center;
     }
-    .c-label { position: absolute; font-size: 9px; font-weight: bold; color: #fff; }
-    .lbl-n { top: 2px; color: #ff0000; }
-    .lbl-s { bottom: 2px; }
-    .lbl-e { right: 4px; }
-    .lbl-w { left: 4px; }
+    .c-label { position: absolute; font-size: 8px; font-weight: bold; color: #fff; }
+    .lbl-n { top: 1px; color: #ff0000; }
+    .lbl-s { bottom: 1px; }
+    .lbl-e { right: 2px; }
+    .lbl-w { left: 2px; }
 
     .compass-needle {
-      width: 6px;
-      height: 32px;
+      width: 4px;
+      height: 28px;
       position: absolute;
       display: flex;
       flex-direction: column;
@@ -73,22 +73,22 @@
     }
     .arrow-head {
       width: 0; height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-bottom: 14px solid #00ffcc;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 12px solid #00ffcc;
     }
     .arrow-tail {
-      width: 2px; height: 16px;
+      width: 2px; height: 14px;
       background: #ffffff;
     }
-    .heading-text { font-size: 10px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
+    .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
     .status-bar {
-      font-size: 12px;
+      font-size: 11px;
       color: #ffffff;
-      margin-top: 6px;
+      margin-top: 4px;
       border-top: 1px solid #444;
-      padding-top: 4px;
+      padding-top: 3px;
       display: flex;
       justify-content: space-between;
     }
@@ -97,11 +97,11 @@
       display: none;
       background: #e63946;
       color: white;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border-radius: 6px;
-      margin-top: 6px;
+      margin-top: 4px;
       text-align: center;
       display: flex;
       justify-content: space-between;
@@ -111,8 +111,8 @@
       background: #ffffff;
       color: #e63946;
       border: none;
-      padding: 3px 8px;
-      font-size: 11px;
+      padding: 2px 6px;
+      font-size: 10px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
@@ -120,23 +120,23 @@
     
     .btn-container {
       position: absolute;
-      bottom: 25px;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 8px;
+      gap: 6px;
       z-index: 1000;
       width: 95%;
-      max-width: 380px;
+      max-width: 400px;
       justify-content: center;
     }
     .btn-action {
       flex: 1;
       border: none;
-      padding: 10px 4px;
-      font-size: 12px;
+      padding: 8px 2px;
+      font-size: 11px;
       font-weight: bold;
-      border-radius: 25px;
+      border-radius: 20px;
       color: white;
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       cursor: pointer;
@@ -145,33 +145,30 @@
     .btn-red { background: #e63946; }
     .btn-blue { background: #1d3557; }
     .btn-darkblue { background: #14213d; }
+    .btn-green { background: #2a9d8f; }
 
-    .leaflet-top.leaflet-left { top: 165px !important; left: 10px !important; }
+    .leaflet-top.leaflet-left { top: 175px !important; left: 10px !important; }
 
-    .popup-box { text-align: center; font-size: 13px; }
-    .popup-coord { font-family: monospace; font-weight: bold; color: #0077b6; font-size: 13px; margin: 4px 0; }
+    .popup-box { text-align: center; font-size: 12px; }
+    .popup-coord { font-family: monospace; font-weight: bold; color: #0077b6; font-size: 12px; margin: 3px 0; }
     .popup-btn {
       color: white;
       border: none;
-      padding: 6px 10px;
-      font-size: 11px;
+      padding: 5px 8px;
+      font-size: 10px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 3px;
       width: 100%;
     }
     .popup-save-island { background: #2a9d8f; }
     .popup-save-reef { background: #212529; }
     .popup-del-btn { background: #e63946; }
 
-    .boat-icon-div {
-      background: transparent;
-      border: none;
-    }
+    .boat-icon-div { background: transparent; border: none; }
     .boat-heading-arrow {
-      width: 28px;
-      height: 28px;
+      width: 26px; height: 26px;
       position: relative;
       display: flex;
       align-items: center;
@@ -181,11 +178,10 @@
     .boat-heading-arrow::before {
       content: '';
       position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 24px solid #00ffcc;
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 22px solid #00ffcc;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
     }
   </style>
@@ -224,8 +220,9 @@
   </div>
 
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="saveCurrentSpot()">📍 பார் சேவ்</button>
-    <button class="btn-action btn-blue" onclick="exportData()">💾 ஃபைல் எடு</button>
+    <button class="btn-action btn-red" onclick="saveCurrentSpot()">📍 பார்</button>
+    <button class="btn-action btn-green" onclick="searchByCoordInput()">🔍 எண் தேடு</button>
+    <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
@@ -234,7 +231,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // சாட்டிலைட் பார்வை டீஃபல்ட்டாக ஓபன் ஆகும்
     const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17, attribution: 'Esri' });
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM' });
 
@@ -345,6 +341,35 @@
       }
     }
 
+    // ஜிபிஎஸ் எண்களை நேரடியாக டைப் செய்து தேடும் வசதி (Manual Coordinate Search)
+    window.searchByCoordInput = function() {
+      let inputLat = prompt("Latitude (எ.கா: 8.8238 அல்லது 8 49.403):", "8.8238");
+      let inputLng = prompt("Longitude (எ.கா: 78.1567 அல்லது 78 8.974):", "78.1567");
+      
+      if (inputLat && inputLng) {
+        let lat = parseFloat(inputLat);
+        let lng = parseFloat(inputLng);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          map.setView([lat, lng], 14);
+          if (clickMarker) { map.removeLayer(clickMarker); }
+          clickMarker = L.marker([lat, lng]).addTo(map)
+            .bindPopup(`
+              <div class="popup-box">
+                <b>🎯 தேடிய இடம்</b>
+                <div class="popup-coord">${formatCoord(lat, true)}<br>${formatCoord(lng, false)}</div>
+                <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
+                <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
+                <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
+              </div>
+            `, { autoClose: false })
+            .openPopup();
+        } else {
+          alert("தவறான எண்கள்! சரியாக உள்ளிடவும்.");
+        }
+      }
+    };
+
     map.on('contextmenu', function(e) {
       const lat = e.latlatlng ? e.latlatlng.lat : e.latlng.lat;
       const lng = e.latlatlng ? e.latlatlng.lng : e.latlng.lng;
@@ -372,7 +397,7 @@
 
     window.saveSpot = function(lat, lng, type) {
       const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
-      const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும்:`, typeName + " " + new Date().toLocaleDateString());
+      const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும் (ஆழம்/பாவம் விவரத்துடன் சேர்த்துக்கொள்ளலாம்):`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         const newId = Date.now();
@@ -412,7 +437,6 @@
         const lngTxt = item.nautical_lng || formatCoord(item.lng, false);
         const isIsland = item.type === 'Island';
         
-        // தீவு என்றால் பெரிய பச்சை நிற குறியீடு, பாறை என்றால் கருப்பு நிறம்
         const bgColor = isIsland ? '#00cc44' : '#111111';
         const size = isIsland ? '22px' : '16px';
         const borderWidth = isIsland ? '3px' : '2px';
@@ -440,7 +464,7 @@
     }
 
     function saveCurrentSpot() {
-      const spotName = prompt("தற்போதைய இடத்தின் பெயர்:", "பார் " + new Date().toLocaleDateString());
+      const spotName = prompt("தற்போதைய இடத்தின் பெயர் (எ.கா: 12 பாவம் பாறை):", "பார் " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
