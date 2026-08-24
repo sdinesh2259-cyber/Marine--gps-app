@@ -201,7 +201,6 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .sonar-bt-btn:active { background: #00b4d8; }
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
     .btn-container {
@@ -235,23 +234,24 @@
 
     .leaflet-top.leaflet-left { top: 160px !important; left: 10px !important; }
 
-    .popup-box { text-align: center; font-size: 12px; }
-    .popup-coord { font-family: monospace; font-weight: bold; color: #0077b6; font-size: 12px; margin: 3px 0; }
+    .popup-box { text-align: center; font-size: 12px; min-width: 140px; }
+    .popup-coord { font-family: monospace; font-weight: bold; color: #0077b6; font-size: 11px; margin: 3px 0; }
     .popup-btn {
       color: white;
       border: none;
-      padding: 6px 8px;
+      padding: 5px 8px;
       font-size: 10px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 3px;
       width: 100%;
     }
     .popup-save-island { background: #2a9d8f; }
     .popup-save-reef { background: #212529; }
     .popup-save-custom { background: #0077b6; }
     .popup-nav-btn { background: #e63946; }
+    .popup-del-btn { background: #d90429; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -498,23 +498,10 @@
       }
     }
 
-    /* நேரடி டச் / லாங் பிரஸ் வழிமுறை (100% மொபைல் சப்போர்ட்) */
-    let touchTimeout;
-    const mapEl = document.getElementById('map');
-
-    mapEl.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        touchTimeout = setTimeout(() => {
-          const point = map.mouseEventToLatLng(touch);
-          triggerSavePopup(point);
-        }, 550);
-      }
-    }, { passive: true });
-
-    mapEl.addEventListener('touchend', () => clearTimeout(touchTimeout));
-    mapEl.addEventListener('touchmove', () => clearTimeout(touchTimeout));
-    map.on('contextmenu', (e) => triggerSavePopup(e.latlng));
+    /* நேரடி டச் / கிளிக் வழிமுறை */
+    map.on('click', function(e) {
+      triggerSavePopup(e.latlng);
+    });
 
     function triggerSavePopup(latlng) {
       if (!latlng) return;
@@ -531,14 +518,14 @@
             <b>🎯 புதிய இடம்</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
-            <button class="popup-btn popup-save-island" onclick="saveSpotFromLongPress(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
-            <button class="popup-btn popup-save-reef" onclick="saveSpotFromLongPress(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
-            <button class="popup-btn popup-save-custom" onclick="saveSpotFromLongPress(${lat}, ${lng}, 'Custom')">📍 பொதுவாக சேமி</button>
+            <button class="popup-btn popup-save-island" onclick="saveSpotFromClick(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
+            <button class="popup-btn popup-save-reef" onclick="saveSpotFromClick(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
+            <button class="popup-btn popup-save-custom" onclick="saveSpotFromClick(${lat}, ${lng}, 'Custom')">📍 பொதுவாக சேமி</button>
           </div>
         `).openPopup();
     }
 
-    window.saveSpotFromLongPress = function(lat, lng, type) {
+    window.saveSpotFromClick = function(lat, lng, type) {
       let defaultName = (type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி')) + " " + new Date().toLocaleDateString();
       let name = prompt("இடத்தின் பெயரை உள்ளிடவும்:", defaultName);
       if (name) {
@@ -551,8 +538,19 @@
       }
     };
 
+    window.deleteSpot = function(id) {
+      if (confirm("இந்த இடத்தை நீக்க விரும்புகிறீர்களா?")) {
+        let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+        saved = saved.filter(item => item.id !== id);
+        localStorage.setItem('marineReefs', JSON.stringify(saved));
+        loadSavedReefs();
+        map.closePopup();
+        if (targetTarget) stopNavigation();
+      }
+    };
+
     function saveCurrentBoatSpot() {
-      saveSpotFromLongPress(currentLat, currentLng, 'Reef');
+      saveSpotFromClick(currentLat, currentLng, 'Reef');
     }
 
     function loadSavedReefs() {
@@ -566,7 +564,14 @@
           iconAnchor: [12, 12]
         });
         L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
-          .bindPopup(`<b>${item.name}</b><br>${formatCoord(item.lat, true)}, ${formatCoord(item.lng, false)}<br><button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>`);
+          .bindPopup(`
+            <div class="popup-box">
+              <b>${item.name}</b>
+              <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
+              <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
+              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+            </div>
+          `);
       });
     }
     loadSavedReefs();
@@ -611,7 +616,6 @@
       reader.readAsText(file);
     }
 
-    /* புளூடூத் சோனார் இணைப்பு (Web Bluetooth API) */
     async function connectBluetoothSonar() {
       if (!navigator.bluetooth) {
         alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை (Chrome பயன்படுத்தவும்).");
@@ -640,7 +644,6 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    /* ஜிபிஎஸ் டிராக்கிங் */
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         currentLat = pos.coords.latitude;
@@ -671,7 +674,6 @@
       }, null, { enableHighAccuracy: true, maximumAge: 1000 });
     }
 
-    /* முழு சோனார் அனிமேஷன் (மணல், கடல் புற்கள், பல வண்ண மீன்கள்) */
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
     
@@ -687,7 +689,6 @@
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // மணல் அமைப்பு
       ctx.beginPath();
       ctx.fillStyle = '#062038';
       ctx.strokeStyle = '#00ffcc';
@@ -701,7 +702,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // கடல் புற்கள் (Sea Grass)
       ctx.strokeStyle = '#2a9d8f';
       ctx.lineWidth = 2;
       for(let x=25; x<canvas.width; x+=45) {
@@ -713,7 +713,6 @@
         ctx.stroke();
       }
 
-      // மீன்கள் அனிமேஷன்
       fishList.forEach(f => {
         f.x -= f.s;
         if(f.x < -20) f.x = canvas.width + 20;
