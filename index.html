@@ -164,7 +164,6 @@
     .popup-save-btn { background: #2a9d8f; }
     .popup-del-btn { background: #e63946; }
 
-    /* படகு இருக்கும் இடத்தில் காட்டulம் திசைக் காட்டி அம்புக்குறி (Boat Heading Arrow) */
     .boat-icon-div {
       background: transparent;
       border: none;
@@ -252,6 +251,7 @@
     let clickMarker = null;
     let navLine = null;
     let targetTarget = null;
+    let lastHeading = 0;
     let savedLayer = L.layerGroup().addTo(map);
 
     function formatCoord(val, isLat) {
@@ -469,8 +469,17 @@
         (pos) => {
           currentLat = pos.coords.latitude;
           currentLng = pos.coords.longitude;
-          const speedKnots = pos.coords.speed ? (pos.coords.speed * 1.94384).toFixed(1) : "0.0";
-          const heading = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? pos.coords.heading : 0;
+          
+          let rawSpeed = pos.coords.speed ? pos.coords.speed * 1.94384 : 0;
+          // வேகம் மிகக் குறைவாக இருந்தால் (0.5 kts கீழே) அதை 0 ஆக்கிவிடும் (Jitter Filter)
+          const speedKnots = rawSpeed > 0.5 ? rawSpeed.toFixed(1) : "0.0";
+
+          // படகு நகர்ந்தால் மட்டுமே திசையை மாற்றும், இல்லையெனில் பழைய திசையிலேயே நிற்கும்
+          let heading = lastHeading;
+          if (rawSpeed > 0.8 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+            heading = pos.coords.heading;
+            lastHeading = heading;
+          }
 
           document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
           document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
@@ -478,7 +487,6 @@
 
           updateCompass(heading);
 
-          // மேப்பில் படகு இருக்கும் இடத்தில் திசையைக் காட்டும் அம்புக்குறி (Heading Arrow)
           const boatIconHtml = `<div class="boat-icon-div"><div class="boat-heading-arrow" id="boat-arrow-icon" style="transform: rotate(${heading}deg);"></div></div>`;
           const customBoatIcon = L.divIcon({
             html: boatIconHtml,
