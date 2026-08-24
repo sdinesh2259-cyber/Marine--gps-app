@@ -7,22 +7,42 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b132b; color: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
-    
-    #top-bar {
+    body { background-color: #0b132b; color: #fff; overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; }
+
+    /* மேல் பகுதி - முழு தகவல் டேஷ்போர்டு */
+    #top-dashboard {
       background: #1c2541;
-      padding: 10px 15px;
+      border-bottom: 2px solid #3a506b;
+      padding: 8px 12px;
+      z-index: 1000;
+    }
+    .header-title {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid #3a506b;
+      margin-bottom: 6px;
     }
-    .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; background: #3a506b; color: #48cae4; font-weight: bold; }
+    .app-title { font-size: 15px; font-weight: bold; color: #48cae4; }
+    .status-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #00b4d8; color: #000; font-weight: bold; }
 
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      background: #0b132b;
+      padding: 6px 8px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .nav-item { font-size: 10px; color: #8d99ae; }
+    .nav-val { font-size: 12px; font-weight: bold; color: #48cae4; display: block; margin-top: 2px; }
+
+    /* நடுப்பகுதி - முழு வரைபடம் */
     #map { flex: 1; width: 100%; z-index: 1; }
 
+    /* அடிப்பகுதி - சோனார் திரை மற்றும் பட்டன் */
     #sonar-panel {
-      height: 120px;
+      height: 110px;
       background: #000;
       border-top: 2px solid #00f0ff;
       position: relative;
@@ -32,40 +52,27 @@
       position: absolute;
       top: 6px;
       left: 10px;
-      font-size: 13px;
+      font-size: 12px;
       color: #00f0ff;
       font-weight: bold;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.7);
       padding: 2px 6px;
       border-radius: 4px;
       z-index: 2;
     }
 
-    #info-bar {
-      background: #0b132b;
-      padding: 8px 12px;
-      display: flex;
-      justify-content: space-around;
-      font-size: 12px;
-      color: #8d99ae;
-      border-top: 1px solid #1c2541;
-    }
-    .val { color: #48cae4; font-weight: bold; }
-
     #controls {
       background: #1c2541;
-      padding: 8px;
-      display: flex;
-      gap: 10px;
+      padding: 6px 10px;
       border-top: 1px solid #3a506b;
     }
     .btn {
-      flex: 1;
+      width: 100%;
       background: #00b4d8;
       color: #000;
       border: none;
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 13px;
       font-weight: bold;
       cursor: pointer;
@@ -75,9 +82,18 @@
 </head>
 <body>
 
-  <div id="top-bar">
-    <div style="font-weight: bold; font-size: 15px; color: #48cae4;">🚤 DM Marine GPS</div>
-    <div id="gps-status" class="status-badge">GPS தயார்</div>
+  <!-- மேலே உள்ள தகவல் பலகை -->
+  <div id="top-dashboard">
+    <div class="header-title">
+      <div class="app-title">🚤 DM Marine GPS</div>
+      <div class="status-badge" id="gps-status">GPS தயார்</div>
+    </div>
+    <div class="nav-grid">
+      <div class="nav-item">வேகம்<span id="speed" class="nav-val">0.0 kn</span></div>
+      <div class="nav-item">திசை<span id="heading" class="nav-val">0° N</span></div>
+      <div class="nav-item">அட்சரேகை<span id="lat" class="nav-val">--</span></div>
+      <div class="nav-item">தீர்க்கரேகை<span id="lng" class="nav-val">--</span></div>
+    </div>
   </div>
 
   <div id="map"></div>
@@ -85,13 +101,6 @@
   <div id="sonar-panel">
     <div class="sonar-data">ஆழம்: <span id="depth-val">--</span> M | தரை: <span id="surface-val">தேடுகிறது...</span></div>
     <canvas id="sonar-canvas"></canvas>
-  </div>
-
-  <div id="info-bar">
-    <div>வேகம்: <span id="speed" class="val">0.0 kn</span></div>
-    <div>திசை: <span id="heading" class="val">0°</span></div>
-    <div>Lat: <span id="lat" class="val">--</span></div>
-    <div>Lng: <span id="lng" class="val">--</span></div>
   </div>
 
   <div id="controls">
@@ -158,7 +167,7 @@
       const depth = (Math.sin(Date.now() / 1500) * 8 + 22).toFixed(1);
       document.getElementById('depth-val').innerText = depth;
 
-      points.push(depth * 3);
+      points.push(depth * 2.5);
       if (points.length > canvas.width / 5) points.shift();
 
       ctx.beginPath();
