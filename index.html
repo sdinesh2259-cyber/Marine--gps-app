@@ -161,8 +161,8 @@
       margin-top: 4px;
       width: 100%;
     }
-    .popup-save-island { background: #2a9d8f; } /* பச்சை நிறம் - தீவு */
-    .popup-save-reef { background: #333333; }   /* கருப்பு நிறம் - பாறை */
+    .popup-save-island { background: #2a9d8f; }
+    .popup-save-reef { background: #212529; }
     .popup-del-btn { background: #e63946; }
 
     .boat-icon-div {
@@ -234,10 +234,11 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map', { zoomControl: true }).setView([8.8238, 78.1567], 11);
-
-    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17, attribution: 'Esri' }).addTo(map);
+    // சாட்டிலைட் பார்வை டீஃபல்ட்டாக ஓபன் ஆகும்
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 17, attribution: 'Esri' });
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM' });
+
+    const map = L.map('map', { zoomControl: true, layers: [satLayer] }).setView([8.8238, 78.1567], 11);
 
     const baseLayers = {
       "🛰️ சாட்டிலைட் பார்வை": satLayer,
@@ -380,7 +381,7 @@
           name: spotName, 
           lat: lat, 
           lng: lng,
-          type: type, // 'Island' அல்லது 'Reef'
+          type: type,
           nautical_lat: formatCoord(lat, true),
           nautical_lng: formatCoord(lng, false)
         });
@@ -410,14 +411,19 @@
         const latTxt = item.nautical_lat || formatCoord(item.lat, true);
         const lngTxt = item.nautical_lng || formatCoord(item.lng, false);
         const isIsland = item.type === 'Island';
-        const color = isIsland ? '#2a9d8f' : '#212529'; // தீவு பச்சை, பாறை கருப்பு
-        const iconHtml = `<div style="background:${color}; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,0.6);"></div>`;
+        
+        // தீவு என்றால் பெரிய பச்சை நிற குறியீடு, பாறை என்றால் கருப்பு நிறம்
+        const bgColor = isIsland ? '#00cc44' : '#111111';
+        const size = isIsland ? '22px' : '16px';
+        const borderWidth = isIsland ? '3px' : '2px';
+        
+        const iconHtml = `<div style="background:${bgColor}; width:${size}; height:${size}; border-radius:50%; border:${borderWidth} solid #ffffff; box-shadow:0 0 6px rgba(0,0,0,0.8);"></div>`;
         
         const customIcon = L.divIcon({
           html: iconHtml,
           className: '',
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconSize: [parseInt(size), parseInt(size)],
+          iconAnchor: [parseInt(size)/2, parseInt(size)/2]
         });
 
         const marker = L.marker([item.lat, item.lng], { icon: customIcon })
