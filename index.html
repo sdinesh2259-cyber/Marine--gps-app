@@ -190,35 +190,45 @@
     .btn-reef { background: #333; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    .boat-label {
-      background: rgba(0, 0, 0, 0.85);
+    /* போட் மார்க்கர் மற்றும் அதற்கு மேல் இருக்கும் நாட்டிக்கல் லேபிள் */
+    .boat-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 140px !important;
+      margin-left: -70px;
+      margin-top: -55px;
+    }
+    .boat-live-label {
+      background: rgba(0, 0, 0, 0.9);
       color: #00ffcc;
-      border: 1px solid #00ffcc;
-      padding: 2px 6px;
+      border: 1px solid #ffcc00;
+      padding: 2px 4px;
       font-size: 10px;
       font-family: monospace;
       font-weight: bold;
       border-radius: 4px;
+      text-align: center;
+      line-height: 1.2;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      margin-bottom: 3px;
       white-space: nowrap;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
-    .boat-icon-div { background: transparent; border: none; }
     .boat-heading-arrow {
-      width: 26px; height: 26px;
-      position: relative;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transform-origin: center;
     }
     .boat-heading-arrow::before {
       content: '';
-      position: absolute;
       width: 0; height: 0;
       border-left: 7px solid transparent;
       border-right: 7px solid transparent;
       border-bottom: 22px solid #00ffcc;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
     }
   </style>
 </head>
@@ -365,11 +375,6 @@
         needle.style.transform = `rotate(${deg}deg)`;
       }
       document.getElementById('heading-val').innerText = `${Math.round(deg)}° ${getHeadingDir(deg)}`;
-
-      const boatArrowElem = document.getElementById('boat-arrow-icon');
-      if (boatArrowElem) {
-        boatArrowElem.style.transform = `rotate(${deg}deg)`;
-      }
     }
 
     window.startNavigation = function(tLat, tLng) {
@@ -425,7 +430,7 @@
         const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
         const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும் (எ.கா: 12 பாவம் பாறை):`, typeName + " " + new Date().toLocaleDateString());
         
-        if (spotname = spotName) {
+        if (spotName) {
           const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
           const newId = Date.now();
           saved.push({ 
@@ -450,11 +455,34 @@
       }
     };
 
-    // சாதாரண கிளிக் (Click/Tap) முழுமையாக நீக்கப்பட்டுவிட்டது. 
-    // மொபைலில் நீண்ட நேரம் அழுத்திப் பிடித்தால் (Long Press / contextmenu) மட்டுமே மெனு வரும்.
+    // நீண்ட நேரம் அழுத்திப் பிடித்தால் மட்டுமே (Proper Long Press) புதிய இடத்தை சேமிக்கும் மெனு வரும்
+    let touchTimer = null;
+    let touchLatLng = null;
+
+    map.on('touchstart', function(e) {
+      if (e.originalEvent.touches.length === 1) {
+        touchLatLng = e.latlng;
+        touchTimer = setTimeout(() => {
+          triggerSavePopup(touchLatLng);
+        }, 800);
+      }
+    });
+
+    map.on('touchend touchmove touchcancel', function() {
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
+    });
+
     map.on('contextmenu', function(e) {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
+      triggerSavePopup(e.latlng);
+    });
+
+    function triggerSavePopup(latlng) {
+      if (!latlng) return;
+      const lat = latlng.lat;
+      const lng = latlng.lng;
       const latTxt = formatCoord(lat, true);
       const lngTxt = formatCoord(lng, false);
 
@@ -472,7 +500,7 @@
           </div>
         `, { autoClose: false })
         .openPopup();
-    });
+    }
 
     window.removeTempMarker = function() {
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
@@ -618,19 +646,18 @@
 
           updateCompass(heading);
 
+          // படகு அம்புக்குறிக்கு மேல் எப்போதும் தெளிவாகத் தெரியும் நாட்டிக்கல் எண்கள்
           const boatIconHtml = `
-            <div style="display: flex; flex-direction: column; align-items: center;">
-              <div class="boat-label">${latTxt}<br>${lngTxt}</div>
-              <div class="boat-icon-div" style="margin-top: 2px;">
-                <div class="boat-heading-arrow" id="boat-arrow-icon" style="transform: rotate(${heading}deg);"></div>
-              </div>
+            <div class="boat-container">
+              <div class="boat-live-label">${latTxt}<br>${lngTxt}</div>
+              <div class="boat-heading-arrow" style="transform: rotate(${heading}deg);"></div>
             </div>`;
 
           const customBoatIcon = L.divIcon({
             html: boatIconHtml,
             className: '',
-            iconSize: [120, 50],
-            iconAnchor: [60, 25]
+            iconSize: [140, 60],
+            iconAnchor: [70, 45]
           });
 
           if (!boatMarker) {
