@@ -7,143 +7,113 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    html, body { height: 100%; height: 100dvh; width: 100vw; overflow: hidden; background: #0b132b; color: #fff; }
+    body { background-color: #0b132b; color: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
     
-    #app-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      height: 100dvh;
-      width: 100vw;
-      position: relative;
-    }
-
     #top-bar {
-      background: rgba(28, 37, 65, 0.95);
-      padding: 8px 12px;
+      background: #1c2541;
+      padding: 10px 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #3a506b;
-      z-index: 1000;
+      border-bottom: 2px solid #3a506b;
     }
-    .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #3a506b; }
-    .danger-active { background: #e63946 !important; animation: blink 1s infinite; }
-    @keyframes blink { 50% { opacity: 0.5; } }
+    .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; background: #3a506b; color: #48cae4; font-weight: bold; }
 
     #map { flex: 1; width: 100%; z-index: 1; }
 
-    /* மேப்பின் ஓரத்தில் மிதக்கும் புதிய பொத்தான்கள் */
-    .floating-controls {
-      position: absolute;
-      right: 12px;
-      top: 60px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 1000;
-    }
-    .fab {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-    }
-    .fab:active { transform: scale(0.92); }
-    .fab-fish { background: #2ec4b6; }
-    .fab-zone { background: #ffb703; }
-    .fab-sos { background: #e63946; }
-    .fab-sonar { background: #00b4d8; }
-
     #sonar-panel {
-      height: 90px;
+      height: 120px;
       background: #000;
       border-top: 2px solid #00f0ff;
       position: relative;
-      z-index: 10;
     }
-    #sonar-canvas { width: 100%; height: 100%; background: #051329; }
+    #sonar-canvas { width: 100%; height: 100%; background: radial-gradient(circle, #051329 0%, #000000 100%); }
     .sonar-data {
       position: absolute;
-      top: 4px;
-      left: 8px;
-      font-size: 11px;
+      top: 6px;
+      left: 10px;
+      font-size: 13px;
       color: #00f0ff;
       font-weight: bold;
       background: rgba(0,0,0,0.6);
       padding: 2px 6px;
       border-radius: 4px;
-      z-index: 11;
+      z-index: 2;
     }
 
     #info-bar {
       background: #0b132b;
-      padding: 6px 10px;
+      padding: 8px 12px;
       display: flex;
-      justify-content: space-between;
-      font-size: 11px;
+      justify-content: space-around;
+      font-size: 12px;
       color: #8d99ae;
       border-top: 1px solid #1c2541;
-      z-index: 10;
     }
     .val { color: #48cae4; font-weight: bold; }
+
+    #controls {
+      background: #1c2541;
+      padding: 8px;
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #3a506b;
+    }
+    .btn {
+      flex: 1;
+      background: #00b4d8;
+      color: #000;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.98); }
   </style>
 </head>
 <body>
 
-  <div id="app-container">
-    <div id="top-bar">
-      <div style="font-weight: bold; font-size: 13px; color: #48cae4;">🚤 DM Marine GPS</div>
-      <div id="zone-status" class="status-badge">பாதுகாப்பான பகுதி</div>
-    </div>
+  <div id="top-bar">
+    <div style="font-weight: bold; font-size: 15px; color: #48cae4;">🚤 DM Marine GPS</div>
+    <div id="gps-status" class="status-badge">GPS தயார்</div>
+  </div>
 
-    <!-- வலதுபுறத்தில் உள்ள வட்ட வடிவ புதிய அம்சங்கள் -->
-    <div class="floating-controls">
-      <div class="fab fab-fish" onclick="markFishCatch()" title="மீன் குறிக்க">🐟</div>
-      <div class="fab fab-zone" onclick="toggleDangerZone()" title="எல்லை கோடு">⚠️</div>
-      <div class="fab fab-sonar" onclick="connectBluetoothSonar()" title="சோனார் இணைப்பு">📡</div>
-      <div class="fab fab-sos" onclick="triggerSOS()" title="அவசர SOS">🚨</div>
-    </div>
+  <div id="map"></div>
 
-    <div id="map"></div>
+  <div id="sonar-panel">
+    <div class="sonar-data">ஆழம்: <span id="depth-val">--</span> M | தரை: <span id="surface-val">தேடுகிறது...</span></div>
+    <canvas id="sonar-canvas"></canvas>
+  </div>
 
-    <div id="sonar-panel">
-      <div class="sonar-data">ஆழம்: <span id="depth-val">--</span> M | தரை: <span id="surface-val">தேடுகிறது...</span></div>
-      <canvas id="sonar-canvas"></canvas>
-    </div>
+  <div id="info-bar">
+    <div>வேகம்: <span id="speed" class="val">0.0 kn</span></div>
+    <div>திசை: <span id="heading" class="val">0°</span></div>
+    <div>Lat: <span id="lat" class="val">--</span></div>
+    <div>Lng: <span id="lng" class="val">--</span></div>
+  </div>
 
-    <div id="info-bar">
-      <div>வேகம்: <span id="speed" class="val">0.0 kn</span></div>
-      <div>திசை: <span id="heading" class="val">0°</span></div>
-      <div>Lat: <span id="lat" class="val">--</span></div>
-      <div>Lng: <span id="lng" class="val">--</span></div>
-    </div>
+  <div id="controls">
+    <button class="btn" onclick="connectBluetoothSonar()">📡 சோனார் இணை (ESP32 Bluetooth)</button>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let map, boatMarker, boatCircle;
     let currentLat = 8.8038, currentLng = 78.1460;
-    let dangerZonePoly = null;
-    let dangerAlarmAudio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-    map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 13);
+    map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
     const boatIcon = L.divIcon({
       className: 'boat-icon',
       html: '<div style="font-size:24px;">🚤</div>',
-      iconSize: [28, 28], iconAnchor: [14, 14]
+      iconSize: [30, 30], iconAnchor: [15, 15]
     });
 
     boatMarker = L.marker([currentLat, currentLng], { icon: boatIcon }).addTo(map);
-    boatCircle = L.circle([currentLat, currentLng], { radius: 20, color: '#00f0ff' }).addTo(map);
+    boatCircle = L.circle([currentLat, currentLng], { radius: 25, color: '#00f0ff' }).addTo(map);
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
@@ -161,57 +131,7 @@
         boatMarker.setLatLng(newPos);
         boatCircle.setLatLng(newPos);
         map.panTo(newPos);
-
-        checkDangerZone(currentLat, currentLng);
       }, err => console.log(err), { enableHighAccuracy: true, maximumAge: 1000 });
-    }
-
-    function markFishCatch() {
-      const time = new Date().toLocaleTimeString();
-      const fishIcon = L.divIcon({
-        html: '<div style="font-size:22px;">🐟</div>',
-        iconSize: [24, 24], iconAnchor: [12, 12]
-      });
-      L.marker([currentLat, currentLng], { icon: fishIcon })
-        .addTo(map)
-        .bindPopup(`<b>மீன் பிடித்த இடம்</b><br>நேரம்: ${time}<br>${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`)
-        .openPopup();
-    }
-
-    function toggleDangerZone() {
-      if (dangerZonePoly) {
-        map.removeLayer(dangerZonePoly);
-        dangerZonePoly = null;
-        return;
-      }
-      const dangerCoords = [
-        [currentLat + 0.03, currentLng - 0.04],
-        [currentLat + 0.03, currentLng + 0.04],
-        [currentLat + 0.08, currentLng + 0.04],
-        [currentLat + 0.08, currentLng - 0.04]
-      ];
-      dangerZonePoly = L.polygon(dangerCoords, { color: 'red', fillColor: '#f03', fillOpacity: 0.35 }).addTo(map);
-      dangerZonePoly.bindPopup("⚠️ ஆபத்தான எல்லை மண்டலம்");
-    }
-
-    function checkDangerZone(lat, lng) {
-      if (dangerZonePoly) {
-        const bounds = dangerZonePoly.getBounds();
-        const badge = document.getElementById('zone-status');
-        if (bounds.contains([lat, lng])) {
-          badge.innerText = "⚠️ எல்லை மீறல்!";
-          badge.classList.add('danger-active');
-          dangerAlarmAudio.play().catch(()=>{});
-        } else {
-          badge.innerText = "பாதுகாப்பான பகுதி";
-          badge.classList.remove('danger-active');
-        }
-      }
-    }
-
-    function triggerSOS() {
-      const msg = `SOS! உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng}`;
-      window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
     }
 
     async function connectBluetoothSonar() {
@@ -220,10 +140,10 @@
           filters: [{ namePrefix: 'ESP32' }, { namePrefix: 'Sonar' }],
           optionalServices: ['battery_service', 0xFFE0]
         });
-        alert(`இணைக்கப்பட்டது: ${device.name}`);
+        alert(`டிவைஸ் இணைக்கப்பட்டது: ${device.name}`);
         document.getElementById('surface-val').innerText = "பாறை / மணல்";
       } catch (err) {
-        alert("ப்ளூடூத் கிடைக்கவில்லை");
+        alert("ப்ளூடூத் கிடைக்கவில்லை அல்லது இணைக்கப்படவில்லை");
       }
     }
 
@@ -238,7 +158,7 @@
       const depth = (Math.sin(Date.now() / 1500) * 8 + 22).toFixed(1);
       document.getElementById('depth-val').innerText = depth;
 
-      points.push(depth * 2.2);
+      points.push(depth * 3);
       if (points.length > canvas.width / 5) points.shift();
 
       ctx.beginPath();
