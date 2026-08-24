@@ -39,8 +39,8 @@
       border: 1px solid #444;
     }
     .compass-dial {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       border: 2px solid #ffcc00;
       background: #000;
@@ -57,20 +57,20 @@
 
     .compass-needle {
       width: 4px;
-      height: 24px;
+      height: 26px;
       position: absolute;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.3s ease-out;
+      transition: transform 0.2s ease-out;
     }
     .arrow-head {
       width: 0; height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-bottom: 10px solid #00ffcc;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 12px solid #00ffcc;
     }
-    .arrow-tail { width: 2px; height: 12px; background: #ffffff; }
+    .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
     .status-bar {
@@ -81,6 +81,24 @@
       padding-top: 3px;
       display: flex;
       justify-content: space-between;
+    }
+
+    /* அசல் பச்சை நிற அம்புக்குறி ஐகான் */
+    .boat-heading-arrow {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease-out;
+    }
+    .boat-heading-arrow::before {
+      content: '';
+      width: 0; height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 26px solid #00ffcc;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
     }
 
     .marine-tools-panel {
@@ -138,7 +156,7 @@
       box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
     }
     .sonar-info {
-      width: 100px;
+      width: 105px;
       background: #051422;
       padding: 4px 6px;
       border-right: 1px solid #1a3a5a;
@@ -146,7 +164,7 @@
       flex-direction: column;
       justify-content: space-around;
     }
-    .sonar-depth-val { font-size: 15px; font-weight: bold; color: #ffcc00; font-family: monospace; }
+    .sonar-depth-val { font-size: 14px; font-weight: bold; color: #ffcc00; font-family: monospace; }
     .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
     .sonar-bt-btn {
       background: #0077b6;
@@ -232,8 +250,8 @@
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">Boat Location / Speed</div>
-        <div class="coord-val" id="lat-coord">8° 49.406' N</div>
-        <div class="coord-val" id="lng-coord">78° 8.971' E</div>
+        <div class="coord-val" id="lat-coord">--° --.---' N</div>
+        <div class="coord-val" id="lng-coord">--° --.---' E</div>
       </div>
       <div class="compass-container">
         <div class="compass-dial">
@@ -281,7 +299,7 @@
         <div style="font-size: 8px; color: #888;">தரை:</div>
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
-      <button class="sonar-bt-btn" onclick="alert('ப்ளூடூத் சோனார் தேடுகிறது...')">📡 சோனார் இணை</button>
+      <button class="sonar-bt-btn" onclick="alert('ப்ளூடூத் சோனார் இணைக்கப்படுகிறது...')">📡 சோனார் இணை</button>
     </div>
     <canvas id="sonarCanvas"></canvas>
   </div>
@@ -332,21 +350,22 @@
     const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
 
-    let currentLat = 8.8234;
-    let currentLng = 78.1495;
+    let currentLat = 8.8238;
+    let currentLng = 78.1567;
+    let currentHeading = 0;
 
-    const map = L.map('map', { zoomControl: true, layers: [satLayer] }).setView([currentLat, currentLng], 15);
+    const map = L.map('map', { zoomControl: true, layers: [satLayer] }).setView([currentLat, currentLng], 14);
     L.control.layers({ "🛰️ சாட்டிலைட்": satLayer, "🗺️ வரைபடம்": osmLayer }, null, { position: 'topleft' }).addTo(map);
 
-    const boatIcon = L.divIcon({
-      className: 'boat-icon-custom',
-      html: '<div style="font-size:28px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));">🚤</div>',
+    // அசல் பச்சை நிற அம்புக்குறி மார்க்கர்
+    const boatArrowIcon = L.divIcon({
+      className: 'boat-marker-div',
+      html: '<div id="boatArrow" class="boat-heading-arrow" style="transform: rotate(0deg);"><div class="arrow-shape"></div></div>',
       iconSize: [30, 30],
       iconAnchor: [15, 15]
     });
 
-    let boatMarker = L.marker([currentLat, currentLng], { icon: boatIcon }).addTo(map);
-    let boatCircle = L.circle([currentLat, currentLng], { radius: 25, color: '#00ffcc', fillColor: '#00ffff', fillOpacity: 0.2 }).addTo(map);
+    let boatMarker = L.marker([currentLat, currentLng], { icon: boatArrowIcon }).addTo(map);
 
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
@@ -367,12 +386,12 @@
     }
 
     function sendSOS() {
-      const msg = `🚨 SOS! உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng}`;
+      const msg = `🚨 SOS! படகு உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng}`;
       window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
     }
 
     function centerBoatLocation() {
-      map.setView([currentLat, currentLng], 16);
+      map.setView([currentLat, currentLng], 15);
     }
 
     function openCoordModal() { document.getElementById('coordModal').style.display = 'flex'; }
@@ -401,50 +420,60 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
+    // மொபைல் நடுக்கம்/டிரிஃப்ட் வடிகட்டுதல்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
-        const speedKts = (pos.coords.speed ? pos.coords.speed * 1.94384 : 0).toFixed(1);
-        const heading = pos.coords.heading ? Math.round(pos.coords.heading) : 0;
+        
+        let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
+        if (speedVal < 0.8) speedVal = 0.0; // நிலையாக இருக்கும்போது வேகம் 0 என நிற்கும்
+        
+        if (pos.coords.heading && speedVal > 0.8) {
+          currentHeading = Math.round(pos.coords.heading);
+        }
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
-        document.getElementById('boat-speed').innerText = `வேகம்: ${speedKts} kts`;
+        document.getElementById('boat-speed').innerText = `வேகம்: ${speedVal.toFixed(1)} kts`;
 
         const needle = document.getElementById('compass-needle');
-        if (needle) needle.style.transform = `rotate(${heading}deg)`;
-        document.getElementById('heading-val').innerText = `${heading}° ${getHeadingDir(heading)}`;
+        if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
+        document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
         const newPos = [currentLat, currentLng];
         boatMarker.setLatLng(newPos);
-        boatCircle.setLatLng(newPos);
-        map.panTo(newPos);
+
+        const arrowEl = document.getElementById('boatArrow');
+        if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
+        
       }, null, { enableHighAccuracy: true, maximumAge: 1000 });
     }
 
-    // சோனார்: தரை மற்றும் மீன்கள் அனிமேஷன்
+    // சோனார் கேன்வாஸ் - மணல் அலைவுகள் & மீன்கள் நீந்தும் அனிமேஷன்
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
-    let fishes = [
-      { x: 50, y: 35, size: 10, speed: 1.2 },
-      { x: 140, y: 22, size: 8, speed: 0.9 },
-      { x: 220, y: 45, size: 12, speed: 1.5 }
+    
+    let fishList = [
+      { x: 50, y: 35, s: 1.2, size: 7, color: '#ffcc00' },
+      { x: 120, y: 20, s: 0.8, size: 5, color: '#00ffcc' },
+      { x: 190, y: 45, s: 1.5, size: 8, color: '#ffcc00' },
+      { x: 260, y: 28, s: 1.0, size: 6, color: '#ff7700' }
     ];
 
     function drawSonar() {
-      canvas.width = canvas.parentElement.clientWidth - 100;
+      canvas.width = canvas.parentElement.clientWidth - 105;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // மணல் / பாறை தரை அமைப்பு
+      // கடலடி மணல் தரை
       ctx.beginPath();
-      ctx.fillStyle = '#051d38';
+      ctx.fillStyle = '#051933';
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 2;
       ctx.moveTo(0, canvas.height);
       for(let x=0; x<=canvas.width; x+=10) {
-        let y = canvas.height - 20 + Math.sin((x + Date.now()/15)/40) * 8;
+        let y = canvas.height - 22 + Math.sin((x + Date.now()/18)/35) * 6;
         ctx.lineTo(x, y);
       }
       ctx.lineTo(canvas.width, canvas.height);
@@ -452,12 +481,22 @@
       ctx.stroke();
 
       // மீன்கள் நீந்துவது
-      ctx.fillStyle = '#ffcc00';
-      fishes.forEach(f => {
-        f.x -= f.speed;
+      fishList.forEach(f => {
+        f.x -= f.s;
         if(f.x < -20) f.x = canvas.width + 20;
+
+        ctx.fillStyle = f.color;
+        // மீன் உடல்
         ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size/3, 0, Math.PI * 2);
+        ctx.ellipse(f.x, f.y, f.size, f.size/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // மீன் வால்
+        ctx.beginPath();
+        ctx.moveTo(f.x + f.size - 1, f.y);
+        ctx.lineTo(f.x + f.size + 4, f.y - 3);
+        ctx.lineTo(f.x + f.size + 4, f.y + 3);
+        ctx.closePath();
         ctx.fill();
       });
 
