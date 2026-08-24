@@ -163,6 +163,31 @@
     }
     .popup-save-btn { background: #2a9d8f; }
     .popup-del-btn { background: #e63946; }
+
+    /* படகு இருக்கும் இடத்தில் காட்டulம் திசைக் காட்டி அம்புக்குறி (Boat Heading Arrow) */
+    .boat-icon-div {
+      background: transparent;
+      border: none;
+    }
+    .boat-heading-arrow {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center;
+    }
+    .boat-heading-arrow::before {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 24px solid #00ffcc;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.7));
+    }
   </style>
 </head>
 <body>
@@ -277,6 +302,11 @@
         needle.style.transform = `rotate(${deg}deg)`;
       }
       document.getElementById('heading-val').innerText = `${Math.round(deg)}° ${getHeadingDir(deg)}`;
+
+      const boatArrowElem = document.getElementById('boat-arrow-icon');
+      if (boatArrowElem) {
+        boatArrowElem.style.transform = `rotate(${deg}deg)`;
+      }
     }
 
     window.startNavigation = function(tLat, tLng) {
@@ -313,7 +343,6 @@
       }
     }
 
-    // நீண்ட நேரம் அழுத்தும் போது (Long Press) மாறும் பாப்-அப்
     map.on('contextmenu', function(e) {
       const lat = e.latlatlng ? e.latlatlng.lat : e.latlng.lat;
       const lng = e.latlatlng ? e.latlatlng.lng : e.latlng.lng;
@@ -354,10 +383,8 @@
         localStorage.setItem('marineReefs', JSON.stringify(saved, null, 2));
         loadSavedReefs();
         if (clickMarker) { map.removeLayer(clickMarker); }
-        
-        // சேமித்தவுடன் உடனே வழிகாட்டத் தொடங்குவது
         startNavigation(lat, lng);
-        alert("இடம் சேமிக்கப்பட்டு வழிகாட்டல் தொடங்கFப்பட்டது!");
+        alert("இடம் சேமிக்கப்பட்டு வழிகாட்டல் தொடங்கப்பட்டது!");
       }
     };
 
@@ -368,7 +395,7 @@
         localStorage.setItem('marineReefs', JSON.stringify(saved, null, 2));
         loadSavedReefs();
         map.closePopup();
-        stopNavigation(); // சேமித்த பார் அழிக்கப்பட்டால் ரூட் லைனையும் நிறுத்துவது
+        stopNavigation();
       }
     };
 
@@ -443,24 +470,28 @@
           currentLat = pos.coords.latitude;
           currentLng = pos.coords.longitude;
           const speedKnots = pos.coords.speed ? (pos.coords.speed * 1.94384).toFixed(1) : "0.0";
+          const heading = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? pos.coords.heading : 0;
 
           document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
           document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
           document.getElementById('boat-speed').innerText = `வேகம்: ${speedKnots} kts`;
 
-          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-            updateCompass(pos.coords.heading);
-          }
+          updateCompass(heading);
+
+          // மேப்பில் படகு இருக்கும் இடத்தில் திசையைக் காட்டும் அம்புக்குறி (Heading Arrow)
+          const boatIconHtml = `<div class="boat-icon-div"><div class="boat-heading-arrow" id="boat-arrow-icon" style="transform: rotate(${heading}deg);"></div></div>`;
+          const customBoatIcon = L.divIcon({
+            html: boatIconHtml,
+            className: '',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
 
           if (!boatMarker) {
-            boatMarker = L.circleMarker([currentLat, currentLng], {
-              radius: 9,
-              color: '#ff0000',
-              fillColor: '#0077ff',
-              fillOpacity: 1
-            }).addTo(map).bindPopup("உங்கள் படகு");
+            boatMarker = L.marker([currentLat, currentLng], { icon: customBoatIcon }).addTo(map).bindPopup("உங்கள் படகு");
           } else {
             boatMarker.setLatLng([currentLat, currentLng]);
+            boatMarker.setIcon(customBoatIcon);
           }
 
           updateNavigation();
