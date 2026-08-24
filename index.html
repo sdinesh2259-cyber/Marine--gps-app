@@ -67,7 +67,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.4s ease-out;
+      transition: transform 0.3s ease-out;
     }
     .arrow-head {
       width: 0; height: 0;
@@ -118,7 +118,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.4s ease-out;
+      transition: transform 0.3s ease-out;
     }
     .boat-heading-arrow::before {
       content: '';
@@ -818,11 +818,8 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    // --- முழுமையான அசைவுத் தடுப்பு ஃபில்டர் (Zero GPS Drift & Freeze Lock) ---
-    let lockedLat = null;
-    let lockedLng = null;
-    let lockedHeading = 0;
-    let isInitialized = false;
+    // --- துல்லியமான மற்றும் உடனடி நகர்வு முறை (Ultra-Responsive & Zero Lag) ---
+    let lastHeading = 0;
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
@@ -830,37 +827,17 @@
         let rawLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0; // knots
 
-        if (!isInitialized) {
-          lockedLat = rawLat;
-          lockedLng = rawLng;
-          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-            lockedHeading = Math.round(pos.coords.heading);
-          }
-          isInitialized = true;
+        currentLat = rawLat;
+        currentLng = rawLng;
+
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 0.4) {
+          lastHeading = Math.round(pos.coords.heading);
         }
-
-        let speedVal = 0.0;
-
-        // வேகம் 3.0 முடிச்சுக்கு (Knots) மேல் இருந்தால் மட்டுமே படகு நகர்வதாகக் கணக்கிடும்
-        if (rawSpeed >= 3.0) {
-          speedVal = rawSpeed;
-          lockedLat = rawLat;
-          lockedLng = rawLng;
-          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-            lockedHeading = Math.round(pos.coords.heading);
-          }
-        } else {
-          // வேகம் 3 kts-க்குக் குறைவாக இருந்தால் லொகேஷன் மாற்றத்தை முழுமையாகப் புறக்கணித்து முடக்கும்
-          speedVal = 0.0;
-        }
-
-        currentLat = lockedLat;
-        currentLng = lockedLng;
-        currentHeading = lockedHeading;
+        currentHeading = lastHeading;
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
-        document.getElementById('boat-speed').innerText = `வேகம்: ${speedVal.toFixed(1)} kts`;
+        document.getElementById('boat-speed').innerText = `வேகம்: ${rawSpeed.toFixed(1)} kts`;
 
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
@@ -872,15 +849,16 @@
         const arrowEl = document.getElementById('boatArrow');
         if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
 
-        if (followBoat && speedVal >= 3.0) {
-          map.panTo(newPos, { animate: true, duration: 0.4 });
+        // படகு நகர்ந்தால் உடனுக்குடன் மேப் பான் ஆகும்
+        if (followBoat) {
+          map.panTo(newPos, { animate: true, duration: 0.2 });
         }
 
         if (targetTarget) updateNavigation();
         
       }, err => {
           console.log("GPS Error:", err);
-      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
+      }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
     const canvas = document.getElementById('sonarCanvas');
