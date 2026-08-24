@@ -252,6 +252,7 @@
     .popup-save-custom { background: #0077b6; }
     .popup-nav-btn { background: #e63946; }
     .popup-del-btn { background: #d90429; }
+    .popup-close-btn { background: #6c757d; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -498,10 +499,14 @@
       }
     }
 
-    /* நேரடி டச் / கிளிக் வழிமுறை */
     map.on('click', function(e) {
       triggerSavePopup(e.latlng);
     });
+
+    function removeTempMarker() {
+      if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
+      map.closePopup();
+    }
 
     function triggerSavePopup(latlng) {
       if (!latlng) return;
@@ -521,6 +526,7 @@
             <button class="popup-btn popup-save-island" onclick="saveSpotFromClick(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
             <button class="popup-btn popup-save-reef" onclick="saveSpotFromClick(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
             <button class="popup-btn popup-save-custom" onclick="saveSpotFromClick(${lat}, ${lng}, 'Custom')">📍 பொதுவாக சேமி</button>
+            <button class="popup-btn popup-close-btn" onclick="removeTempMarker()">❌ ரத்து செய்</button>
           </div>
         `).openPopup();
     }
@@ -533,13 +539,12 @@
         saved.push({ id: Date.now(), name: name, lat: lat, lng: lng, type: type });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
-        map.closePopup();
-        if (clickMarker) map.removeLayer(clickMarker);
+        removeTempMarker();
       }
     };
 
     window.deleteSpot = function(id) {
-      if (confirm("இந்த இடத்தை நீக்க விரும்புகிறீர்களா?")) {
+      if (confirm("இந்த இடத்தை நிரந்தரமாக நீக்க விரும்புகிறீர்களா?")) {
         let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved = saved.filter(item => item.id !== id);
         localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -559,17 +564,17 @@
       saved.forEach(item => {
         let iconHtml = item.type === 'Island' ? '🌴' : (item.type === 'Reef' ? '🪨' : '📍');
         let customMarker = L.divIcon({
-          html: `<div style="font-size:22px; filter:drop-shadow(0 2px 4px #000);">${iconHtml}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+          html: `<div style="font-size:24px; filter:drop-shadow(0 2px 4px #000); cursor:pointer;">${iconHtml}</div>`,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
         });
         L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
           .bindPopup(`
             <div class="popup-box">
-              <b>${item.name}</b>
+              <b style="color:#ffcc00; font-size:13px;">${item.name}</b>
               <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
               <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
-              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு (Delete)</button>
             </div>
           `);
       });
@@ -618,7 +623,7 @@
 
     async function connectBluetoothSonar() {
       if (!navigator.bluetooth) {
-        alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை (Chrome பயன்படுத்தவும்).");
+        alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை (Google Chrome பயன்படுத்தவும்).");
         return;
       }
       try {
