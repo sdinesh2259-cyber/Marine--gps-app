@@ -12,7 +12,7 @@
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
-    #map { height: calc(100vh - 140px); width: 100vw; z-index: 1; }
+    #map { height: calc(100vh - 165px); width: 100vw; z-index: 1; }
     
     .dashboard {
       position: absolute;
@@ -176,7 +176,7 @@
       bottom: 48px;
       left: 0;
       right: 0;
-      height: 92px;
+      height: 115px;
       background: #020b14;
       border-top: 2px solid #00ffcc;
       z-index: 1000;
@@ -184,27 +184,36 @@
       box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
     }
     .sonar-info {
-      width: 105px;
+      width: 120px;
       background: #051422;
       padding: 4px 6px;
       border-right: 1px solid #1a3a5a;
       display: flex;
       flex-direction: column;
-      justify-content: space-around;
+      justify-content: space-between;
     }
-    .sonar-depth-val { font-size: 14px; font-weight: bold; color: #ffcc00; font-family: monospace; }
+    .sonar-depth-val { font-size: 13px; font-weight: bold; color: #ffcc00; font-family: monospace; }
     .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
+    
+    .bt-buttons-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-top: 2px;
+    }
     .sonar-bt-btn {
-      background: #0077b6;
       color: white;
       border: none;
-      padding: 4px 4px;
-      font-size: 9px;
+      padding: 5px 2px;
+      font-size: 8.5px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
-      margin-bottom: 2px;
+      text-align: center;
     }
+    .btn-bt-sonar { background: #0077b6; }
+    .btn-bt-sat { background: #d90429; }
+
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
     .btn-container {
@@ -343,10 +352,11 @@
     <div>வானிலை: <span style="color:#fff;">தெளிவான காற்று</span></div>
   </div>
 
+  <!-- நேர்த்தியாக மாற்றியமைக்கப்பட்ட சோனார் பேனல் -->
   <div class="sonar-panel">
     <div class="sonar-info">
       <div>
-        <div style="font-size: 8px; color: #888;">ஆழம் (Depth):</div>
+        <div style="font-size: 8px; color: #888;">ஆழம்:</div>
         <div class="sonar-depth-val" id="live-depth">12.4 பாவம்</div>
         <div style="font-size: 8px; color: #00ffcc;" id="live-meters">(22.6 M)</div>
       </div>
@@ -354,9 +364,10 @@
         <div style="font-size: 8px; color: #888;">தரை:</div>
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
-      <!-- எதிர்கால புளூடூத் சோனார் மற்றும் சாட்டிலைட் கருவிகளுக்கான பிரத்யேக இணைப்பு பட்டன்கள் -->
-      <button class="sonar-bt-btn" id="bt-status-btn" onclick="connectBluetoothSonar()">📡 சோனார்/மீன் கருவி இணை</button>
-      <button class="sonar-bt-btn" id="sat-status-btn" style="background:#d90429;" onclick="connectSatelliteDevice()">🛰️ சாட்டிலைட் SOS இணை</button>
+      <div class="bt-buttons-group">
+        <button class="sonar-bt-btn btn-bt-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡 சோனார் இணை</button>
+        <button class="sonar-bt-btn btn-bt-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️ சாட்டிலைட் இணை</button>
+      </div>
     </div>
     <canvas id="sonarCanvas"></canvas>
   </div>
@@ -450,7 +461,6 @@
     let savedLayer = L.layerGroup();
     let followBoat = true;
     
-    // எதிர்கால சாட்டிலைட் மற்றும் சோனார் ஹார்டுவேர் குறிப்புகள் (Variables for Hardware Connection)
     let connectedSatelliteDevice = null;
     let connectedSonarDevice = null;
 
@@ -507,13 +517,11 @@
       widget.style.display = (widget.style.display === 'block') ? 'none' : 'block';
     }
 
-    // --- SOS அவசர உதவி (சாட்டிலைட் ஹார்டுவேர் ஒருங்கிணைப்புடன்) ---
     function sendSOS() {
       const msg = `🚨 SOS! ஆழ்கடல் அவசர உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
       
       if (connectedSatelliteDevice) {
         alert("🛰️ சாட்டிலைட் கருவி மூலம் அவசர SOS செய்தி வெற்றிகரமாக அனுப்பப்படுகிறது!");
-        // எதிர்காலத்தில் சாட்டிலைட் ஹார்டுவேருக்கு டேட்டா அனுப்பும் கட்டளை இங்கே செயல்படும்
         return;
       }
 
@@ -525,7 +533,6 @@
       }
     }
 
-    // --- எதிர்கால சாட்டிலைட் கருவியை புளூடூத் மூலம் இணைக்கும் வசதி ---
     async function connectSatelliteDevice() {
       if (!navigator.bluetooth) {
         alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை.");
@@ -536,7 +543,7 @@
           acceptAllDevices: true,
           optionalServices: ['generic_access']
         });
-        document.getElementById('sat-status-btn').innerText = "🛰️ சாட்டிலைட் இணைந்தது";
+        document.getElementById('sat-status-btn').innerText = "🛰️ இணைந்தது";
         document.getElementById('sat-status-btn').style.background = "#2a9d8f";
         alert(`சாட்டிலைட் கருவி வெற்றிகரமாக இணைக்கப்பட்டது: ${connectedSatelliteDevice.name || 'Satellite SOS Device'}`);
       } catch (err) {
@@ -544,7 +551,6 @@
       }
     }
 
-    // --- சோனார் / மீன் / பாறை கண்டறியும் கருவியை இணைக்கும் வசதி ---
     async function connectBluetoothSonar() {
       if (!navigator.bluetooth) {
         alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை.");
@@ -555,7 +561,7 @@
           acceptAllDevices: true,
           optionalServices: ['generic_access', 0xFFE0]
         });
-        document.getElementById('bt-status-btn').innerText = "✅ சோனார் இணைந்தது";
+        document.getElementById('bt-status-btn').innerText = "✅ இணைந்தது";
         document.getElementById('bt-status-btn').style.background = "#2a9d8f";
         alert(`சோனார் & மீன் கண்டறியும் கருவி இணைக்கப்பட்டது: ${connectedSonarDevice.name || 'Marine Sonar Finder'}`);
       } catch (err) {
@@ -883,7 +889,7 @@
     ];
 
     function drawSonar() {
-      canvas.width = canvas.parentElement.clientWidth - 105;
+      canvas.width = canvas.parentElement.clientWidth - 120;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
