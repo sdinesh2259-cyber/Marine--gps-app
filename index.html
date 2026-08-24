@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marine GPS Navigation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    #map { height: 100vh; width: 100vw; }
+    .dashboard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+    .val { font-size: 18px; font-weight: bold; color: #00ffcc; }
+    .label { font-size: 11px; color: #ccc; }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <div>
+      <div class="label">வேகம் (SOG)</div>
+      <div class="val" id="speed">0.0 kts</div>
+    </div>
+    <div>
+      <div class="label">திசை (Heading)</div>
+      <div class="val" id="heading">0°</div>
+    </div>
+    <div>
+      <div class="label">அட்சரேகை / தீர்க்கரேகை</div>
+      <div class="val" id="coords" style="font-size: 12px; color: #fff;">0.0000, 0.0000</div>
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // மேப் அமைப்பு
+    const map = L.map('map').setView([8.7642, 78.1348], 12);
+
+    // 1. Base Map (நிலப்பரப்பு மற்றும் கடல் அடிப்படை)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map);
+
+    // 2. OpenSeaMap (கடல் அடையாளங்கள், Buoys, லைட்ஹவுஸ்)
+    L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+      maxZoom: 18
+    }).addTo(map);
+
+    let boatMarker = null;
+
+    // ஜிபிஎஸ் லைவ் லொகேஷன் பெறுதல்
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const speedKnots = pos.coords.speed ? (pos.coords.speed * 1.94384).toFixed(1) : "0.0";
+          const heading = pos.coords.heading ? pos.coords.heading.toFixed(0) : "0";
+
+          document.getElementById('speed').innerText = speedKnots + " kts";
+          document.getElementById('heading').innerText = heading + "°";
+          document.getElementById('coords').innerText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+          if (!boatMarker) {
+            boatMarker = L.marker([lat, lng]).addTo(map).bindPopup("உங்கள் படகு").openPopup();
+            map.setView([lat, lng], 14);
+          } else {
+            boatMarker.setLatLng([lat, lng]);
+          }
+        },
+        (err) => console.log(err),
+        { enableHighAccuracy: true, maximumAge: 1000 }
+      );
+    }
+  </script>
+</body>
+</html>
