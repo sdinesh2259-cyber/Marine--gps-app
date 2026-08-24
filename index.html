@@ -34,7 +34,6 @@
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
     .coord-val { font-size: 15px; font-weight: bold; color: #00ffcc; font-family: monospace; }
     
-    /* காம்பஸ் மற்றும் திசைக் காட்டி வடிவம் */
     .compass-container {
       display: flex;
       flex-direction: column;
@@ -94,7 +93,6 @@
       justify-content: space-between;
     }
 
-    /* டார்கெட் நேவிகேஷன் பார் */
     .nav-bar {
       display: none;
       background: #e63946;
@@ -233,9 +231,8 @@
       return dirs[Math.round(deg / 45) % 8];
     }
 
-    // தூரம் கணக்கிடுதல் (நாட்டிக்கல் மைல் - NM)
     function calcDistanceNM(lat1, lon1, lat2, lon2) {
-      const R = 3440.065; // Earth radius in NM
+      const R = 3440.065;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -245,7 +242,6 @@
       return (R * c).toFixed(2);
     }
 
-    // திசைக்கோணம் கணக்கிடுதல் (Bearing Angle)
     function calcBearing(lat1, lon1, lat2, lon2) {
       const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
       const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
@@ -272,7 +268,6 @@
       document.getElementById('heading-val').innerText = `${Math.round(deg)}° ${getHeadingDir(deg)}`;
     }
 
-    // வழிகாட்டல் தொடங்குதல்
     window.startNavigation = function(tLat, tLng) {
       targetTarget = { lat: tLat, lng: tLng };
       document.getElementById('nav-info').style.display = 'block';
@@ -281,7 +276,6 @@
       updateNavigation();
     };
 
-    // வழிகாட்டல் நிறுத்துதல்
     window.stopNavigation = function() {
       targetTarget = null;
       if (navLine) { map.removeLayer(navLine); navLine = null; }
@@ -291,7 +285,6 @@
 
     function updateNavigation() {
       if (!targetTarget) return;
-
       const dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
       const brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
 
@@ -299,7 +292,6 @@
       document.getElementById('target-bearing').innerText = `${Math.round(brng)}° ${getHeadingDir(brng)}`;
 
       const lineCoords = [[currentLat, currentLng], [targetTarget.lat, targetTarget.lng]];
-
       if (navLine) {
         navLine.setLatLngs(lineCoords);
       } else {
@@ -312,9 +304,10 @@
       }
     }
 
-    map.on('click', function(e) {
-      const lat = e.latlng.lat;
-      const lng = e.latlng.lng;
+    // [முக்கிய மாற்றம்]: சாதாரண கிளிக் நீக்கப்பட்டு, நீண்ட நேரம் அழுத்தும் போது (contextmenu / long press) மட்டும் மார்க் விழும்
+    map.on('contextmenu', function(e) {
+      const lat = e.latlatlng ? e.latlatlng.lat : e.latlng.lat;
+      const lng = e.latlatlng ? e.latlatlng.lng : e.latlng.lng;
       const latTxt = formatCoord(lat, true);
       const lngTxt = formatCoord(lng, false);
 
@@ -323,16 +316,21 @@
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
           <div class="popup-box">
-            <b>🎯 தொட்ட இடம்</b>
+            <b>🎯 குறிக்கப்பட்ட இடம்</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
-            <button class="popup-btn popup-save-btn" onclick="saveCustomSpot(${lat}, ${lng})">📍 இதை சேமிக்க</button>
+            <button class="popup-btn popup-save-btn" onclick="saveCustomSpotFromPopup(${lat}, ${lng})">💾 சேமிக்க</button>
+            <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
           </div>
         `, { autoClose: false })
         .openPopup();
     });
 
-    window.saveCustomSpot = function(lat, lng) {
+    window.removeTempMarker = function() {
+      if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
+    };
+
+    window.saveCustomSpotFromPopup = function(lat, lng) {
       const spotName = prompt("இந்தப் பாறைக்கு பெயர் உள்ளிடவும்:", "பார் " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -426,7 +424,6 @@
       reader.readAsText(file);
     }
 
-    // ஜிபிஎஸ் இயக்கம் மற்றும் லைவ் ரூட்டிங்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         (pos) => {
@@ -453,7 +450,6 @@
             boatMarker.setLatLng([currentLat, currentLng]);
           }
 
-          // படகு நகரும் போது வழித்தடக் கோட்டைத் தானாக நகர்த்துவது
           updateNavigation();
         },
         (err) => console.log(err),
