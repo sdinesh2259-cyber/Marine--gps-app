@@ -2,74 +2,123 @@
 <html lang="ta">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DM Marine GPS & Sonar Ultimate</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DM Marine GPS & Sonar</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #0b132b; color: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+    html, body { height: 100%; height: 100dvh; overflow: hidden; background-color: #0b132b; color: #fff; }
     
-    #top-bar {
-      background: #1c2541; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3a506b;
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+      width: 100vw;
     }
-    .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; background: #3a506b; }
+
+    #top-bar {
+      background: #1c2541;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #3a506b;
+      min-height: 38px;
+    }
+    .status-badge { font-size: 11px; padding: 3px 6px; border-radius: 4px; background: #3a506b; }
     .danger-active { background: #e63946 !important; animation: blink 1s infinite; }
     @keyframes blink { 50% { opacity: 0.5; } }
 
     #map { flex: 1; width: 100%; z-index: 1; }
 
     #sonar-panel {
-      height: 120px; background: #000; border-top: 2px solid #00f0ff; position: relative; display: flex; flex-direction: column;
+      height: 80px;
+      background: #000;
+      border-top: 2px solid #00f0ff;
+      position: relative;
     }
-    #sonar-canvas { width: 100%; height: 100%; background: radial-gradient(circle, #051329 0%, #000000 100%); }
+    #sonar-canvas { width: 100%; height: 100%; background: #051329; }
     .sonar-data {
-      position: absolute; top: 6px; left: 10px; font-size: 13px; color: #00f0ff; font-weight: bold; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-size: 11px;
+      color: #00f0ff;
+      font-weight: bold;
+      background: rgba(0,0,0,0.6);
+      padding: 2px 6px;
+      border-radius: 4px;
+      z-index: 2;
     }
-
-    #controls {
-      background: #1c2541; padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; border-top: 1px solid #3a506b;
-    }
-    .btn {
-      background: #3a506b; color: white; border: none; padding: 10px 4px; border-radius: 8px; font-size: 11px; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
-    }
-    .btn:active { transform: scale(0.96); }
-    .btn-sonar { background: #00b4d8; color: #000; }
-    .btn-fish { background: #2ec4b6; color: #000; }
-    .btn-sos { background: #e63946; color: #fff; }
-    .btn-zone { background: #ffb703; color: #000; }
 
     #info-bar {
-      background: #0b132b; padding: 6px 12px; display: flex; justify-content: space-around; font-size: 11px; color: #8d99ae;
+      background: #0b132b;
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #8d99ae;
+      border-top: 1px solid #1c2541;
     }
     .val { color: #48cae4; font-weight: bold; }
+
+    #controls {
+      background: #1c2541;
+      padding: 6px 8px 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      border-top: 1px solid #3a506b;
+    }
+    .btn {
+      color: white;
+      border: none;
+      padding: 8px 2px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-sonar { background: #00b4d8; color: #000; }
+    .btn-fish { background: #2ec4b6; color: #000; }
+    .btn-zone { background: #ffb703; color: #000; }
+    .btn-sos { background: #e63946; color: #fff; }
   </style>
 </head>
 <body>
 
-  <div id="top-bar">
-    <div style="font-weight: bold; font-size: 14px; color: #48cae4;">🚤 DM Marine GPS</div>
-    <div id="zone-status" class="status-badge">பாதுகாப்பான பகுதி</div>
-  </div>
+  <div id="app-container">
+    <div id="top-bar">
+      <div style="font-weight: bold; font-size: 13px; color: #48cae4;">🚤 DM Marine GPS</div>
+      <div id="zone-status" class="status-badge">பாதுகாப்பான பகுதி</div>
+    </div>
 
-  <div id="map"></div>
+    <div id="map"></div>
 
-  <div id="sonar-panel">
-    <div class="sonar-data">ஆழம்: <span id="depth-val">--</span> M | தரை: <span id="surface-val">தேடுகிறது...</span></div>
-    <canvas id="sonar-canvas"></canvas>
-  </div>
+    <div id="sonar-panel">
+      <div class="sonar-data">ஆழம்: <span id="depth-val">--</span> M | தரை: <span id="surface-val">தேடுகிறது...</span></div>
+      <canvas id="sonar-canvas"></canvas>
+    </div>
 
-  <div id="info-bar">
-    <div>வேகம்: <span id="speed" class="val">0.0 kn</span></div>
-    <div>திசை: <span id="heading" class="val">0° N</span></div>
-    <div>அட்சரேகை: <span id="lat" class="val">--</span></div>
-    <div>தீர்க்கரேகை: <span id="lng" class="val">--</span></div>
-  </div>
+    <div id="info-bar">
+      <div>வேகம்: <span id="speed" class="val">0.0 kn</span></div>
+      <div>திசை: <span id="heading" class="val">0°</span></div>
+      <div>Lat: <span id="lat" class="val">--</span></div>
+      <div>Lng: <span id="lng" class="val">--</span></div>
+    </div>
 
-  <div id="controls">
-    <button class="btn btn-sonar" onclick="connectBluetoothSonar()">📡 சோனார்</button>
-    <button class="btn btn-fish" onclick="markFishCatch()">🐟 மீன் புள்ளி</button>
-    <button class="btn btn-zone" onclick="toggleDangerZone()">⚠️ எல்லை கோடு</button>
-    <button class="btn btn-sos" onclick="triggerSOS()">🚨 SOS உதவி</button>
+    <div id="controls">
+      <button class="btn btn-sonar" onclick="connectBluetoothSonar()">📡 சோனார்</button>
+      <button class="btn btn-fish" onclick="markFishCatch()">🐟 மீன் புள்ளி</button>
+      <button class="btn btn-zone" onclick="toggleDangerZone()">⚠️ எல்லை</button>
+      <button class="btn btn-sos" onclick="triggerSOS()">🚨 SOS</button>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -79,20 +128,18 @@
     let dangerZonePoly = null;
     let dangerAlarmAudio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-    // வரைபடம் அமைத்தல்
     map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
     const boatIcon = L.divIcon({
       className: 'boat-icon',
-      html: '<div style="font-size:24px; text-shadow: 0 0 4px #000;">🚤</div>',
-      iconSize: [30, 30], iconAnchor: [15, 15]
+      html: '<div style="font-size:22px;">🚤</div>',
+      iconSize: [26, 26], iconAnchor: [13, 13]
     });
 
     boatMarker = L.marker([currentLat, currentLng], { icon: boatIcon }).addTo(map);
     boatCircle = L.circle([currentLat, currentLng], { radius: 20, color: '#00f0ff' }).addTo(map);
 
-    // ஜிபிஎஸ் டிராக்கிங்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         currentLat = pos.coords.latitude;
@@ -114,27 +161,24 @@
       }, err => console.log(err), { enableHighAccuracy: true, maximumAge: 1000 });
     }
 
-    // மீன் பிடித்த இடம் குறித்தல் (Fish Marker)
     function markFishCatch() {
       const time = new Date().toLocaleTimeString();
       const fishIcon = L.divIcon({
-        html: '<div style="font-size:22px;">🐟</div>',
-        iconSize: [25, 25], iconAnchor: [12, 12]
+        html: '<div style="font-size:20px;">🐟</div>',
+        iconSize: [22, 22], iconAnchor: [11, 11]
       });
       L.marker([currentLat, currentLng], { icon: fishIcon })
         .addTo(map)
-        .bindPopup(`<b>மீன் பிடித்த இடம்</b><br>நேரம்: ${time}<br>GPS: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`)
+        .bindPopup(`<b>மீன் இடம்</b><br>நேரம்: ${time}<br>${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`)
         .openPopup();
     }
 
-    // சர்வதேச எல்லை / ஆபத்து மண்டலம் (IMBL Alert Line)
     function toggleDangerZone() {
       if (dangerZonePoly) {
         map.removeLayer(dangerZonePoly);
         dangerZonePoly = null;
         return;
       }
-      // மாதிரி எல்லைப் பகுதி (தூத்துக்குடி - இலங்கை கடல் வழி எடுத்துக்காட்டு)
       const dangerCoords = [
         [currentLat + 0.05, currentLng - 0.05],
         [currentLat + 0.05, currentLng + 0.05],
@@ -142,7 +186,7 @@
         [currentLat + 0.10, currentLng - 0.05]
       ];
       dangerZonePoly = L.polygon(dangerCoords, { color: 'red', fillColor: '#f03', fillOpacity: 0.35 }).addTo(map);
-      dangerZonePoly.bindPopup("⚠️ ஆபத்தான எல்லை மண்டலம் / பாறை பகுதி");
+      dangerZonePoly.bindPopup("⚠️ எல்லை மண்டலம்");
     }
 
     function checkDangerZone(lat, lng) {
@@ -150,7 +194,7 @@
         const bounds = dangerZonePoly.getBounds();
         const badge = document.getElementById('zone-status');
         if (bounds.contains([lat, lng])) {
-          badge.innerText = "⚠️ ஆபத்து! எல்லை தாண்டிவிட்டீர்கள்";
+          badge.innerText = "⚠️ எல்லை மீறல்!";
           badge.classList.add('danger-active');
           dangerAlarmAudio.play().catch(()=>{});
         } else {
@@ -160,28 +204,24 @@
       }
     }
 
-    // அவசர SOS மெசேஜ்
     function triggerSOS() {
-      const msg = `SOS! எனது படகு ஆபத்தில் உள்ளது. தற்போதைய இடம்: https://maps.google.com/?q=${currentLat},${currentLng}`;
-      const url = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-      window.location.href = url;
+      const msg = `SOS! உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng}`;
+      window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
     }
 
-    // ESP32 புளூடூத் சோனார் இணைப்பு
     async function connectBluetoothSonar() {
       try {
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ namePrefix: 'ESP32' }, { namePrefix: 'Sonar' }],
           optionalServices: ['battery_service', 0xFFE0]
         });
-        alert(`டிவைஸ் இணைக்கப்பட்டது: ${device.name}`);
+        alert(`இணைக்கப்பட்டது: ${device.name}`);
         document.getElementById('surface-val').innerText = "பாறை / மணல்";
       } catch (err) {
-        alert("ப்ளூடூத் கிடைக்கவில்லை அல்லது இணைக்கப்படவில்லை");
+        alert("ப்ளூடூத் கிடைக்கவில்லை");
       }
     }
 
-    // சோனார் கிராபிக்ஸ் அனிமேஷன்
     const canvas = document.getElementById('sonar-canvas');
     const ctx = canvas.getContext('2d');
     let points = [];
@@ -193,7 +233,7 @@
       const depth = (Math.sin(Date.now() / 1500) * 8 + 22).toFixed(1);
       document.getElementById('depth-val').innerText = depth;
 
-      points.push(depth * 3);
+      points.push(depth * 2);
       if (points.length > canvas.width / 5) points.shift();
 
       ctx.beginPath();
