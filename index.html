@@ -382,16 +382,49 @@
 </head>
 <body>
 
-  <!-- Service Worker / Fallback Cache -->
+  <!-- Smart Offline Caching (Service Worker) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          self.addEventListener('install', e => self.skipWaiting());
-          self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+          const CACHE_NAME = 'marine-gps-cache-v4';
+          self.addEventListener('install', event => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', event => {
+            event.waitUntil(
+              caches.keys().then(keys => Promise.all(
+                keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
+              ))
+            );
+            self.clients.claim();
+          });
           self.addEventListener('fetch', event => {
             event.respondWith(
-              fetch(event.request).catch(() => caches.match(event.request))
+              caches.match(event.request).then(cachedResponse => {
+                if (cachedResponse) {
+                  // Background-ல் நெட் இருந்தா புதுப்பித்துக் கொள்ளும், இல்லாவிட்டால் கேச்-ஐ பயன்படுத்தும்
+                  fetch(event.request).then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                      caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse));
+                    }
+                  }).catch(() => {});
+                  return cachedResponse;
+                }
+                return fetch(event.request).then(networkResponse => {
+                  return caches.open(CACHE_NAME).then(cache => {
+                    if (networkResponse && networkResponse.status === 200) {
+                      cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
+                  });
+                }).catch(() => {
+                  // நெட் மற்றும் கேச் இரண்டும் இல்லையெனில் ஆஃப்லைன் மெசேஜ் டைல் காட்டும்
+                  return new Response('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="%23020b14"/><text x="128" y="128" fill="%2300ffcc" font-size="14" text-anchor="middle" dominant-baseline="middle">Offline Map</text></svg>', {
+                    headers: {'Content-Type': 'image/svg+xml'}
+                  });
+                });
+              })
             );
           });
         `;
@@ -565,16 +598,8 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // ஆஃப்லைனில் நெட் இல்லாவிட்டாலும் லீப்லெட் மேப் உடைந்து போகாமல் இருக்க Fallback Tile Layer
-    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { 
-      maxZoom: 18,
-      errorTileUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="%23020b14"/><text x="128" y="128" fill="%2300ffcc" font-size="14" text-anchor="middle" dominant-baseline="middle">Marine GPS Offline</text></svg>'
-    });
-    
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-      maxZoom: 19,
-      errorTileUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="%23020b14"/><text x="128" y="128" fill="%2300ffcc" font-size="14" text-anchor="middle" dominant-baseline="middle">Marine Map Offline</text></svg>'
-    });
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
 
     let currentLat = 8.8238;
     let currentLng = 78.1567;
