@@ -204,8 +204,8 @@
     .sonar-bt-btn {
       color: white;
       border: none;
-      padding: 5px 2px;
-      font-size: 8.5px;
+      padding: 4px 2px;
+      font-size: 8px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
@@ -213,6 +213,7 @@
     }
     .btn-bt-sonar { background: #0077b6; }
     .btn-bt-sat { background: #d90429; }
+    .btn-bt-walkie { background: #7b2cbf; }
 
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
@@ -364,8 +365,9 @@
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
       <div class="bt-buttons-group">
-        <button class="sonar-bt-btn btn-bt-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡 சோனார் இணை</button>
-        <button class="sonar-bt-btn btn-bt-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️ சாட்டிலைட் இணை</button>
+        <button class="sonar-bt-btn btn-bt-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡 சோனார்</button>
+        <button class="sonar-bt-btn btn-bt-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️ சாட்டிலைட்</button>
+        <button class="sonar-bt-btn btn-bt-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()">🎙️ வாக்கி-டாகி</button>
       </div>
     </div>
     <canvas id="sonarCanvas"></canvas>
@@ -462,6 +464,9 @@
     
     let connectedSatelliteDevice = null;
     let connectedSonarDevice = null;
+    let walkieActive = false;
+    let mediaRecorder = null;
+    let audioChunks = [];
 
     const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false }).setView([currentLat, currentLng], 14);
     savedLayer.addTo(map);
@@ -532,6 +537,45 @@
       }
     }
 
+    // --- வாக்கி-டாகி குரல் பதிவு மற்றும் நேரடிப் பேச்சு வசதி (Walkie-Talkie Intercom) ---
+    async function toggleWalkieTalkie() {
+      const btn = document.getElementById('walkie-btn');
+      if (!walkie-active && !walkieActive) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
+
+          mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const audio = new Audio(audioUrl);
+            audio.play();
+            alert("🎙️ வாக்கி-டாகி குரல் பதிவு செய்யப்பட்டது மற்றும் பிளே செய்யப்படுகிறது!");
+          };
+
+          mediaRecorder.start();
+          walkieActive = true;
+          btn.innerText = "🔴 பேசுகிறார் (Rec)";
+          btn.style.background = "#e63946";
+          alert("🎙️ வாக்கி-டாகி ஆன் செய்யப்பட்டுள்ளது! நீங்கள் பேசும் குரல் பதிவு செய்யப்படுகிறது. நிறுத்த மீண்டும் பட்டனை அழுத்தவும்.");
+        } catch (err) {
+          alert("மைக்ரோபோன் அனுமதி கிடைக்கவில்லை: " + err);
+        }
+      } else {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          mediaRecorder.stop();
+        }
+        walkieActive = false;
+        btn.innerText = "🎙️ வாக்கி-டாகி";
+        btn.style.background = "#7b2cbf";
+      }
+    }
+
     async function connectSatelliteDevice() {
       if (!navigator.bluetooth) {
         alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை.");
@@ -544,7 +588,7 @@
         });
         document.getElementById('sat-status-btn').innerText = "🛰️ இணைந்தது";
         document.getElementById('sat-status-btn').style.background = "#2a9d8f";
-        alert(`சாட்டிலைட் கருவி வெற்றிகரமாக இணைக்கப்பட்டது: ${connectedSatelliteDevice.name || 'Satellite SOS Device'}`);
+        alert(`சாட்டிலைட் கருவி இணைக்கப்பட்டது: ${connectedSatelliteDevice.name || 'Satellite SOS'}`);
       } catch (err) {
         console.log("Satellite Bluetooth Error:", err);
       }
@@ -562,7 +606,7 @@
         });
         document.getElementById('bt-status-btn').innerText = "✅ இணைந்தது";
         document.getElementById('bt-status-btn').style.background = "#2a9d8f";
-        alert(`சோனார் & மீன் கண்டறியும் கருவி இணைக்கப்பட்டது: ${connectedSonarDevice.name || 'Marine Sonar Finder'}`);
+        alert(`சோனார் கருவி இணைக்கப்பட்டது: ${connectedSonarDevice.name || 'Marine Sonar'}`);
       } catch (err) {
         console.log("Sonar Bluetooth Error:", err);
       }
@@ -818,7 +862,6 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    // --- துல்லியமான மற்றும் உடனடி நகர்வு முறை (Ultra-Responsive & Zero Lag) ---
     let lastHeading = 0;
 
     if (navigator.geolocation) {
@@ -849,7 +892,6 @@
         const arrowEl = document.getElementById('boatArrow');
         if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
 
-        // படகு நகர்ந்தால் உடனுக்குடன் மேப் பான் ஆகும்
         if (followBoat) {
           map.panTo(newPos, { animate: true, duration: 0.2 });
         }
@@ -907,7 +949,7 @@
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2);
-        ctx.fill();
+        f.fill();
 
         ctx.beginPath();
         ctx.moveTo(f.x + f.size - 1, f.y);
