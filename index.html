@@ -280,8 +280,8 @@
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* உங்கள் படத்தில் உள்ள பச்சை நிற மேப் பின் ஐகான் */
-    .green-pin-svg {
+    /* நீங்கள் கேட்ட ஊதா நிற மேப் பின் ஐகான் */
+    .purple-pin-svg {
       width: 28px;
       height: 38px;
       filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
@@ -380,7 +380,7 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 பச்சை பின் (Green Pin)</option>
+          <option value="Pin">📍 ஊதா பின் (Purple Pin)</option>
           <option value="Fish">🐟 மீன்</option>
           <option value="Net">🕸️ வலை</option>
           <option value="Squid">🦑 கணவா</option>
@@ -573,14 +573,14 @@
       loadSavedReefs();
     }
 
-    // பார் சேமி பட்டன் - பச்சை பின் சேமிக்கும்
+    // பார் சேமி பட்டன் - ஊதா பின் சேமிக்கும்
     window.saveCurrentBoatSpotDirect = function() {
       let autoName = "பார் " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Pin' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("📍 பார் (பச்சை பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் (ஊதா பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -638,8 +638,8 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
         let iconHtml;
-        let iSize = [26, 26];
-        let iAnchor = [13, 13];
+        let iSize = [28, 38];
+        let iAnchor = [14, 38];
 
         switch(item.type) {
           case 'Fish': iconHtml = '<div style="font-size:24px;">🐟</div>'; break;
@@ -648,14 +648,12 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; break;
-          default: // பச்சை நிற கிளாசிக் பின் ஐகான்
+          default: // ஊதா நிற கிளாசிக் பின் ஐகான் (உங்கள் படத்தில் உள்ளது போல)
             iconHtml = `
-              <svg class="green-pin-svg" viewBox="0 0 24 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 34 12 34C12 34 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="#00E640" stroke="#000000" stroke-width="2"/>
+              <svg class="purple-pin-svg" viewBox="0 0 24 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 34 12 34C12 34 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="#7C3AED" stroke="#000000" stroke-width="2"/>
                 <circle cx="12" cy="12" r="5" fill="#000000"/>
               </svg>`;
-            iSize = [28, 38];
-            iAnchor = [14, 38];
             break;
         }
 
