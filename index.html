@@ -166,7 +166,6 @@
     .popup-save-reef { background: #212529; }
     .popup-del-btn { background: #e63946; }
 
-    /* Custom Modal for Coordinate Input */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0,0,0,0.75); z-index: 2000; display: none;
@@ -244,11 +243,9 @@
     </div>
   </div>
 
-  <!-- Custom Coordinate Input Modal with Direct Save Option -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமிக்க</div>
-      
       <div class="input-group">
         <label>Latitude (N):</label>
         <div class="input-row">
@@ -257,7 +254,6 @@
           <span style="font-weight:bold; color:#ffcc00;">' N</span>
         </div>
       </div>
-
       <div class="input-group">
         <label>Longitude (E):</label>
         <div class="input-row">
@@ -266,7 +262,6 @@
           <span style="font-weight:bold; color:#ffcc00;">' E</span>
         </div>
       </div>
-
       <div class="modal-btn-row">
         <button class="modal-btn btn-island" onclick="saveCoordSpot('Island')">🌴 தீவாக சேமி</button>
         <button class="modal-btn btn-reef" onclick="saveCoordSpot('Reef')">🪨 பாறையாக சேமி</button>
@@ -347,7 +342,7 @@
       let h = now.getHours();
       const m = String(now.getMinutes()).padStart(2, '0');
       const s = String(now.getSeconds()).padStart(2, '0');
-      const ampm = h >= 12 ? 'PM' : 'AM';
+    const ampm = h >= 12 ? 'PM' : 'AM';
       h = h % 12 || 12;
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
@@ -443,21 +438,26 @@
       }
     };
 
-    map.on('contextmenu', function(e) {
-      const lat = e.latlatlng ? e.latlatlng.lat : e.latlng.lat;
-      const lng = e.latlatlng ? e.latlatlng.lng : e.latlng.lng;
+    // மேப்பில் எங்கு தொட்டாலும் (Click/Tap) அந்த இடத்தின் நாட்டிக்கல் எண்கள் மற்றும் தூரத்தைக் காட்டுவது
+    map.on('click', function(e) {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
       const latTxt = formatCoord(lat, true);
       const lngTxt = formatCoord(lng, false);
+      const dist = calcDistanceNM(currentLat, currentLng, lat, lng);
+      const brng = calcBearing(currentLat, currentLng, lat, lng);
 
       if (clickMarker) { map.removeLayer(clickMarker); }
 
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
           <div class="popup-box">
-            <b>🎯 புதிய இடம் குறித்தல்</b>
+            <b>📍 தொட்ட இடம் (Location)</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
-            <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி (பச்சை)</button>
-            <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி (கருப்பு)</button>
+            <div style="font-size:11px; color:#e63946; font-weight:bold; margin: 4px 0;">📏 தூரம்: ${dist} NM | கோணம்: ${Math.round(brng)}°</div>
+            <button class="popup-btn popup-save-island" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
+            <button class="popup-btn popup-save-island" style="background:#2a9d8f;" onclick="saveSpotFromClick(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
+            <button class="popup-btn popup-save-reef" onclick="saveSpotFromClick(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
             <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
           </div>
         `, { autoClose: false })
@@ -468,14 +468,13 @@
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
     };
 
-    window.saveSpot = function(lat, lng, type) {
+    window.saveSpotFromClick = function(lat, lng, type) {
       const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
       const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும்:`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-        const newId = Date.now();
         saved.push({ 
-          id: newId, 
+          id: Date.now(), 
           name: spotName, 
           lat: lat, 
           lng: lng,
@@ -487,7 +486,7 @@
         loadSavedReefs();
         if (clickMarker) { map.removeLayer(clickMarker); }
         startNavigation(lat, lng);
-        alert(`${typeName} வெற்றிகரமாக சேமிக்கப்பட்டது!`);
+        alert(`${typeName} சேமிக்கப்பட்டு வழிகாட்டல் தொடங்கப்பட்டது!`);
       }
     };
 
