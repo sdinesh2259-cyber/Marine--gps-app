@@ -279,6 +279,31 @@
     .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
+
+    /* பனித்துளி வடிவ பின் மார்க்கர் (Pin Marker) */
+    .pin-marker {
+      width: 24px;
+      height: 24px;
+      border-radius: 50% 50% 50% 0;
+      background: #00e5ff;
+      position: absolute;
+      transform: rotate(-45deg);
+      left: 50%;
+      top: 50%;
+      margin: -16px 0 0 -12px;
+      box-shadow: -2px 2px 6px rgba(0,0,0,0.8);
+      border: 2px solid #ffffff;
+      cursor: pointer;
+    }
+    .pin-marker::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      margin: 6px 0 0 6px;
+      background: #020b14;
+      position: absolute;
+      border-radius: 50%;
+    }
   </style>
 </head>
 <body>
@@ -372,7 +397,7 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Dot">🟢 டாட் புள்ளி</option>
+          <option value="Pin">📍 மேப் பின் (பனித்துளி)</option>
           <option value="Fish">🐟 மீன்</option>
           <option value="Net">🕸️ வலை</option>
           <option value="Squid">🦑 கணவா</option>
@@ -526,7 +551,7 @@
       }
     }
 
-    // --- லாங் பிரஸ் செய்தால் உடனே ஐகானாக சேவ் ஆகும் & நகர்த்திக்கொள்ளலாம் (Draggable) ---
+    // --- லாங் பிரஸ் செய்தால் உடனே பனித்துளி பின் விழும் & நகர்த்திக்கொள்ளலாம் ---
     let touchTimer = null;
 
     map.on('contextmenu', function(e) {
@@ -559,20 +584,20 @@
     function createDraggableMarker(lat, lng) {
       let autoName = "புள்ளி " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let newSpot = { id: Date.now(), name: autoName, lat: lat, lng: lng, type: 'Dot' };
+      let newSpot = { id: Date.now(), name: autoName, lat: lat, lng: lng, type: 'Pin' };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
     }
 
-    // பார் சேமி பட்டனை அழுத்தினால் உடனே டாட் சேவ் ஆகும்
+    // பார் சேமி பட்டனை அழுத்தினால் உடனே பனித்துளி பின் சேவ் ஆகும்
     window.saveCurrentBoatSpotDirect = function() {
       let autoName = "பார் " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Dot' });
+      saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Pin' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("🟢 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் (மேப் பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -637,8 +662,8 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; break;
-          default:
-            iconHtml = '<div style="width:14px; height:14px; background:#00ffcc; border:2px solid #000; border-radius:50%; box-shadow:0 0 6px #00ffcc;"></div>';
+          default: // 'Pin' அல்லது பழைய புள்ளிகளுக்கு பனித்துளி மார்க்கர்
+            iconHtml = '<div class="pin-marker"></div>';
             break;
         }
 
@@ -648,10 +673,9 @@
             iconSize: [26, 26],
             iconAnchor: [13, 13]
           }),
-          draggable: true // ஐகானை எங்கு வேண்டுமானாலும் நகர்த்தலாம்
+          draggable: true
         }).addTo(savedLayer);
 
-        // ஐகானை நகர்த்தி விட்டால் புதிய Lat/Lng சேவ் ஆகும்
         customMarker.on('dragend', function(e) {
           let newPos = e.target.getLatLng();
           let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
