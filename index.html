@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Marine GPS & Fish Finder</title>
   
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -329,7 +332,7 @@
 
   <div class="marine-tools-panel">
     <div class="tool-btn" onclick="toggleWeatherWidget()" title="காற்று & அலை விவரம்">🌊</div>
-    <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🚨</div>
+    <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி (WhatsApp & SMS)">🚨</div>
   </div>
 
   <div class="weather-widget" id="weatherWidget">
@@ -497,9 +500,19 @@
       widget.style.display = (widget.style.display === 'block') ? 'none' : 'block';
     }
 
+    // --- மேம்படுத்தப்பட்ட SOS அவசர உதவி (WhatsApp மற்றும் SMS இரண்டும் வேலை செய்யும்) ---
     function sendSOS() {
-      const msg = `🚨 SOS! படகு உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
-      window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
+      const msg = `🚨 SOS! படகு உதவி தேவை. எனது தற்போதைய இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
+      
+      // வாட்ஸ்அப் மற்றும் சாதாரண SMS இரண்டிற்கும் தேர்வு செய்ய வழிவகை
+      let choice = confirm("🚨 அவசர உதவி (SOS):\n\n[OK] - வாட்ஸ்அப் மூலம் அனுப்ப\n[Cancel] - சாதாரண SMS (Offline) மூலம் அனுப்ப");
+      
+      if (choice) {
+        window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
+      } else {
+        // நெட் இல்லாதபோது சாதாரண SMS ஆப்பைத் திறக்கும் (உடனடி ஆஃப்லைன் முறை)
+        window.open(`sms:?body=${encodeURIComponent(msg)}`);
+      }
     }
 
     window.startNavigation = function(tLat, tLng) {
@@ -770,32 +783,28 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    // --- பூஜ்ஜிய நடுக்கம் & துல்லிய ஜிபிஎஸ் ஃபில்டரிங் (Zero Jitter Control) ---
     let lastLat = null, lastLng = null, lastHead = 0;
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let rawLat = pos.coords.latitude;
         let rawLng = pos.coords.longitude;
-        let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0; // knots
+        let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
 
-        // வேகம் 1.5 kts (சுமார் 3 km/h) க்கும் குறைவாக இருந்தால் போட் நிலையாக உள்ளது என முடிவு செய்தல்
         if (speedVal < 1.5) {
           speedVal = 0.0;
-          // வேகம் பூஜ்ஜியமாக இருக்கும்போது லொகேஷன் மாறாமல் அப்படியே இருக்கும்
           if (lastLat !== null && lastLng !== null) {
             let distMoved = calcDistanceNM(lastLat, lastLng, rawLat, rawLng);
-            if (distMoved < 0.015) { // 30 மீட்டருக்குள் நகர்ந்தால் ஜிபிஎஸ் பிழை என நிராகரிக்கும்
+            if (distMoved < 0.015) {
               rawLat = lastLat;
               rawLng = lastLng;
             }
           }
         } else {
-          // போட் நகரும்போது மட்டுமே திசைக் கோணம் மாறும்
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             let headDiff = Math.abs(pos.coords.heading - lastHead);
             if (headDiff > 180) headDiff = 360 - headDiff;
-            if (headDiff > 4) { // சிறிய அதிர்வுகளைப் புறக்கணித்தல்
+            if (headDiff > 4) {
               lastHead = Math.round(pos.coords.heading);
             }
           }
@@ -891,7 +900,7 @@
 
       requestAnimationFrame(drawSonar);
     }
-    drawSonar();
+    drawsonar();
   </script>
 </body>
 </html>
