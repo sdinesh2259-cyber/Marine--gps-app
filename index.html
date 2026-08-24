@@ -234,26 +234,47 @@
 
     .leaflet-top.leaflet-left { top: 160px !important; left: 10px !important; }
 
-    .popup-box { text-align: center; font-size: 12px; min-width: 150px; padding: 2px; }
-    .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:2px; border-radius:4px; font-size: 11px; margin: 3px 0; }
+    .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
+    .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
     .popup-btn {
       color: white;
       border: none;
-      padding: 6px 8px;
+      padding: 6px 6px;
       font-size: 11px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 3px;
       width: 100%;
       display: block;
     }
-    .popup-save-island { background: #2a9d8f; }
-    .popup-save-reef { background: #333; border:1px solid #444; }
-    .popup-save-custom { background: #0077b6; }
+    
+    /* ஐகான் பட்டன் கிரிட் */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      margin: 4px 0;
+    }
+    .grid-btn {
+      background: #222;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 5px 2px;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .grid-btn:active { background: #00ffcc; color: #000; }
+
     .popup-nav-btn { background: #e63946; }
-    .popup-del-btn { background: #d90429; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.2); }
-    .popup-close-btn { background: #555; color:#fff; margin-top: 6px; }
+    .popup-del-btn { background: #d90429; margin-top: 6px; }
+    .popup-close-btn { background: #444; color:#fff; margin-top: 4px; }
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -277,13 +298,7 @@
       width: 95%; background: #000; color: #fff; border: 1px solid #444; padding: 6px 8px;
       border-radius: 6px; font-size: 12px;
     }
-    .modal-btn-row { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-    .modal-btn-grid { display: flex; gap: 6px; }
-    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
-    .btn-island { background: #2a9d8f; color: #fff; }
-    .btn-reef { background: #333; color: #fff; }
-    .btn-custom { background: #0077b6; color: #fff; }
-    .btn-cancel { background: #e63946; color: #fff; }
+    .modal-btn-cancel { background: #e63946; color: #fff; width: 100%; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -372,19 +387,19 @@
         <label>இடத்தின் பெயர்:</label>
         <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா: 12 பாவம் பாறை">
       </div>
-      <div class="modal-btn-row">
-        <div class="modal-btn-grid">
-          <button class="modal-btn btn-island" onclick="saveCoordSpotModal('Island')">🌴 தீவாக சேமி</button>
-          <button class="modal-btn btn-reef" onclick="saveCoordSpotModal('Reef')">🪨 பாறையாக சேமி</button>
-        </div>
-        <button class="modal-btn btn-custom" onclick="saveCoordSpotModal('Custom')">📍 பொதுவாக சேமி</button>
-        <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
+      <div class="icon-grid">
+        <button class="grid-btn" onclick="saveCoordSpotModal('Fish')"><span>🐟</span>மீன்</button>
+        <button class="grid-btn" onclick="saveCoordSpotModal('Net')"><span>🕸️</span>வலை</button>
+        <button class="grid-btn" onclick="saveCoordSpotModal('Squid')"><span>🦑</span>கணவா</button>
+        <button class="grid-btn" onclick="saveCoordSpotModal('Ray')"><span>🪼</span>திருக்கை</button>
+        <button class="grid-btn" onclick="saveCoordSpotModal('Reef')"><span>🪨</span>பாறை</button>
+        <button class="grid-btn" onclick="saveCoordSpotModal('Island')"><span>🌴</span>தீவு</button>
       </div>
+      <button class="modal-btn-cancel" onclick="closeCoordModal()">ரத்து</button>
     </div>
   </div>
 
   <div class="btn-container">
-    <!-- சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Dot' (புள்ளி ஐகான்) ஆக சேவ் ஆகும் -->
     <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
@@ -508,6 +523,7 @@
       map.closePopup();
     }
 
+    // வரைபடத்தில் தொடும்போது 7 வகை ஐகான் தேர்வுகள்
     function triggerSavePopup(latlng) {
       if (!latlng) return;
       const lat = latlng.lat;
@@ -520,21 +536,39 @@
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
           <div class="popup-box">
-            <b style="color:#ffcc00;">🎯 புதிய புள்ளி</b>
+            <b style="color:#ffcc00;">🎯 புதிய இடம் சேமி</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${lat}, ${lng})">🚀 இங்கே வழிகாட்டு</button>
-            <div style="display:flex; gap:3px;">
-              <button class="popup-btn popup-save-island" onclick="saveDirectly(${lat}, ${lng}, 'Island')">🌴 தீவு சேமி</button>
-              <button class="popup-btn popup-save-reef" onclick="saveDirectly(${lat}, ${lng}, 'Reef')">🪨 பாறை சேமி</button>
+            
+            <div class="icon-grid">
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Fish')"><span>🐟</span>மீன்</button>
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Net')"><span>🕸️</span>வலை</button>
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Squid')"><span>🦑</span>கணவா</button>
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Ray')"><span>🪼</span>திருக்கை</button>
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Reef')"><span>🪨</span>பாறை</button>
+              <button class="grid-btn" onclick="saveDirectly(${lat}, ${lng}, 'Island')"><span>🌴</span>தீவு</button>
             </div>
-            <button class="popup-btn popup-save-custom" onclick="saveDirectly(${lat}, ${lng}, 'Custom')">📍 புள்ளி சேமி</button>
+            
+            <button class="popup-btn" style="background:#0077b6;" onclick="saveDirectly(${lat}, ${lng}, 'Dot')">🟢 டாட் புள்ளி சேமி</button>
             <button class="popup-btn popup-close-btn" onclick="removeTempMarker()">❌ ரத்து செய்</button>
           </div>
         `, { closeButton: false }).openPopup();
     }
 
+    function getTypeName(type) {
+      switch(type) {
+        case 'Fish': return 'மீன்';
+        case 'Net': return 'வலை';
+        case 'Squid': return 'கணவா';
+        case 'Ray': return 'திருக்கை';
+        case 'Reef': return 'பாறை';
+        case 'Island': return 'தீவு';
+        default: return 'பார்';
+      }
+    }
+
     window.saveDirectly = function(lat, lng, type) {
-      let typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி');
+      let typeName = getTypeName(type);
       let autoName = typeName + " " + new Date().toLocaleDateString();
       
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -544,14 +578,14 @@
       removeTempMarker();
     };
 
-    // சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது உடனே 'Dot' (புள்ளி ஐகான்) ஆக சேவ் ஆகும்
+    // சிவப்பு 'பார் சேமி' பட்டனை அழுத்தும்போது டாட் ஐகானாக உடனே சேவ் ஆகும்
     window.saveCurrentBoatSpotDirect = function() {
       let autoName = "பார் " + new Date().toLocaleDateString();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.push({ id: Date.now(), name: autoName, lat: currentLat, lng: currentLng, type: 'Dot' });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
-      alert("📍 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("🟢 பார் (டாட் புள்ளி) வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     window.deleteSpot = function(id) {
@@ -569,17 +603,25 @@
       savedLayer.clearLayers();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
-        // 'Dot' வகைக்கு சிறிய புள்ளி ஐகான் வரும், மற்றவைகளுக்கு தீவு அல்லது பாறை ஐகான் வரும்
         let iconHtml;
-        if(item.type === 'Island') iconHtml = '🌴';
-        else if(item.type === 'Reef') iconHtml = '🪨';
-        else iconHtml = '<div style="width:12px; height:12px; background:#00ffcc; border:2px solid #000; border-radius:50%; box-shadow:0 0 5px #00ffcc;"></div>';
+        switch(item.type) {
+          case 'Fish': iconHtml = '<div style="font-size:24px;">🐟</div>'; break;
+          case 'Net': iconHtml = '<div style="font-size:24px;">🕸️</div>'; break;
+          case 'Squid': iconHtml = '<div style="font-size:24px;">🦑</div>'; break;
+          case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; break;
+          case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; break;
+          case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; break;
+          default: // 'Dot' அல்லது மற்றவை
+            iconHtml = '<div style="width:14px; height:14px; background:#00ffcc; border:2px solid #000; border-radius:50%; box-shadow:0 0 6px #00ffcc;"></div>';
+            break;
+        }
 
         let customMarker = L.divIcon({
           html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
         });
+
         L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
           .bindPopup(`
             <div class="popup-box">
@@ -603,7 +645,7 @@
       if (!isNaN(latMin) && !isNaN(lngMin)) {
         let lat = 8.0 + (latMin / 60.0);
         let lng = 78.0 + (lngMin / 60.0);
-        let typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'புள்ளி');
+        let typeName = getTypeName(type);
         let name = customName ? customName : (typeName + " " + new Date().toLocaleDateString());
         
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
