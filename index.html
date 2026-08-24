@@ -190,7 +190,6 @@
     .btn-reef { background: #333; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* படகுக்கு மேலே எண்கள் காட்டும் லேபிள் ஸ்டைல் */
     .boat-label {
       background: rgba(0, 0, 0, 0.85);
       color: #00ffcc;
@@ -426,7 +425,7 @@
         const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
         const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும் (எ.கா: 12 பாவம் பாறை):`, typeName + " " + new Date().toLocaleDateString());
         
-        if (spotName) {
+        if (spotname = spotName) {
           const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
           const newId = Date.now();
           saved.push({ 
@@ -451,7 +450,8 @@
       }
     };
 
-    // சாதாரண டச் (Tap) நீக்கப்பட்டு, நீண்ட நேரம் அழுத்துவது (Long Press / contextmenu) மட்டுமே வைக்கப்பட்டுள்ளது
+    // சாதாரண கிளிக் (Click/Tap) முழுமையாக நீக்கப்பட்டுவிட்டது. 
+    // மொபைலில் நீண்ட நேரம் அழுத்திப் பிடித்தால் (Long Press / contextmenu) மட்டுமே மெனு வரும்.
     map.on('contextmenu', function(e) {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
@@ -618,7 +618,6 @@
 
           updateCompass(heading);
 
-          // படகு அம்புக்குறிக்கு நேராக மேலேவே எண்கள் தெரியும் படி அமைப்பு (Boat Icon + Live Tooltip)
           const boatIconHtml = `
             <div style="display: flex; flex-direction: column; align-items: center;">
               <div class="boat-label">${latTxt}<br>${lngTxt}</div>
