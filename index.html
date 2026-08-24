@@ -34,7 +34,7 @@
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
     .coord-val { font-size: 15px; font-weight: bold; color: #00ffcc; font-family: monospace; }
     
-    /* காம்பஸ் மற்றும் திசைக் காட்டி வடிவம் */
+    /* காம்பஸ் வடிவமைப்பு (N, S, E, W மற்றும் நடுவில் அம்புக்குறி) */
     .compass-container {
       display: flex;
       flex-direction: column;
@@ -57,12 +57,13 @@
       align-items: center;
       justify-content: center;
     }
-    .c-label { position: absolute; font-size: 8px; font-weight: bold; color: #aaa; }
+    .c-label { position: absolute; font-size: 9px; font-weight: bold; color: #fff; }
     .lbl-n { top: 2px; color: #ff0000; }
     .lbl-s { bottom: 2px; }
-    .lbl-e { right: 3px; }
-    .lbl-w { left: 3px; }
+    .lbl-e { right: 4px; }
+    .lbl-w { left: 4px; }
 
+    /* படகு திசையைக் காட்டும் அம்புக்குறி (போன் திருப்பினாலும் மாறாது, ஜிபிஎஸ் மூவ்மென்ட்டுக்கு மட்டுமே மாறும்) */
     .compass-needle {
       width: 6px;
       height: 32px;
@@ -70,7 +71,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.2s ease-out;
+      transition: transform 0.3s ease-out;
     }
     .arrow-head {
       width: 0; height: 0;
@@ -219,6 +220,9 @@
       document.getElementById('heading-val').innerText = `${Math.round(deg)}° ${getHeadingDir(deg)}`;
     }
 
+    // [முக்கிய மாற்றம்]: போனின் சென்சார் (DeviceOrientation) முழுமையாக நீக்கப்பட்டுவிட்டது. 
+    // இதனால் போனைத் திருப்பினால் காம்பஸ் மாறாது. படகு நகரும்போது (GPS Heading) மட்டுமே அம்புக்குறி மாறும்.
+
     map.on('click', function(e) {
       const lat = e.latlng.lat;
       const lng = e.latlng.lng;
@@ -282,6 +286,7 @@
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ id: Date.now(), name: spotName, lat: currentLat, lng: currentLng });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
+        loadSavedRefns = loadSavedReefs();
         loadSavedReefs();
         alert("தற்போதைய இடம் சேமிக்கப்பட்டது!");
       }
@@ -315,6 +320,7 @@
       reader.readAsText(file);
     }
 
+    // படகு நகரும்போது (GPS Heading / Movement) மட்டுமே அம்புக்குறி திசையைக் காட்டும்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         (pos) => {
