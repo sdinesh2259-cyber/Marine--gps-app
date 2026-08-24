@@ -64,7 +64,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.6s ease-out;
+      transition: transform 0.4s ease-out;
     }
     .arrow-head {
       width: 0; height: 0;
@@ -115,7 +115,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.6s ease-out;
+      transition: transform 0.4s ease-out;
     }
     .boat-heading-arrow::before {
       content: '';
@@ -280,7 +280,6 @@
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
-    /* எந்தவித பெட்டியும் (Box) இல்லாமல் தனித்து நிற்கும் சிவப்பு நிற 3D பின் */
     .transparent-pin-container {
       background: transparent !important;
       border: none !important;
@@ -650,7 +649,7 @@
           case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; classNameStr = ''; break;
           case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; classNameStr = ''; break;
           case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; classNameStr = ''; break;
-          default: // 3D சிவப்பு நிற பின் (பெட்டி இல்லாதது)
+          default:
             iconHtml = `
               <svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/>
@@ -771,36 +770,40 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
+    // --- பூஜ்ஜிய நடுக்கம் & துல்லிய ஜிபிஎஸ் ஃபில்டரிங் (Zero Jitter Control) ---
     let lastLat = null, lastLng = null, lastHead = 0;
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
-        currentLat = pos.coords.latitude;
-        currentLng = pos.coords.longitude;
-        
-        let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-        let headVal = pos.coords.heading ? Math.round(pos.coords.heading) : lastHead;
+        let rawLat = pos.coords.latitude;
+        let rawLng = pos.coords.longitude;
+        let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0; // knots
 
-        if (speedVal < 0.8) {
+        // வேகம் 1.5 kts (சுமார் 3 km/h) க்கும் குறைவாக இருந்தால் போட் நிலையாக உள்ளது என முடிவு செய்தல்
+        if (speedVal < 1.5) {
           speedVal = 0.0;
-          headVal = lastHead;
+          // வேகம் பூஜ்ஜியமாக இருக்கும்போது லொகேஷன் மாறாமல் அப்படியே இருக்கும்
+          if (lastLat !== null && lastLng !== null) {
+            let distMoved = calcDistanceNM(lastLat, lastLng, rawLat, rawLng);
+            if (distMoved < 0.015) { // 30 மீட்டருக்குள் நகர்ந்தால் ஜிபிஎஸ் பிழை என நிராகரிக்கும்
+              rawLat = lastLat;
+              rawLng = lastLng;
+            }
+          }
         } else {
-          let headDiff = Math.abs(headVal - lastHead);
-          if (headDiff > 180) headDiff = 360 - headDiff;
-          if (headDiff < 6) { 
-             headVal = lastHead;
-          } else {
-             currentHeading = headVal;
+          // போட் நகரும்போது மட்டுமே திசைக் கோணம் மாறும்
+          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+            let headDiff = Math.abs(pos.coords.heading - lastHead);
+            if (headDiff > 180) headDiff = 360 - headDiff;
+            if (headDiff > 4) { // சிறிய அதிர்வுகளைப் புறக்கணித்தல்
+              lastHead = Math.round(pos.coords.heading);
+            }
           }
         }
-        
-        if(lastLat !== null && lastLng !== null && speedVal < 0.6) {
-            let distMoved = calcDistanceNM(lastLat, lastLng, currentLat, currentLng);
-            if(distMoved < 0.003) {
-                currentLat = lastLat;
-                currentLng = lastLng;
-            }
-        }
+
+        currentLat = rawLat;
+        currentLng = rawLng;
+        currentHeading = lastHead;
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
@@ -816,17 +819,18 @@
         const arrowEl = document.getElementById('boatArrow');
         if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
 
-        if (followBoat) {
-          map.panTo(newPos, { animate: true, duration: 0.6 });
+        if (followBoat && speedVal > 0.5) {
+          map.panTo(newPos, { animate: true, duration: 0.4 });
         }
 
         if (targetTarget) updateNavigation();
 
-        lastLat = currentLat; lastLng = currentLng; lastHead = currentHeading;
+        lastLat = currentLat;
+        lastLng = currentLng;
         
       }, err => {
           console.log("GPS Error:", err);
-      }, { enableHighAccuracy: true, maximumAge: 1500, timeout: 6000 });
+      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 });
     }
 
     const canvas = document.getElementById('sonarCanvas');
