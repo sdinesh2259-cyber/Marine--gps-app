@@ -161,7 +161,8 @@
       margin-top: 4px;
       width: 100%;
     }
-    .popup-save-btn { background: #2a9d8f; }
+    .popup-save-island { background: #2a9d8f; } /* பச்சை நிறம் - தீவு */
+    .popup-save-reef { background: #333333; }   /* கருப்பு நிறம் - பாறை */
     .popup-del-btn { background: #e63946; }
 
     .boat-icon-div {
@@ -354,9 +355,10 @@
       clickMarker = L.marker([lat, lng]).addTo(map)
         .bindPopup(`
           <div class="popup-box">
-            <b>🎯 புதிய இடம்</b>
+            <b>🎯 புதிய இடம் குறித்தல்</b>
             <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
-            <button class="popup-btn popup-save-btn" onclick="saveAndNavigate(${lat}, ${lng})">💾 சேமித்து வழிகாட்டு</button>
+            <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி (பச்சை)</button>
+            <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி (கருப்பு)</button>
             <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
           </div>
         `, { autoClose: false })
@@ -367,8 +369,9 @@
       if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null; }
     };
 
-    window.saveAndNavigate = function(lat, lng) {
-      const spotName = prompt("இந்தப் பாறைக்கு பெயர் உள்ளிடவும்:", "பார் " + new Date().toLocaleDateString());
+    window.saveSpot = function(lat, lng, type) {
+      const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
+      const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும்:`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         const newId = Date.now();
@@ -377,6 +380,7 @@
           name: spotName, 
           lat: lat, 
           lng: lng,
+          type: type, // 'Island' அல்லது 'Reef'
           nautical_lat: formatCoord(lat, true),
           nautical_lng: formatCoord(lng, false)
         });
@@ -384,12 +388,12 @@
         loadSavedReefs();
         if (clickMarker) { map.removeLayer(clickMarker); }
         startNavigation(lat, lng);
-        alert("இடம் சேமிக்கப்பட்டு வழிகாட்டல் தொடங்கப்பட்டது!");
+        alert(`${typeName} வெற்றிகரமாக சேமிக்கப்பட்டது!`);
       }
     };
 
     window.deleteSpot = function(id) {
-      if (confirm("இந்தப் பாறை பதிவை அழிக்கவா?")) {
+      if (confirm("இந்தப் பதிவை அழிக்கவா?")) {
         let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved = saved.filter(item => item.id !== id);
         localStorage.setItem('marineReefs', JSON.stringify(saved, null, 2));
@@ -405,13 +409,24 @@
       saved.forEach((item) => {
         const latTxt = item.nautical_lat || formatCoord(item.lat, true);
         const lngTxt = item.nautical_lng || formatCoord(item.lng, false);
-        const marker = L.marker([item.lat, item.lng])
+        const isIsland = item.type === 'Island';
+        const color = isIsland ? '#2a9d8f' : '#212529'; // தீவு பச்சை, பாறை கருப்பு
+        const iconHtml = `<div style="background:${color}; width:16px; height:16px; border-radius:50%; border:2px solid #fff; box-shadow:0 0 4px rgba(0,0,0,0.6);"></div>`;
+        
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: '',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
+        });
+
+        const marker = L.marker([item.lat, item.lng], { icon: customIcon })
           .bindPopup(`
             <div class="popup-box">
-              <b>🐠 ${item.name}</b>
+              <b>${isIsland ? '🌴 தீவு' : '🪨 பாறை'}: ${item.name}</b>
               <div class="popup-coord">${latTxt}<br>${lngTxt}</div>
-              <button class="popup-btn popup-save-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இங்கே வழிகாட்டு</button>
-              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">❌ இந்த பாரை அழி</button>
+              <button class="popup-btn popup-save-island" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இங்கே வழிகாட்டு</button>
+              <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">❌ இதை அழி</button>
             </div>
           `);
         savedLayer.addLayer(marker);
@@ -419,7 +434,7 @@
     }
 
     function saveCurrentSpot() {
-      const spotName = prompt("தற்போதைய இடத்தின் பெயர் உள்ளிடவும்:", "பார் " + new Date().toLocaleDateString());
+      const spotName = prompt("தற்போதைய இடத்தின் பெயர்:", "பார் " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
@@ -427,6 +442,7 @@
           name: spotName, 
           lat: currentLat, 
           lng: currentLng,
+          type: 'Reef',
           nautical_lat: formatCoord(currentLat, true),
           nautical_lng: formatCoord(currentLng, false)
         });
@@ -471,10 +487,8 @@
           currentLng = pos.coords.longitude;
           
           let rawSpeed = pos.coords.speed ? pos.coords.speed * 1.94384 : 0;
-          // வேகம் மிகக் குறைவாக இருந்தால் (0.5 kts கீழே) அதை 0 ஆக்கிவிடும் (Jitter Filter)
           const speedKnots = rawSpeed > 0.5 ? rawSpeed.toFixed(1) : "0.0";
 
-          // படகு நகர்ந்தால் மட்டுமே திசையை மாற்றும், இல்லையெனில் பழைய திசையிலேயே நிற்கும்
           let heading = lastHeading;
           if (rawSpeed > 0.8 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             heading = pos.coords.heading;
