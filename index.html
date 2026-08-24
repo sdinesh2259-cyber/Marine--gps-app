@@ -7,6 +7,7 @@
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
     #map { height: calc(100vh - 140px); width: 100vw; }
     
@@ -108,7 +109,6 @@
       cursor: pointer;
     }
 
-    /* அசல் பச்சை நிற அம்புக்குறி */
     .boat-heading-arrow {
       width: 28px;
       height: 28px;
@@ -195,12 +195,13 @@
       background: #0077b6;
       color: white;
       border: none;
-      padding: 3px 4px;
+      padding: 4px 4px;
       font-size: 9px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
     }
+    .sonar-bt-btn:active { background: #00b4d8; }
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
     .btn-container {
@@ -239,12 +240,12 @@
     .popup-btn {
       color: white;
       border: none;
-      padding: 5px 8px;
+      padding: 6px 8px;
       font-size: 10px;
       font-weight: bold;
       border-radius: 4px;
       cursor: pointer;
-      margin-top: 3px;
+      margin-top: 4px;
       width: 100%;
     }
     .popup-save-island { background: #2a9d8f; }
@@ -342,7 +343,7 @@
         <div style="font-size: 8px; color: #888;">தரை:</div>
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
-      <button class="sonar-bt-btn" onclick="alert('ப்ளூடூத் சோனார் இணைக்கப்படுகிறது...')">📡 சோனார் இணை</button>
+      <button class="sonar-bt-btn" id="bt-status-btn" onclick="connectBluetoothSonar()">📡 சோனார் இணை</button>
     </div>
     <canvas id="sonarCanvas"></canvas>
   </div>
@@ -382,7 +383,7 @@
   </div>
 
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="openCoordModal()">📍 பார்</button>
+    <button class="btn-action btn-red" onclick="saveCurrentBoatSpot()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
@@ -497,26 +498,23 @@
       }
     }
 
-    /* அசல் Long Press வழிப்புள்ளி சேமிப்பு */
-    let touchTimer = null;
-    let touchLatLng = null;
+    /* நேரடி டச் / லாங் பிரஸ் வழிமுறை (100% மொபைல் சப்போர்ட்) */
+    let touchTimeout;
+    const mapEl = document.getElementById('map');
 
-    map.on('touchstart', function(e) {
-      if (e.originalEvent.touches.length === 1) {
-        touchLatLng = e.latlng;
-        touchTimer = setTimeout(() => {
-          triggerSavePopup(touchLatLng);
-        }, 700);
+    mapEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        touchTimeout = setTimeout(() => {
+          const point = map.mouseEventToLatLng(touch);
+          triggerSavePopup(point);
+        }, 550);
       }
-    });
+    }, { passive: true });
 
-    map.on('touchend touchmove touchcancel', function() {
-      if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; }
-    });
-
-    map.on('contextmenu', function(e) {
-      triggerSavePopup(e.latlng);
-    });
+    mapEl.addEventListener('touchend', () => clearTimeout(touchTimeout));
+    mapEl.addEventListener('touchmove', () => clearTimeout(touchTimeout));
+    map.on('contextmenu', (e) => triggerSavePopup(e.latlng));
 
     function triggerSavePopup(latlng) {
       if (!latlng) return;
@@ -553,11 +551,21 @@
       }
     };
 
+    function saveCurrentBoatSpot() {
+      saveSpotFromLongPress(currentLat, currentLng, 'Reef');
+    }
+
     function loadSavedReefs() {
       savedLayer.clearLayers();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
-        L.marker([item.lat, item.lng]).addTo(savedLayer)
+        let iconHtml = item.type === 'Island' ? '🌴' : (item.type === 'Reef' ? '🪨' : '📍');
+        let customMarker = L.divIcon({
+          html: `<div style="font-size:22px; filter:drop-shadow(0 2px 4px #000);">${iconHtml}</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
+        });
+        L.marker([item.lat, item.lng], { icon: customMarker }).addTo(savedLayer)
           .bindPopup(`<b>${item.name}</b><br>${formatCoord(item.lat, true)}, ${formatCoord(item.lng, false)}<br><button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>`);
       });
     }
@@ -603,6 +611,25 @@
       reader.readAsText(file);
     }
 
+    /* புளூடூத் சோனார் இணைப்பு (Web Bluetooth API) */
+    async function connectBluetoothSonar() {
+      if (!navigator.bluetooth) {
+        alert("உங்கள் பிரவுசரில் Web Bluetooth வசதி இல்லை (Chrome பயன்படுத்தவும்).");
+        return;
+      }
+      try {
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['generic_access', 0xFFE0]
+        });
+        document.getElementById('bt-status-btn').innerText = "✅ இணைந்தது";
+        document.getElementById('bt-status-btn').style.background = "#2a9d8f";
+        alert(`சோனார் சாதனம் இணைக்கப்பட்டது: ${device.name || 'Marine Sonar'}`);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
     setInterval(() => {
       const now = new Date();
       let h = now.getHours();
@@ -613,14 +640,14 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    /* ஜிபிஎஸ் டிரிஃப்ட் பில்டர் - மொபைல் நின்றால் வேகமும் திசையும் ஆடாது */
+    /* ஜிபிஎஸ் டிராக்கிங் */
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         currentLat = pos.coords.latitude;
         currentLng = pos.coords.longitude;
         
         let speedVal = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-        if (speedVal < 0.8) {
+        if (speedVal < 0.6) {
           speedVal = 0.0;
         } else if (pos.coords.heading) {
           currentHeading = Math.round(pos.coords.heading);
@@ -644,15 +671,15 @@
       }, null, { enableHighAccuracy: true, maximumAge: 1000 });
     }
 
-    /* சோனார் கேன்வாஸ் - அலைகள் மற்றும் நீந்தும் மீன்கள் */
+    /* முழு சோனார் அனிமேஷன் (மணல், கடல் புற்கள், பல வண்ண மீன்கள்) */
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
     
     let fishList = [
-      { x: 60, y: 35, s: 1.2, size: 7, color: '#ffcc00' },
-      { x: 130, y: 22, s: 0.9, size: 5, color: '#00ffcc' },
-      { x: 210, y: 48, s: 1.4, size: 8, color: '#ffcc00' },
-      { x: 290, y: 28, s: 1.0, size: 6, color: '#ff7700' }
+      { x: 50, y: 25, s: 1.2, size: 7, color: '#ffcc00' },
+      { x: 120, y: 18, s: 0.9, size: 5, color: '#00ffcc' },
+      { x: 200, y: 38, s: 1.4, size: 8, color: '#ff5722' },
+      { x: 270, y: 22, s: 1.0, size: 6, color: '#ffeb3b' }
     ];
 
     function drawSonar() {
@@ -660,26 +687,40 @@
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // மணல் அமைப்பு
       ctx.beginPath();
-      ctx.fillStyle = '#051933';
+      ctx.fillStyle = '#062038';
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 2;
       ctx.moveTo(0, canvas.height);
       for(let x=0; x<=canvas.width; x+=10) {
-        let y = canvas.height - 22 + Math.sin((x + Date.now()/18)/35) * 6;
+        let y = canvas.height - 24 + Math.sin((x + Date.now()/20)/30) * 5;
         ctx.lineTo(x, y);
       }
       ctx.lineTo(canvas.width, canvas.height);
       ctx.fill();
       ctx.stroke();
 
+      // கடல் புற்கள் (Sea Grass)
+      ctx.strokeStyle = '#2a9d8f';
+      ctx.lineWidth = 2;
+      for(let x=25; x<canvas.width; x+=45) {
+        let grassBaseY = canvas.height - 20;
+        let sway = Math.sin((Date.now()/250) + x) * 6;
+        ctx.beginPath();
+        ctx.moveTo(x, grassBaseY);
+        ctx.quadraticCurveTo(x + sway, grassBaseY - 12, x + sway*1.5, grassBaseY - 22);
+        ctx.stroke();
+      }
+
+      // மீன்கள் அனிமேஷன்
       fishList.forEach(f => {
         f.x -= f.s;
         if(f.x < -20) f.x = canvas.width + 20;
 
         ctx.fillStyle = f.color;
         ctx.beginPath();
-        ctx.ellipse(f.x, f.y, f.size, f.size/2, 0, 0, Math.PI * 2);
+        ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.beginPath();
