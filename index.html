@@ -166,6 +166,30 @@
     .popup-save-reef { background: #212529; }
     .popup-del-btn { background: #e63946; }
 
+    /* Custom Modal for Coordinate Input */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7); z-index: 2000; display: none;
+      align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: #111; color: #fff; padding: 16px; border-radius: 12px;
+      width: 90%; max-width: 320px; border: 1px solid #444; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+    }
+    .modal-title { font-size: 14px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; text-align: center; }
+    .input-group { margin-bottom: 10px; }
+    .input-group label { font-size: 11px; color: #00ffcc; display: block; margin-bottom: 3px; }
+    .input-row { display: flex; align-items: center; gap: 6px; }
+    .fixed-deg { background: #222; padding: 6px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; border: 1px solid #551; }
+    .input-box {
+      flex: 1; background: #000; color: #00ffcc; border: 1px solid #444; padding: 6px 8px;
+      border-radius: 6px; font-size: 14px; font-family: monospace; font-weight: bold;
+    }
+    .modal-btn-row { display: flex; gap: 8px; margin-top: 14px; }
+    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .btn-search { background: #2a9d8f; color: #fff; }
+    .btn-cancel { background: #e63946; color: #fff; }
+
     .boat-icon-div { background: transparent; border: none; }
     .boat-heading-arrow {
       width: 26px; height: 26px;
@@ -219,9 +243,39 @@
     </div>
   </div>
 
+  <!-- Custom Coordinate Input Modal -->
+  <div class="modal-overlay" id="coordModal">
+    <div class="modal-content">
+      <div class="modal-title">🧭 ஜிபிஎஸ் எண் உள்ளிடவும்</div>
+      
+      <div class="input-group">
+        <label>Latitude (N):</label>
+        <div class="input-row">
+          <div class="fixed-deg">8°</div>
+          <input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any">
+          <span style="font-weight:bold; color:#ffcc00;">' N</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Longitude (E):</label>
+        <div class="input-row">
+          <div class="fixed-deg">78°</div>
+          <input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any">
+          <span style="font-weight:bold; color:#ffcc00;">' E</span>
+        </div>
+      </div>
+
+      <div class="modal-btn-row">
+        <button class="modal-btn btn-search" onclick="submitCoordSearch()">தேடு & காட்டு</button>
+        <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
+      </div>
+    </div>
+  </div>
+
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="saveCurrentSpot()">📍 பார்</button>
-    <button class="btn-action btn-green" onclick="searchByCoordInput()">🔍 எண் தேடு</button>
+    <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
@@ -341,32 +395,40 @@
       }
     }
 
-    // ஜிபிஎஸ் எண்களை நேரடியாக டைப் செய்து தேடும் வசதி (Manual Coordinate Search)
-    window.searchByCoordInput = function() {
-      let inputLat = prompt("Latitude (எ.கா: 8.8238 அல்லது 8 49.403):", "8.8238");
-      let inputLng = prompt("Longitude (எ.கா: 78.1567 அல்லது 78 8.974):", "78.1567");
-      
-      if (inputLat && inputLng) {
-        let lat = parseFloat(inputLat);
-        let lng = parseFloat(inputLng);
-        
-        if (!isNaN(lat) && !isNaN(lng)) {
-          map.setView([lat, lng], 14);
-          if (clickMarker) { map.removeLayer(clickMarker); }
-          clickMarker = L.marker([lat, lng]).addTo(map)
-            .bindPopup(`
-              <div class="popup-box">
-                <b>🎯 தேடிய இடம்</b>
-                <div class="popup-coord">${formatCoord(lat, true)}<br>${formatCoord(lng, false)}</div>
-                <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
-                <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
-                <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
-              </div>
-            `, { autoClose: false })
-            .openPopup();
-        } else {
-          alert("தவறான எண்கள்! சரியாக உள்ளிடவும்.");
-        }
+    window.openCoordModal = function() {
+      document.getElementById('coordModal').style.display = 'flex';
+    };
+
+    window.closeCoordModal = function() {
+      document.getElementById('coordModal').style.display = 'none';
+    };
+
+    window.submitCoordSearch = function() {
+      let latMin = parseFloat(document.getElementById('inputLatMin').value);
+      let lngMin = parseFloat(document.getElementById('inputLngMin').value);
+
+      if (!isNaN(latMin) && !isNaN(lngMin)) {
+        // 8 டிகிரி மற்றும் 78 டிகிரியை அடிப்படையாக வைத்து முழு லொகேஷனைக் கணக்கிடுதல்
+        let lat = 8.0 + (latMin / 60.0);
+        let lng = 78.0 + (lngMin / 60.0);
+
+        map.setView([lat, lng], 15);
+        closeCoordModal();
+
+        if (clickMarker) { map.removeLayer(clickMarker); }
+        clickMarker = L.marker([lat, lng]).addTo(map)
+          .bindPopup(`
+            <div class="popup-box">
+              <b>🎯 தேடிய இடம்</b>
+              <div class="popup-coord">${formatCoord(lat, true)}<br>${formatCoord(lng, false)}</div>
+              <button class="popup-btn popup-save-island" onclick="saveSpot(${lat}, ${lng}, 'Island')">🌴 தீவாக சேமி</button>
+              <button class="popup-btn popup-save-reef" onclick="saveSpot(${lat}, ${lng}, 'Reef')">🪨 பாறையாக சேமி</button>
+              <button class="popup-btn popup-del-btn" onclick="removeTempMarker()">❌ நீக்கு</button>
+            </div>
+          `, { autoClose: false })
+          .openPopup();
+      } else {
+        alert("தயவுசெய்து எண்களைச் சரியாக உள்ளிடவும்!");
       }
     };
 
@@ -397,7 +459,7 @@
 
     window.saveSpot = function(lat, lng, type) {
       const typeName = type === 'Island' ? 'தீவு' : 'பாறை/பார்';
-      const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும் (ஆழம்/பாவம் விவரத்துடன் சேர்த்துக்கொள்ளலாம்):`, typeName + " " + new Date().toLocaleDateString());
+      const spotName = prompt(`${typeName} பெயரைக் குறிப்பிடவும்:`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         const newId = Date.now();
@@ -464,7 +526,7 @@
     }
 
     function saveCurrentSpot() {
-      const spotName = prompt("தற்போதைய இடத்தின் பெயர் (எ.கா: 12 பாவம் பாறை):", "பார் " + new Date().toLocaleDateString());
+      const spotName = prompt("தற்போதைய இடத்தின் பெயர்:", "பார் " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
