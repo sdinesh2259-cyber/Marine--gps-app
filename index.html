@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marine GPS & Fish Reef Navigation</title>
+  <title>Marine GPS & Smart Sonar Fish Finder</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; }
-    #map { height: 100vh; width: 100vw; }
+    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
+    #map { height: calc(100vh - 140px); width: 100vw; }
     
     .dashboard {
       position: absolute;
@@ -22,17 +22,10 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.6);
       border: 1px solid #333;
     }
-    .dash-main {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .coord-section {
-      flex: 1;
-      text-align: left;
-    }
+    .dash-main { display: flex; align-items: center; justify-content: space-between; }
+    .coord-section { flex: 1; text-align: left; }
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
-    .coord-val { font-size: 14px; font-weight: bold; color: #00ffcc; font-family: monospace; }
+    .coord-val { font-size: 13px; font-weight: bold; color: #00ffcc; font-family: monospace; }
     
     .compass-container {
       display: flex;
@@ -46,8 +39,8 @@
       border: 1px solid #444;
     }
     .compass-dial {
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       border: 2px solid #ffcc00;
       background: #000;
@@ -64,7 +57,7 @@
 
     .compass-needle {
       width: 4px;
-      height: 28px;
+      height: 24px;
       position: absolute;
       display: flex;
       flex-direction: column;
@@ -75,12 +68,9 @@
       width: 0; height: 0;
       border-left: 4px solid transparent;
       border-right: 4px solid transparent;
-      border-bottom: 12px solid #00ffcc;
+      border-bottom: 10px solid #00ffcc;
     }
-    .arrow-tail {
-      width: 2px; height: 14px;
-      background: #ffffff;
-    }
+    .arrow-tail { width: 2px; height: 12px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
     .status-bar {
@@ -117,26 +107,66 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
+    /* லைவ் சோனார் ஸ்கிரீன் ஸ்டைல் */
+    .sonar-panel {
+      position: absolute;
+      bottom: 48px;
+      left: 0;
+      right: 0;
+      height: 92px;
+      background: #020b14;
+      border-top: 2px solid #00ffcc;
+      z-index: 1000;
+      display: flex;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
+    }
+    .sonar-info {
+      width: 100px;
+      background: #051422;
+      padding: 4px 6px;
+      border-right: 1px solid #1a3a5a;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+    .sonar-depth-val { font-size: 15px; font-weight: bold; color: #ffcc00; font-family: monospace; }
+    .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
+    .sonar-bt-btn {
+      background: #0077b6;
+      color: white;
+      border: none;
+      padding: 3px 4px;
+      font-size: 9px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #sonarCanvas {
+      flex: 1;
+      height: 100%;
+      background: #010810;
+    }
     
     .btn-container {
       position: absolute;
-      bottom: 20px;
+      bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 6px;
+      gap: 4px;
       z-index: 1000;
-      width: 95%;
-      max-width: 400px;
+      width: 98%;
+      max-width: 440px;
       justify-content: center;
     }
     .btn-action {
       flex: 1;
       border: none;
       padding: 8px 2px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
-      border-radius: 20px;
+      border-radius: 16px;
       color: white;
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
       cursor: pointer;
@@ -147,7 +177,7 @@
     .btn-darkblue { background: #14213d; }
     .btn-green { background: #2a9d8f; }
 
-    .leaflet-top.leaflet-left { top: 175px !important; left: 10px !important; }
+    .leaflet-top.leaflet-left { top: 160px !important; left: 10px !important; }
 
     .popup-box { text-align: center; font-size: 12px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #0077b6; font-size: 12px; margin: 3px 0; }
@@ -248,10 +278,28 @@
     </div>
   </div>
 
+  <div id="map"></div>
+
+  <!-- லைவ் சோனார் மற்றும் பிஷ் பைண்டர் டிஸ்ப்ளே -->
+  <div class="sonar-panel">
+    <div class="sonar-info">
+      <div>
+        <div style="font-size: 8px; color: #888;">ஆழம் (Depth):</div>
+        <div class="sonar-depth-val" id="live-depth">12.4 பாவம்</div>
+        <div style="font-size: 8px; color: #00ffcc;" id="live-meters">(22.6 M)</div>
+      </div>
+      <div>
+        <div style="font-size: 8px; color: #888;">தரை:</div>
+        <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
+      </div>
+      <button class="sonar-bt-btn" id="bt-btn" onclick="connectBluetoothSonar()">📡 சோனார் இணை</button>
+    </div>
+    <canvas id="sonarCanvas"></canvas>
+  </div>
+
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமிக்க</div>
-      
       <div class="input-group">
         <label>Latitude (N):</label>
         <div class="input-row">
@@ -260,7 +308,6 @@
           <span style="font-weight:bold; color:#ffcc00;">' N</span>
         </div>
       </div>
-
       <div class="input-group">
         <label>Longitude (E):</label>
         <div class="input-row">
@@ -269,18 +316,16 @@
           <span style="font-weight:bold; color:#ffcc00;">' E</span>
         </div>
       </div>
-
       <div class="input-group">
-        <label>இடத்தின் பெயர் (விரும்பினால் எடிட் செய்யவும்):</label>
-        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா: பார் 1 அல்லது தூத்துக்குடி பாறை">
+        <label>இடத்தின் பெயர் (எடிட் செய்யவும்):</label>
+        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா: 12 பாவம் பாறை">
       </div>
-
       <div class="modal-btn-row">
         <div class="modal-btn-grid">
           <button class="modal-btn btn-island" onclick="saveCoordSpot('Island')">🌴 தீவாக சேமி</button>
           <button class="modal-btn btn-reef" onclick="saveCoordSpot('Reef')">🪨 பாறையாக சேமி</button>
         </div>
-        <button class="modal-btn btn-custom" onclick="saveCoordSpot('Custom')">📍 பொதுவாக சேமி (Custom)</button>
+        <button class="modal-btn btn-custom" onclick="saveCoordSpot('Custom')">📍 பொதுவாக சேமி</button>
         <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
       </div>
     </div>
@@ -293,8 +338,6 @@
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
-
-  <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -363,9 +406,7 @@
 
     function updateCompass(deg) {
       const needle = document.getElementById('compass-needle');
-      if (needle) {
-        needle.style.transform = `rotate(${deg}deg)`;
-      }
+      if (needle) needle.style.transform = `rotate(${deg}deg)`;
       document.getElementById('heading-val').innerText = `${Math.round(deg)}° ${getHeadingDir(deg)}`;
     }
 
@@ -500,7 +541,7 @@
 
     window.saveSpotFromLongPress = function(lat, lng, type) {
       const typeName = type === 'Island' ? 'தீவு' : (type === 'Reef' ? 'பாறை' : 'இடம்');
-      const spotName = prompt(`${typeName} பெயரை உள்ளிடவும் (விரும்பிய பெயரை எடிட் செய்யவும்):`, typeName + " " + new Date().toLocaleDateString());
+      const spotName = prompt(`${typeName} பெயரை உள்ளிடவும்:`, typeName + " " + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
@@ -553,7 +594,7 @@
         const latTxt = item.nautical_lat || formatCoord(item.lat, true);
         const lngTxt = item.nautical_lng || formatCoord(item.lng, false);
         
-        let bgColor = '#0077b6'; // Custom Default Blue
+        let bgColor = '#0077b6';
         if (item.type === 'Island') bgColor = '#00cc44';
         if (item.type === 'Reef') bgColor = '#111111';
 
@@ -586,7 +627,8 @@
     window.saveCurrentSpot = function() {
       const latTxt = formatCoord(currentLat, true);
       const lngTxt = formatCoord(currentLng, false);
-      const spotName = prompt("இந்த நின்ற இடத்தின் பெயரை உள்ளிடவும்:", "பார் " + new Date().toLocaleDateString());
+      const depthTxt = document.getElementById('live-depth').innerText;
+      const spotName = prompt("இந்த நின்ற இடத்தின் பெயரை உள்ளிடவும்:", `பார் (${depthTxt}) ` + new Date().toLocaleDateString());
       if (spotName) {
         const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved.push({ 
@@ -594,7 +636,7 @@
           name: spotName, 
           lat: currentLat, 
           lng: currentLng,
-          type: 'Custom',
+          type: 'Reef',
           nautical_lat: latTxt,
           nautical_lng: lngTxt
         });
@@ -656,7 +698,6 @@
 
           updateCompass(heading);
 
-          // சுத்தமான படகு அம்புக்குறி மட்டும் (லேபிள் நீக்கப்பட்டது)
           const boatIconHtml = `<div class="boat-heading-arrow" style="transform: rotate(${heading}deg);"></div>`;
 
           const customBoatIcon = L.divIcon({
@@ -681,6 +722,119 @@
     }
 
     loadSavedReefs();
+
+    // ==========================================
+    // லைவ் சோனார் கேன்வாஸ் வரைபடம் (Sonar Engine)
+    // ==========================================
+    const canvas = document.getElementById('sonarCanvas');
+    const ctx = canvas.getContext('2d');
+    let sonarData = [];
+    let fishes = [];
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth - 100;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let simDepthMeters = 22.0;
+
+    function updateSonarFrame(depthMeters, isHardBottom, fishDetected) {
+      const paavam = (depthMeters / 1.8288).toFixed(1);
+      document.getElementById('live-depth').innerText = `${paavam} பாவம்`;
+      document.getElementById('live-meters').innerText = `(${depthMeters.toFixed(1)} M)`;
+      document.getElementById('live-bottom').innerText = isHardBottom ? "🪨 பாறை (Reef)" : "🏖️ மணல் (Sand)";
+
+      sonarData.push({ depth: depthMeters, isHard: isHardBottom });
+      if (sonarData.length > canvas.width) sonarData.shift();
+
+      if (fishDetected || Math.random() < 0.08) {
+        fishes.push({ x: canvas.width - 5, y: (depthMeters * 0.4 + Math.random() * 8) });
+      }
+
+      // வரைதல் (Drawing Sonar Display)
+      ctx.fillStyle = '#010810';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // கிரிட் வரிகள்
+      ctx.strokeStyle = '#05233a';
+      ctx.lineWidth = 1;
+      for (let y = 15; y < canvas.height; y += 20) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // கடலின் தரை அமைப்பு (Seabed Floor)
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      for (let i = 0; i < sonarData.length; i++) {
+        let yPos = (sonarData[i].depth / 40.0) * canvas.height;
+        ctx.lineTo(i, yPos);
+      }
+      ctx.lineTo(sonarData.length, canvas.height);
+      ctx.fillStyle = '#8b5a2b';
+      ctx.fill();
+
+      // தரை மேல் அடுக்கு (பாறை என்றால் சிவப்பு/பச்சை, மணல் என்றால் மஞ்சள்)
+      ctx.beginPath();
+      for (let i = 0; i < sonarData.length; i++) {
+        let yPos = (sonarData[i].depth / 40.0) * canvas.height;
+        if (i === 0) ctx.moveTo(i, yPos); else ctx.lineTo(i, yPos);
+      }
+      ctx.strokeStyle = isHardBottom ? '#ff3300' : '#00ff66';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // மீன்கள் வரைதல் (Fish Icons)
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = '11px sans-serif';
+      for (let f = 0; f < fishes.length; f++) {
+        fishes[f].x -= 1.5;
+        let fishY = (fishes[f].y / 40.0) * canvas.height;
+        ctx.fillText('🐟', fishes[f].x, fishY);
+      }
+      fishes = fishes.filter(f => f.x > 0);
+    }
+
+    // சோனார் சிமுலேஷன் (Demo Loop)
+    setInterval(() => {
+      simDepthMeters += (Math.random() - 0.5) * 0.6;
+      if (simDepthMeters < 8) simDepthMeters = 8;
+      if (simDepthMeters > 35) simDepthMeters = 35;
+      const isReef = simDepthMeters < 20;
+      updateSonarFrame(simDepthMeters, isReef, false);
+    }, 200);
+
+    // ==========================================
+    // Web Bluetooth API மூலம் ESP32 சோனார் இணைத்தல்
+    // ==========================================
+    async function connectBluetoothSonar() {
+      try {
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'ESP32_Marine_Sonar' }],
+          optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+        });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+        const characteristic = await service.getCharacteristic('beb5483e-36e1-4688-b7f5-ea07361b26a8');
+        
+        document.getElementById('bt-btn').innerText = '✅ இணைந்தது';
+        document.getElementById('bt-btn').style.background = '#2a9d8f';
+
+        characteristic.startNotifications();
+        characteristic.addEventListener('characteristicvaluechanged', (e) => {
+          const val = new TextDecoder().decode(e.target.value);
+          // ESP32-லிருந்து வரும் தரவு: "DEPTH:22.5,HARD:1,FISH:1"
+          const parts = val.split(',');
+          let d = parseFloat(parts[0].split(':')[1]);
+          let h = parts[1].split(':')[1] === '1';
+          let f = parts[2].split(':')[1] === '1';
+          updateSonarFrame(d, h, f);
+        });
+      } catch (err) {
+        alert("Bluetooth வழியாக இணைக்க முடியவில்லை: " + err.message);
+      }
+    }
   </script>
 </body>
 </html>
