@@ -92,7 +92,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: transform 0.3s ease-out;
+      /* Removed transition here to avoid full spin glitch */
     }
     .arrow-head {
       width: 0; height: 0;
@@ -216,7 +216,7 @@
       border-bottom: 26px solid #00ffcc;
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
       transform-origin: center center;
-      transition: transform 0.2s ease-out;
+      /* Removed transition here to avoid full spin glitch */
     }
 
     .border-alert-banner {
@@ -380,7 +380,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-vector-v2';
+          const CACHE_NAME = 'marine-gps-vector-v3';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -586,6 +586,12 @@
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
+    
+    // GPS Drift Filters
+    let lastValidLat = currentLat;
+    let lastValidLng = currentLng;
+    let lastValidHeading = 0;
+
     let boatMarker = null;
     let arrowInnerEl = null;
     let targetTarget = null;
@@ -909,7 +915,6 @@
       return iconHtml;
     }
 
-    // சேமித்த புள்ளிகளுக்கான தூரத்தைக் கணக்கிட்டு சோனார் தரை நிலையைக் கண்டறிதல்
     function updateBottomSeaType() {
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nearReef = false;
@@ -1105,21 +1110,26 @@
       document.getElementById('norm-time').innerText = `நேரம்: ${String(h).padStart(2, '0')}:${m}:${s} ${ampm}`;
     }, 1000);
 
-    let lastHeading = 0;
-
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let rawLat = pos.coords.latitude;
         let rawLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
 
-        currentLat = rawLat;
-        currentLng = rawLng;
-
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 0.4) {
-          lastHeading = Math.round(pos.coords.heading);
+        // GPS Drift Filter - படகு 3 மீட்டர் நகர்ந்தால் அல்லது வேகம் 0.5 இருந்தால் மட்டுமே மேப் நகரும்
+        let distMoved = calcDistanceNM(lastValidLat, lastValidLng, rawLat, rawLng) * 1852; 
+        if (distMoved > 3 || rawSpeed > 0.5) {
+            currentLat = rawLat;
+            currentLng = rawLng;
+            lastValidLat = rawLat;
+            lastValidLng = rawLng;
         }
-        currentHeading = lastHeading;
+
+        // Heading Lock - வேகம் 1.0 நாட்-க்கு மேல் இருந்தால் மட்டுமே அம்பு திரும்பும்
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.0) {
+          lastValidHeading = Math.round(pos.coords.heading);
+        }
+        currentHeading = lastValidHeading;
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
