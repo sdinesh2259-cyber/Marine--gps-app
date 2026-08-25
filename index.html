@@ -268,7 +268,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
 
-    /* சாட்டிலைட் / வரைபடம் லேயர் மாற்றும் சுவிட்ச் */
     .layer-toggle-btn {
       position: absolute;
       top: 154px;
@@ -397,7 +396,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-vector-v6';
+          const CACHE_NAME = 'marine-gps-vector-v7';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -482,8 +481,6 @@
 
   <div id="map"></div>
   <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()" title="வடக்கு திசைக்கு திருப்பு">🧭 N</button>
-  
-  <!-- மேப் லேயர் மாற்றும் பட்டன் -->
   <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
 
   <div class="sonar-panel">
@@ -550,7 +547,7 @@
   <!-- எண் தேடு மற்றும் சேமிக்கும் பெட்டி -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
+      <div class="modal-title" id="coordModalTitle">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row">
@@ -675,6 +672,42 @@
       dragRotate: true,
       touchZoomRotate: true
     });
+
+    // லாங் பிரஸ் (Long Press) நிகழ்வு - வரைபடத்தில் 1 வினாடி அழுத்திப் பிடித்தால் புள்ளி விழும்
+    let touchTimer = null;
+    let touchMoved = false;
+
+    map.on('touchstart', (e) => {
+      touchMoved = false;
+      if (e.points && e.points.length > 1) return; // இரண்டு விரல் தொட்டால் ரத்து செய்
+      touchTimer = setTimeout(() => {
+        if (!touchMoved) {
+          handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
+        }
+      }, 800);
+    });
+
+    map.on('touchmove', () => {
+      touchMoved = true;
+      if (touchTimer) clearTimeout(touchTimer);
+    });
+
+    map.on('touchend', () => {
+      if (touchTimer) clearTimeout(touchTimer);
+    });
+
+    map.on('contextmenu', (e) => {
+      handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
+    });
+
+    function handleLongPressCoord(lat, lng) {
+      if (navigator.vibrate) navigator.vibrate(80);
+      document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
+      document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
+      document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
+      document.getElementById('inputSpotName').value = "புள்ளி " + formatCoord(lat, true);
+      document.getElementById('coordModal').style.display = 'flex';
+    }
 
     function toggleMapLayer() {
       const btn = document.getElementById('layerToggleBtn');
@@ -1085,6 +1118,7 @@
     };
 
     function openCoordModal() {
+      document.getElementById('coordModalTitle').innerText = "🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு";
       document.getElementById('inputSpotName').value = '';
       document.getElementById('coordModal').style.display = 'flex';
     }
