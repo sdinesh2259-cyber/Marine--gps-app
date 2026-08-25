@@ -386,7 +386,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-cache-v4';
+          const CACHE_NAME = 'marine-gps-cache-v5';
           const urlsToCache = [
             './',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -542,11 +542,12 @@
     </div>
   </div>
 
+  <!-- எண் தேடு மற்றும் புள்ளியாகச் சேமிக்கும் பெட்டி -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் தேட</div>
+      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
       <div class="input-group">
-        <label>Latitude (N):</label>
+        <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row">
           <div class="fixed-deg">8°</div>
           <input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any">
@@ -554,14 +555,21 @@
         </div>
       </div>
       <div class="input-group">
-        <label>Longitude (E):</label>
+        <label>Longitude (மினிட் மட்டும்):</label>
         <div class="input-row">
           <div class="fixed-deg">78°</div>
           <input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any">
           <span style="font-weight:bold; color:#ffcc00;">' E</span>
         </div>
       </div>
-      <button class="modal-btn btn-save" onclick="searchCoord()" style="width:100%; margin-top:5px;">🔍 இடத்திற்கு செல்</button>
+      <div class="input-group">
+        <label>பெயர் (விருப்பமிருந்தால்):</label>
+        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. பார் 1">
+      </div>
+      <div class="modal-btn-row">
+        <button class="modal-btn btn-save" onclick="saveCoordAsPinDirect()">📍 புள்ளியாகச் சேமி</button>
+        <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="searchCoord()">🔍 இடத்திற்கு செல்</button>
+      </div>
       <button class="modal-btn btn-cancel" onclick="closeCoordModal()" style="width:100%; margin-top:8px;">ரத்து</button>
     </div>
   </div>
@@ -1037,9 +1045,13 @@
     }
     loadSavedReefs();
 
-    function openCoordModal() { document.getElementById('coordModal').style.display = 'flex'; }
+    function openCoordModal() {
+      document.getElementById('inputSpotName').value = '';
+      document.getElementById('coordModal').style.display = 'flex';
+    }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
 
+    // எண் மூலம் குறிப்பிட்ட இடத்தை வரைபடத்தில் பார்க்க
     function searchCoord() {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
@@ -1051,6 +1063,39 @@
       } else {
         alert("சரியான எண்களை உள்ளிடவும்!");
       }
+    }
+
+    // எண் மூலம் நேரடியாக புள்ளியாகச் சேமிக்க
+    function saveCoordAsPinDirect() {
+      let latMin = parseFloat(document.getElementById('inputLatMin').value);
+      let lngMin = parseFloat(document.getElementById('inputLngMin').value);
+      let spotName = document.getElementById('inputSpotName').value.trim();
+
+      if (isNaN(latMin) || isNaN(lngMin)) {
+        alert("சரியான Latitude மற்றும் Longitude எண்களை உள்ளிடவும்!");
+        return;
+      }
+
+      let lat = 8.0 + (latMin / 60.0);
+      let lng = 78.0 + (lngMin / 60.0);
+
+      if (!spotName) {
+        spotName = "பார் " + formatCoord(lat, true);
+      }
+
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      saved.push({
+        id: Date.now(),
+        name: spotName,
+        lat: lat,
+        lng: lng,
+        type: 'Pin'
+      });
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
+      map.setView([lat, lng], 16);
+      closeCoordModal();
+      alert("📍 புள்ளி (" + spotName + ") வெற்றிகரமாக வரைபடத்தில் சேமிக்கப்பட்டது!");
     }
 
     function exportData() {
