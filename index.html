@@ -17,14 +17,8 @@
       height: calc(100vh - 165px);
       width: 100vw;
       z-index: 1;
-      overflow: hidden;
+      background: #001220;
       transition: filter 0.3s ease;
-    }
-    
-    /* உள்ளே உள்ள மேப் டைல்ஸ் மற்றும் மார்க்கர்கள் மட்டும் சுழல */
-    .leaflet-map-pane {
-      transform-origin: center center;
-      transition: transform 0.05s linear;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -287,26 +281,6 @@
       cursor: pointer;
     }
 
-    .rotate-reset-btn {
-      position: absolute;
-      top: 110px;
-      left: 12px;
-      background: rgba(0,0,0,0.85);
-      border: 1.5px solid #00ffcc;
-      color: #00ffcc;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-
     .sonar-panel {
       position: absolute;
       bottom: 48px;
@@ -419,7 +393,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-sat-v8';
+          const CACHE_NAME = 'marine-gps-sat-v9';
           const urlsToCache = [
             './',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -504,7 +478,6 @@
   </div>
 
   <div id="map"></div>
-  <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapRotation()" title="வடக்கு திசைக்கு திருப்பு">🧭 N</button>
 
   <div class="weather-widget" id="weatherWidget">
     <div class="weather-header">
@@ -533,7 +506,6 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- இடம் எடிட் செய்யும் பெட்டி -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
@@ -579,7 +551,6 @@
     </div>
   </div>
 
-  <!-- எண் தேடு மற்றும் அனைத்துக் குறியீடுகளுடன் சேமிக்கும் பெட்டி -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
@@ -646,10 +617,6 @@
     let targetTarget = null;
     let savedLayer = L.layerGroup();
     let followBoat = true;
-    
-    let currentMapRotation = 0;
-    let touchStartAngle = 0;
-    let initialMapRotation = 0;
 
     let trackRecording = true;
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
@@ -667,7 +634,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
 
-    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false, touchZoom: true }).setView([currentLat, currentLng], 14);
+    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false }).setView([currentLat, currentLng], 14);
     savedLayer.addTo(map);
 
     L.control.layers({ "🛰️ சாட்டிலைட்": satLayer, "🗺️ வரைபடம்": osmLayer }, null, { position: 'topleft' }).addTo(map);
@@ -686,40 +653,6 @@
     }
 
     map.on('movestart', function() { followBoat = false; });
-
-    // உள் மேப் பகுதியை மட்டும் இரண்டு விரல்களால் சுழற்றும் வசதி
-    const mapPane = map.getPane('mapPane');
-    const mapContainer = document.getElementById('map');
-
-    function calculateAngle(touches) {
-      const p1 = touches[0];
-      const p2 = touches[1];
-      return Math.atan2(p2.clientY - p1.clientY, p2.clientX - p1.clientX) * (180 / Math.PI);
-    }
-
-    mapContainer.addEventListener('touchstart', function(e) {
-      if (e.touches.length === 2) {
-        touchStartAngle = calculateAngle(e.touches);
-        initialMapRotation = currentMapRotation;
-      }
-    }, { passive: true });
-
-    mapContainer.addEventListener('touchmove', function(e) {
-      if (e.touches.length === 2) {
-        const currentTouchAngle = calculateAngle(e.touches);
-        const diff = currentTouchAngle - touchStartAngle;
-        currentMapRotation = initialMapRotation + diff;
-        
-        mapPane.style.transform = `rotate(${currentMapRotation}deg)`;
-        document.getElementById('resetNorthBtn').style.transform = `rotate(${currentMapRotation}deg)`;
-      }
-    }, { passive: true });
-
-    function resetMapRotation() {
-      currentMapRotation = 0;
-      mapPane.style.transform = `rotate(0deg)`;
-      document.getElementById('resetNorthBtn').style.transform = `rotate(0deg)`;
-    }
     
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
