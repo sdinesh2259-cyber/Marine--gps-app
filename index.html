@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder</title>
+  <title>Marine GPS & Fish Finder - Satellite Edition</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
@@ -12,7 +12,21 @@
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
-    #map { height: calc(100vh - 165px); width: 100vw; z-index: 1; transition: filter 0.3s ease; }
+    
+    #mapWrapper {
+      height: calc(100vh - 165px);
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    #map {
+      height: 100%;
+      width: 100%;
+      z-index: 1;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out, filter 0.3s ease;
+    }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
     body.mode-night-red .dashboard, body.mode-night-red .sonar-panel { background: rgba(35, 0, 0, 0.96); border-color: #ff0044; }
@@ -274,6 +288,26 @@
       cursor: pointer;
     }
 
+    .rotate-reset-btn {
+      position: absolute;
+      top: 110px;
+      left: 12px;
+      background: rgba(0,0,0,0.85);
+      border: 1.5px solid #00ffcc;
+      color: #00ffcc;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
     .sonar-panel {
       position: absolute;
       bottom: 48px;
@@ -329,7 +363,7 @@
     .btn-darkblue { background: #14213d; }
     .btn-green { background: #2a9d8f; }
 
-    .leaflet-top.leaflet-left { top: 160px !important; left: 10px !important; }
+    .leaflet-top.leaflet-left { top: 155px !important; left: 10px !important; }
 
     .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
@@ -386,7 +420,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-cache-v5';
+          const CACHE_NAME = 'marine-gps-sat-v6';
           const urlsToCache = [
             './',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -422,7 +456,7 @@
   <div class="dashboard">
     <div class="dash-main">
       <div class="coord-section">
-        <div class="title-bar">Boat Location / Speed</div>
+        <div class="title-bar">🛰️ GPS Sat Position / Speed</div>
         <div class="coord-val" id="lat-coord">8° 49.406' N</div>
         <div class="coord-val" id="lng-coord">78° 8.971' E</div>
       </div>
@@ -470,7 +504,10 @@
     </div>
   </div>
 
-  <div id="map"></div>
+  <div id="mapWrapper">
+    <div id="map"></div>
+    <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapRotation()" title="வடக்கு திசைக்கு திருப்பு">🧭 N</button>
+  </div>
 
   <div class="weather-widget" id="weatherWidget">
     <div class="weather-header">
@@ -499,6 +536,7 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
+  <!-- இடம் எடிட் செய்யும் பெட்டி -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
@@ -526,13 +564,15 @@
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D சிவப்பு பின் (Red Pin)</option>
-          <option value="Fish">🐟 மீன்</option>
-          <option value="Net">🕸️ வலை</option>
-          <option value="Squid">🦑 கணவா</option>
-          <option value="Ray">🪼 திருக்கை</option>
-          <option value="Reef">🪨 பாறை</option>
-          <option value="Island">🌴 தீவு</option>
+          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
+          <option value="Reef">🪨 பார் / பாறை (Reef)</option>
+          <option value="Island">🌴 தீவு (Island)</option>
+          <option value="Crab">🦀 நண்டு (Crab)</option>
+          <option value="Fish">🐟 மீன் (Fish)</option>
+          <option value="Net">🕸️ வலை (Net)</option>
+          <option value="Conch">🐚 சங்கு (Conch)</option>
+          <option value="Ray">🪼 திருக்கை (Ray)</option>
+          <option value="Squid">🦑 கணவா (Squid)</option>
         </select>
       </div>
       <div class="modal-btn-row">
@@ -542,7 +582,7 @@
     </div>
   </div>
 
-  <!-- எண் தேடு மற்றும் புள்ளியாகச் சேமிக்கும் பெட்டி -->
+  <!-- எண் தேடு மற்றும் அனைத்துக் குறியீடுகளுடன் சேமிக்கும் பெட்டி -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
@@ -564,7 +604,21 @@
       </div>
       <div class="input-group">
         <label>பெயர் (விருப்பமிருந்தால்):</label>
-        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. பார் 1">
+        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை">
+      </div>
+      <div class="input-group">
+        <label>ஐகான் தேர்வு:</label>
+        <select id="inputSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
+          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
+          <option value="Reef">🪨 பார் / பாறை (Reef)</option>
+          <option value="Island">🌴 தீவு (Island)</option>
+          <option value="Crab">🦀 நண்டு (Crab)</option>
+          <option value="Fish">🐟 மீன் (Fish)</option>
+          <option value="Net">🕸️ வலை (Net)</option>
+          <option value="Conch">🐚 சங்கு (Conch)</option>
+          <option value="Ray">🪼 திருக்கை (Ray)</option>
+          <option value="Squid">🦑 கணவா (Squid)</option>
+        </select>
       </div>
       <div class="modal-btn-row">
         <button class="modal-btn btn-save" onclick="saveCoordAsPinDirect()">📍 புள்ளியாகச் சேமி</button>
@@ -596,6 +650,10 @@
     let savedLayer = L.layerGroup();
     let followBoat = true;
     
+    let mapRotationAngle = 0;
+    let initialTouchAngle = 0;
+    let isRotating = false;
+
     let trackRecording = true;
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     let trackPolyline = null;
@@ -612,7 +670,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
 
-    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false }).setView([currentLat, currentLng], 14);
+    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false, touchZoom: true }).setView([currentLat, currentLng], 14);
     savedLayer.addTo(map);
 
     L.control.layers({ "🛰️ சாட்டிலைட்": satLayer, "🗺️ வரைபடம்": osmLayer }, null, { position: 'topleft' }).addTo(map);
@@ -631,6 +689,44 @@
     }
 
     map.on('movestart', function() { followBoat = false; });
+
+    // இரு விரல் தொடுதல் மூலம் மேப்பைச் சுழற்றும் வசதி (Two-finger rotate)
+    const mapEl = document.getElementById('map');
+    const mapWrapper = document.getElementById('mapWrapper');
+
+    function getTouchAngle(e) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      return Math.atan2(touch2.clientY - touch1.clientY, touch2.clientX - touch1.clientX) * (180 / Math.PI);
+    }
+
+    mapWrapper.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        isRotating = true;
+        initialTouchAngle = getTouchAngle(e) - mapRotationAngle;
+      }
+    }, { passive: true });
+
+    mapWrapper.addEventListener('touchmove', (e) => {
+      if (isRotating && e.touches.length === 2) {
+        const currentTouchAngle = getTouchAngle(e);
+        mapRotationAngle = currentTouchAngle - initialTouchAngle;
+        mapEl.style.transform = `rotate(${mapRotationAngle}deg)`;
+        document.getElementById('resetNorthBtn').style.transform = `rotate(${mapRotationAngle}deg)`;
+      }
+    }, { passive: true });
+
+    mapWrapper.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        isRotating = false;
+      }
+    });
+
+    function resetMapRotation() {
+      mapRotationAngle = 0;
+      mapEl.style.transform = `rotate(0deg)`;
+      document.getElementById('resetNorthBtn').style.transform = `rotate(0deg)`;
+    }
     
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
@@ -979,44 +1075,51 @@
       }
     };
 
+    function getIconDetails(type) {
+      let iconHtml;
+      let iSize = [32, 42];
+      let iAnchor = [16, 42];
+      let classNameStr = 'transparent-pin-container';
+
+      switch(type) {
+        case 'Fish': iconHtml = '<div style="font-size:24px;">🐟</div>'; classNameStr = ''; break;
+        case 'Net': iconHtml = '<div style="font-size:24px;">🕸️</div>'; classNameStr = ''; break;
+        case 'Squid': iconHtml = '<div style="font-size:24px;">🦑</div>'; classNameStr = ''; break;
+        case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; classNameStr = ''; break;
+        case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; classNameStr = ''; break;
+        case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; classNameStr = ''; break;
+        case 'Crab': iconHtml = '<div style="font-size:24px;">🦀</div>'; classNameStr = ''; break;
+        case 'Conch': iconHtml = '<div style="font-size:24px;">🐚</div>'; classNameStr = ''; break;
+        default:
+          iconHtml = `
+            <svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/>
+              <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/>
+              <defs>
+                <radialGradient id="redGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#F87171"/>
+                  <stop offset="50%" stop-color="#EF4444"/>
+                  <stop offset="100%" stop-color="#B91C1C"/>
+                </radialGradient>
+              </defs>
+            </svg>`;
+          break;
+      }
+      return { iconHtml, iSize, iAnchor, classNameStr };
+    }
+
     function loadSavedReefs() {
       savedLayer.clearLayers();
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
-        let iconHtml;
-        let iSize = [32, 42];
-        let iAnchor = [16, 42];
-        let classNameStr = 'transparent-pin-container';
-
-        switch(item.type) {
-          case 'Fish': iconHtml = '<div style="font-size:24px;">🐟</div>'; classNameStr = ''; break;
-          case 'Net': iconHtml = '<div style="font-size:24px;">🕸️</div>'; classNameStr = ''; break;
-          case 'Squid': iconHtml = '<div style="font-size:24px;">🦑</div>'; classNameStr = ''; break;
-          case 'Ray': iconHtml = '<div style="font-size:24px;">🪼</div>'; classNameStr = ''; break;
-          case 'Reef': iconHtml = '<div style="font-size:24px;">🪨</div>'; classNameStr = ''; break;
-          case 'Island': iconHtml = '<div style="font-size:24px;">🌴</div>'; classNameStr = ''; break;
-          default:
-            iconHtml = `
-              <svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/>
-                <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/>
-                <defs>
-                  <radialGradient id="redGrad" cx="30%" cy="30%" r="70%">
-                    <stop offset="0%" stop-color="#F87171"/>
-                    <stop offset="50%" stop-color="#EF4444"/>
-                    <stop offset="100%" stop-color="#B91C1C"/>
-                  </radialGradient>
-                </defs>
-              </svg>`;
-            break;
-        }
+        const iconData = getIconDetails(item.type);
 
         let customMarker = L.marker([item.lat, item.lng], {
           icon: L.divIcon({
-            className: classNameStr,
-            html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconHtml}</div>`,
-            iconSize: iSize,
-            iconAnchor: iAnchor
+            className: iconData.classNameStr,
+            html: `<div style="display:flex; align-items:center; justify-content:center; cursor:pointer;">${iconData.iconHtml}</div>`,
+            iconSize: iconData.iSize,
+            iconAnchor: iconData.iAnchor
           }),
           draggable: true
         }).addTo(savedLayer);
@@ -1051,7 +1154,6 @@
     }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
 
-    // எண் மூலம் குறிப்பிட்ட இடத்தை வரைபடத்தில் பார்க்க
     function searchCoord() {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
@@ -1065,11 +1167,11 @@
       }
     }
 
-    // எண் மூலம் நேரடியாக புள்ளியாகச் சேமிக்க
     function saveCoordAsPinDirect() {
       let latMin = parseFloat(document.getElementById('inputLatMin').value);
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
       let spotName = document.getElementById('inputSpotName').value.trim();
+      let spotType = document.getElementById('inputSpotType').value;
 
       if (isNaN(latMin) || isNaN(lngMin)) {
         alert("சரியான Latitude மற்றும் Longitude எண்களை உள்ளிடவும்!");
@@ -1080,7 +1182,7 @@
       let lng = 78.0 + (lngMin / 60.0);
 
       if (!spotName) {
-        spotName = "பார் " + formatCoord(lat, true);
+        spotName = "புள்ளி " + formatCoord(lat, true);
       }
 
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -1089,13 +1191,13 @@
         name: spotName,
         lat: lat,
         lng: lng,
-        type: 'Pin'
+        type: spotType
       });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
       map.setView([lat, lng], 16);
       closeCoordModal();
-      alert("📍 புள்ளி (" + spotName + ") வெற்றிகரமாக வரைபடத்தில் சேமிக்கப்பட்டது!");
+      alert("📍 " + spotName + " வெற்றிகரமாக வரைபடத்தில் சேமிக்கப்பட்டது!");
     }
 
     function exportData() {
@@ -1137,6 +1239,7 @@
 
     let lastHeading = 0;
 
+    // தூய ஹார்டுவேர் GPS சாட்டிலைட் கண்காணிப்பு முறை (Pure Offline Satellite GPS Mode)
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let rawLat = pos.coords.latitude;
@@ -1185,7 +1288,7 @@
         if (targetTarget) updateNavigation();
         
       }, err => {
-          console.log("GPS Error:", err);
+          console.log("GPS Sat Error:", err);
       }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
