@@ -198,7 +198,6 @@
       cursor: pointer;
     }
 
-    /* அம்பு குறி நிலையாக மையத்தில் இருக்கும்படி சரிசெய்யப்பட்ட CSS */
     .boat-marker-container {
       width: 32px;
       height: 32px;
@@ -378,7 +377,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-vector-v4';
+          const CACHE_NAME = 'marine-gps-vector-v5';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -605,8 +604,10 @@
 
     let activeMarkers = [];
 
+    // ஜூம் உடையாமல் இருக்க maxzoom மற்றும் maxBounds சீரமைக்கப்பட்டுள்ளது
     const map = new maplibregl.Map({
       container: 'map',
+      maxZoom: 18.5,
       style: {
         version: 8,
         sources: {
@@ -615,7 +616,8 @@
             tiles: [
               'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             ],
-            tileSize: 256
+            tileSize: 256,
+            maxzoom: 18
           }
         },
         layers: [
@@ -730,8 +732,7 @@
     function calcBearing(lat1, lon1, lat2, lon2) {
       const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
       const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.cos((lon2 - lon1) * Math.PI / 180);
+                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
       let brng = Math.atan2(y, x) * 180 / Math.PI;
       return (brng + 360) % 360;
     }
@@ -950,7 +951,7 @@
             <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
             <button class="popup-btn popup-edit-btn" onclick="openSpotModalForCoord(${item.lat}, ${item.lng}, '${item.name}', '${item.type}', ${item.id})">✏️ எடிட்</button>
-            <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+            <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
 
@@ -1114,7 +1115,6 @@
         let rawLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
 
-        // GPS Drift Filter - 4 மீட்டர் தூரம் தாண்டினால் மட்டுமே படகு நகரும்
         let distMoved = calcDistanceNM(lastValidLat, lastValidLng, rawLat, rawLng) * 1852; 
         if (distMoved > 4 || rawSpeed > 0.8) {
             currentLat = rawLat;
@@ -1123,7 +1123,6 @@
             lastValidLng = rawLng;
         }
 
-        // Heading Deadband Filter - வேகம் 1.5 kts மேல் இருந்து, கோண மாற்றம் 8 டிகிரிக்கு மேல் இருந்தால் மட்டுமே திரும்பும்
         if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.5) {
           let newHead = Math.round(pos.coords.heading);
           let diff = Math.abs(newHead - lastValidHeading);
@@ -1142,7 +1141,6 @@
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-        // படகு அம்பு புள்ளி தன் இடத்தை விட்டு விலகாமல் மையத்தில் இயங்குதல்
         boatMarker.setLngLat([currentLng, currentLat]);
         if (arrowInnerEl) {
           arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
