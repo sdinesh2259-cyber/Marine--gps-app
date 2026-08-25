@@ -199,21 +199,24 @@
       cursor: pointer;
     }
 
-    .boat-heading-arrow {
-      width: 28px;
-      height: 28px;
+    /* அம்பு குறி நிலையாக மையத்தில் இருக்கும்படி சரிசெய்யப்பட்ட CSS */
+    .boat-marker-container {
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease-out;
+      pointer-events: none;
     }
-    .boat-heading-arrow::before {
-      content: '';
-      width: 0; height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 24px solid #00ffcc;
+    .boat-heading-arrow {
+      width: 0; 
+      height: 0; 
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 26px solid #00ffcc;
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
+      transform-origin: center center;
+      transition: transform 0.2s ease-out;
     }
 
     .border-alert-banner {
@@ -281,7 +284,7 @@
       box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
     }
     .sonar-info {
-      width: 110px;
+      width: 115px;
       background: #051422;
       padding: 6px;
       border-right: 1px solid #1a3a5a;
@@ -377,7 +380,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-vector-v1';
+          const CACHE_NAME = 'marine-gps-vector-v2';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -471,7 +474,7 @@
         <div style="font-size: 8px; color: #00ffcc;" id="live-meters">(22.6 M)</div>
       </div>
       <div>
-        <div style="font-size: 8px; color: #888;">தரை:</div>
+        <div style="font-size: 8px; color: #888;">தரை நிலை:</div>
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
     </div>
@@ -584,6 +587,7 @@
     let currentLng = 78.1567;
     let currentHeading = 0;
     let boatMarker = null;
+    let arrowInnerEl = null;
     let targetTarget = null;
     let followBoat = true;
 
@@ -597,7 +601,6 @@
 
     let activeMarkers = [];
 
-    // MapLibre WebGL Vector Map Engine (Google Map போன்ற 360° சுழற்சி முறை)
     const map = new maplibregl.Map({
       container: 'map',
       style: {
@@ -628,9 +631,18 @@
       touchZoomRotate: true
     });
 
-    const boatEl = document.createElement('div');
-    boatEl.className = 'boat-heading-arrow';
-    boatMarker = new maplibregl.Marker({ element: boatEl, rotationAlignment: 'map' })
+    // படகு அம்பு புள்ளி உருவாக்கப்பட்டு மையத்தில் நிலைநிறுத்தப்படுகிறது
+    const boatContainer = document.createElement('div');
+    boatContainer.className = 'boat-marker-container';
+    arrowInnerEl = document.createElement('div');
+    arrowInnerEl.className = 'boat-heading-arrow';
+    boatContainer.appendChild(arrowInnerEl);
+
+    boatMarker = new maplibregl.Marker({ 
+      element: boatContainer, 
+      anchor: 'center',
+      rotationAlignment: 'map'
+    })
       .setLngLat([currentLng, currentLat])
       .addTo(map);
 
@@ -835,7 +847,7 @@
       document.getElementById('nav-info').style.display = 'flex';
       
       const brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
-      map.easeTo({ bearing: brng, duration: 600 }); // இலக்கு புள்ளி மொபைலின் மேல்நோக்கி நேராக திரும்பும்
+      map.easeTo({ bearing: brng, duration: 600 });
 
       updateNavigation();
     };
@@ -897,6 +909,29 @@
       return iconHtml;
     }
 
+    // சேமித்த புள்ளிகளுக்கான தூரத்தைக் கணக்கிட்டு சோனார் தரை நிலையைக் கண்டறிதல்
+    function updateBottomSeaType() {
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let nearReef = false;
+
+      for (let item of saved) {
+        let d = parseFloat(calcDistanceNM(currentLat, currentLng, item.lat, item.lng));
+        if (d <= 0.15 && (item.type === 'Reef' || item.type === 'Pin')) {
+          nearReef = true;
+          break;
+        }
+      }
+
+      const bottomEl = document.getElementById('live-bottom');
+      if (nearReef) {
+        bottomEl.innerText = "🪨 பாறை (Reef)";
+        bottomEl.style.color = "#ffcc00";
+      } else {
+        bottomEl.innerText = "🏖️ மணல் (Sand)";
+        bottomEl.style.color = "#00ffcc";
+      }
+    }
+
     function loadSavedReefs() {
       activeMarkers.forEach(m => m.remove());
       activeMarkers = [];
@@ -930,10 +965,12 @@
             target.lng = lngLat.lng;
             localStorage.setItem('marineReefs', JSON.stringify(allSpots));
           }
+          updateBottomSeaType();
         });
 
         activeMarkers.push(marker);
       });
+      updateBottomSeaType();
     }
 
     function openSpotModalForCoord(lat, lng, name, type, id) {
@@ -1092,8 +1129,11 @@
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
+        // படகு அம்பு புள்ளி தன் இடத்தை விட்டு விலகாமல் மையத்தில் இயங்குதல்
         boatMarker.setLngLat([currentLng, currentLat]);
-        boatMarker.setRotation(currentHeading);
+        if (arrowInnerEl) {
+          arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
+        }
 
         if (trackRecording && rawSpeed > 0.4) {
           boatTrackCoords.push([currentLng, currentLat]);
@@ -1106,6 +1146,7 @@
         }
 
         checkBorderProximity(currentLat, currentLng);
+        updateBottomSeaType();
 
         if (followBoat) {
           map.easeTo({ center: [currentLng, currentLat], duration: 200 });
@@ -1129,7 +1170,7 @@
     ];
 
     function drawSonar() {
-      canvas.width = canvas.parentElement.clientWidth - 110;
+      canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
