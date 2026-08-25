@@ -13,22 +13,11 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
     
-    #mapWrapper {
+    #map {
       height: calc(100vh - 165px);
       width: 100vw;
-      position: relative;
-      overflow: hidden;
-      background: #001220;
-    }
-
-    #map {
-      height: 140%;
-      width: 140%;
-      position: absolute;
-      top: -20%;
-      left: -20%;
       z-index: 1;
-      transform-origin: center center;
+      background: #001220;
       transition: filter 0.3s ease;
     }
     
@@ -259,24 +248,37 @@
       cursor: pointer;
     }
 
-    .rotate-reset-btn {
+    .weather-widget {
       position: absolute;
-      top: 110px;
-      left: 12px;
-      background: rgba(0,0,0,0.85);
-      border: 1.5px solid #00ffcc;
-      color: #00ffcc;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      top: 135px;
+      right: 15px;
+      background: rgba(11, 19, 43, 0.95);
+      border: 1px solid #00ffcc;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: #fff;
+      font-size: 11px;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+      width: 175px;
+    }
+    .weather-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      font-size: 13px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 3px;
+      margin-bottom: 5px;
+    }
+    .weather-title { font-weight: bold; color: #ffcc00; }
+    .close-widget-btn {
+      background: transparent;
+      border: none;
+      color: #ff4444;
+      font-size: 12px;
       font-weight: bold;
       cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
 
     .sonar-panel {
@@ -391,7 +393,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-sat-v10';
+          const CACHE_NAME = 'marine-gps-sat-v11';
           const urlsToCache = [
             './',
             'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
@@ -475,10 +477,7 @@
     </div>
   </div>
 
-  <div id="mapWrapper">
-    <div id="map"></div>
-    <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapRotation()" title="வடக்கு திசைக்கு திருப்பு">🧭 N</button>
-  </div>
+  <div id="map"></div>
 
   <div class="weather-widget" id="weatherWidget">
     <div class="weather-header">
@@ -621,11 +620,6 @@
     let savedLayer = L.layerGroup();
     let followBoat = true;
 
-    let currentRotationAngle = 0;
-    let touchStartAngle = 0;
-    let initialRotation = 0;
-    let isUserRotating = false;
-
     let trackRecording = true;
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     let trackPolyline = null;
@@ -642,7 +636,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
 
-    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false, touchZoom: true }).setView([currentLat, currentLng], 14);
+    const map = L.map('map', { zoomControl: true, layers: [satLayer], tap: false }).setView([currentLat, currentLng], 14);
     savedLayer.addTo(map);
 
     L.control.layers({ "🛰️ சாட்டிலைட்": satLayer, "🗺️ வரைபடம்": osmLayer }, null, { position: 'topleft' }).addTo(map);
@@ -661,47 +655,6 @@
     }
 
     map.on('movestart', function() { followBoat = false; });
-
-    // இரண்டு விரல் மூலம் மேப்பைத் திருப்பும் தொடுமுறை (Two-finger rotate)
-    const mapWrapper = document.getElementById('mapWrapper');
-    const mapEl = document.getElementById('map');
-
-    function getAngle(p1, p2) {
-      return Math.atan2(p2.clientY - p1.clientY, p2.clientX - p1.clientX) * (180 / Math.PI);
-    }
-
-    mapWrapper.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        isUserRotating = true;
-        touchStartAngle = getAngle(e.touches[0], e.touches[1]);
-        initialRotation = currentRotationAngle;
-      }
-    }, { passive: true });
-
-    mapWrapper.addEventListener('touchmove', (e) => {
-      if (isUserRotating && e.touches.length === 2) {
-        const currentTouchAngle = getAngle(e.touches[0], e.touches[1]);
-        const diff = currentTouchAngle - touchStartAngle;
-        currentRotationAngle = initialRotation + diff;
-        applyMapRotation(currentRotationAngle);
-      }
-    }, { passive: true });
-
-    mapWrapper.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) {
-        isUserRotating = false;
-      }
-    });
-
-    function applyMapRotation(angle) {
-      mapEl.style.transform = `rotate(${angle}deg)`;
-      document.getElementById('resetNorthBtn').style.transform = `rotate(${angle}deg)`;
-    }
-
-    function resetMapRotation() {
-      currentRotationAngle = 0;
-      applyMapRotation(0);
-    }
     
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
@@ -952,12 +905,6 @@
       targetTarget = { lat: tLat, lng: tLng };
       document.getElementById('nav-info').style.display = 'flex';
       map.closePopup();
-      
-      // வழிகாட்டல் ஆரம்பித்தவுடன் இலக்கு புள்ளி மொபைலின் நேர் மேல்நோக்கி திரும்பும்
-      const brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
-      currentRotationAngle = -Math.round(brng);
-      applyMapRotation(currentRotationAngle);
-
       updateNavigation();
     };
 
@@ -965,7 +912,6 @@
       targetTarget = null;
       if (navLine) { map.removeLayer(navLine); navLine = null; }
       document.getElementById('nav-info').style.display = 'none';
-      resetMapRotation();
     };
 
     function updateNavigation() {
