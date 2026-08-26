@@ -864,7 +864,7 @@
       
       const formattedData = rawData.map(item => ({
         id: item.id,
-        name: item.name || new Date().toLocaleString(),
+        name: item.name,
         nautical_north: item.nautical_north || formatCoord(item.lat, true),
         nautical_east: item.nautical_east || formatCoord(item.lng, false),
         type: item.type || 'Pin'
@@ -943,11 +943,11 @@
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
     
-    // மீன்கள் பார்ப்பதற்கு அழகாகவும் தெளிவாகவும் நீந்திச் செல்லுதல்
+    // மீன்களுக்கு தெளிவான கண்கள் மற்றும் துடுப்புகளுடன் கூடிய அமைப்பு
     let fishList = [
-      {x: 60, y: 35, s: 1.2, sizeX: 12, sizeY: 6, color: '#ffcc00'}, 
-      {x: 160, y: 22, s: 0.9, sizeX: 10, sizeY: 5, color: '#00ffcc'}, 
-      {x: 260, y: 50, s: 1.4, sizeX: 14, sizeY: 7, color: '#ff5722'}
+      {x: 60, y: 35, s: 1.2, sizeX: 14, sizeY: 7, color: '#ffcc00'}, 
+      {x: 170, y: 22, s: 0.9, sizeX: 12, sizeY: 6, color: '#00ffcc'}, 
+      {x: 280, y: 50, s: 1.4, sizeX: 16, sizeY: 8, color: '#ff5722'}
     ];
 
     function drawSonar() {
@@ -968,23 +968,34 @@
       ctx.fill(); 
       ctx.stroke();
 
-      // மீன் வடிவத்தில் (Fish shape) ஸ்மூத்தாக நகர்தல்
+      // மீன் வடிவத்தில் கண்கள் மற்றும் துடுப்புகளுடன் ஸ்மூத்தாக நகர்தல்
       fishList.forEach(f => {
         f.x -= f.s; 
         if(f.x < -40) f.x = canvas.width + 40;
         
+        // மீனின் உடல் பகுதி
         ctx.fillStyle = f.color;
         ctx.beginPath();
-        // மீனின் உடல் பகுதி (Ellipse)
         ctx.ellipse(f.x, f.y, f.sizeX, f.sizeY, 0, 0, Math.PI * 2);
         ctx.fill();
         
-        // மீனின் வால் பகுதி (Triangle)
+        // மீனின் வால் பகுதி
         ctx.beginPath();
         ctx.moveTo(f.x + f.sizeX, f.y);
-        ctx.lineTo(f.x + f.sizeX + 8, f.y - 5);
-        ctx.lineTo(f.x + f.sizeX + 8, f.y + 5);
+        ctx.lineTo(f.x + f.sizeX + 9, f.y - 6);
+        ctx.lineTo(f.x + f.sizeX + 9, f.y + 6);
         ctx.closePath();
+        ctx.fill();
+
+        // மீனின் கண் பகுதி (கருப்பு மற்றும் வெள்ளை புள்ளி)
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 1, 0, Math.PI * 2);
         ctx.fill();
       });
 
