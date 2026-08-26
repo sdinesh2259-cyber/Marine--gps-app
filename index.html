@@ -16,7 +16,7 @@
       height: calc(100vh - 165px);
       width: 100vw;
       z-index: 1;
-      background: #001e3d;
+      background: #001220;
       pointer-events: auto !important;
     }
     
@@ -396,7 +396,7 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // சாட்டிலைட் மேப் இயல்புநிலையாக இருக்கக்கூடிய உறுதியான அமைப்பு
+    // நெட் இல்லாதபோதும் ஆப் லாக் ஆகாமல் இருக்க, டைல்ஸ் லோடிங் பிழைக்குத் தற்காப்புடன் கூடிய மேப் அமைப்பு
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
@@ -407,6 +407,7 @@
           'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
+          { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
           { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
           { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
         ]
