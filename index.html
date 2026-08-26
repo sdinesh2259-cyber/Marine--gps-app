@@ -431,7 +431,7 @@
       document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = "புள்ளி " + formatCoord(lat, true);
+      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleDateString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -765,7 +765,7 @@
       let id = document.getElementById('editSpotId').value;
       let minLat = parseFloat(document.getElementById('modalLatMin').value);
       let minLng = parseFloat(document.getElementById('modalLngMin').value);
-      let name = document.getElementById('modalSpotName').value.trim() || 'புள்ளி';
+      let name = document.getElementById('modalSpotName').value.trim() || 'பார் ' + new Date().toLocaleString();
       let type = document.getElementById('modalSpotType').value;
       if(isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -800,9 +800,13 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nLat = formatCoord(currentLat, true);
       let nLng = formatCoord(currentLng, false);
+      let spotName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", "பார் " + new Date().toLocaleString());
+      if (spotName === null) return;
+      spotName = spotName.trim() || ("பார் " + new Date().toLocaleString());
+      
       saved.push({
         id: Date.now(),
-        name: "பார் " + new Date().toLocaleDateString(),
+        name: spotName,
         lat: currentLat,
         lng: currentLng,
         nautical_north: nLat,
@@ -816,7 +820,7 @@
 
     function openCoordModal() {
       document.getElementById('coordModalTitle').innerText = "🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு";
-      document.getElementById('inputSpotName').value = '';
+      document.getElementById('inputSpotName').value = 'பார் ' + new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
@@ -832,7 +836,7 @@
       let lng = 78.0 + (parseFloat(document.getElementById('inputLngMin').value) / 60.0);
       let nLat = formatCoord(lat, true);
       let nLng = formatCoord(lng, false);
-      let spotName = document.getElementById('inputSpotName').value.trim() || "புள்ளி " + nLat;
+      let spotName = document.getElementById('inputSpotName').value.trim() || ("பார் " + new Date().toLocaleString());
       let spotType = document.getElementById('inputSpotType').value;
       if (isNaN(lat) || isNaN(lng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -856,7 +860,7 @@
       
       const formattedData = rawData.map(item => ({
         id: item.id,
-        name: item.name || "பார் " + new Date().toLocaleDateString(),
+        name: item.name || ("பார் " + new Date().toLocaleString()),
         nautical_north: item.nautical_north || formatCoord(item.lat, true),
         nautical_east: item.nautical_east || formatCoord(item.lng, false),
         type: item.type || 'Pin'
@@ -934,20 +938,38 @@
 
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
-    let fishList = [{x: 50, y: 25, s: 1.2, size: 7, color: '#ffcc00'}, {x: 120, y: 18, s: 0.9, size: 5, color: '#00ffcc'}, {x: 200, y: 38, s: 1.4, size: 8, color: '#ff5722'}];
+    let fishList = [
+      {x: 50, y: 30, s: 1.5, size: 7, color: '#ffcc00'}, 
+      {x: 140, y: 20, s: 1.2, size: 5, color: '#00ffcc'}, 
+      {x: 230, y: 45, s: 1.8, size: 8, color: '#ff5722'}
+    ];
 
     function drawSonar() {
       canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.beginPath(); ctx.fillStyle = '#062038'; ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2;
+      
+      // தரைக்கோடு ஸ்மூத்தாக வரச் செய்தல்
+      ctx.beginPath(); 
+      ctx.fillStyle = '#062038'; 
+      ctx.strokeStyle = '#00ffcc'; 
+      ctx.lineWidth = 2.5;
       ctx.moveTo(0, canvas.height);
-      for(let x=0; x<=canvas.width; x+=10) ctx.lineTo(x, canvas.height - 24 + Math.sin((x + Date.now()/20)/30) * 5);
-      ctx.lineTo(canvas.width, canvas.height); ctx.fill(); ctx.stroke();
+      for(let x=0; x<=canvas.width; x+=2) {
+        ctx.lineTo(x, canvas.height - 24 + Math.sin((x + Date.now()/15)/35) * 6);
+      }
+      ctx.lineTo(canvas.width, canvas.height); 
+      ctx.fill(); 
+      ctx.stroke();
 
+      // மீன்கள் ஸ்மூத்தாக நகர்வது
       fishList.forEach(f => {
-        f.x -= f.s; if(f.x < -20) f.x = canvas.width + 20;
-        ctx.fillStyle = f.color; ctx.beginPath(); ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2); ctx.fill();
+        f.x -= f.s; 
+        if(f.x < -30) f.x = canvas.width + 30;
+        ctx.fillStyle = f.color; 
+        ctx.beginPath(); 
+        ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2); 
+        ctx.fill();
       });
       requestAnimationFrame(drawSonar);
     }
