@@ -16,7 +16,7 @@
       height: calc(100vh - 165px);
       width: 100vw;
       z-index: 1;
-      background: #001220;
+      background: #0a192f;
       pointer-events: auto !important;
     }
     
@@ -253,7 +253,7 @@
 
   <div id="map"></div>
   <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()">🧭 N</button>
-  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
+  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🗺️ மேப் லேயர்</button>
 
   <div class="sonar-panel">
     <div class="sonar-info">
@@ -393,22 +393,20 @@
     let beepInterval = null;
     let spotBeepInterval = null;
     let currentViewMode = 0;
-    let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // நெட் இருக்கும்போது சாட்டிலைட் மேப் அழகாகத் தெரியும், நெட் இல்லாவிட்டாலும் ஆப் லாக் ஆகாது
+    // மிகச்சிறந்த ஓபன் ஸ்ட்ரீட் மேப் (OSM) முறை - நெட் இருக்கும்போது மேப் வரும், நெட் போனாலும் லாக் ஆகாது
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
       style: {
         version: 8,
         sources: {
-          'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 },
           'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
-          { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
+          { id: 'background', type: 'background', paint: { 'background-color': '#0a192f' } },
+          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22 }
         ]
       },
       center: [currentLng, currentLat],
@@ -439,16 +437,7 @@
     }
 
     function toggleMapLayer() {
-      const btn = document.getElementById('layerToggleBtn');
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
-      } else {
-        map.setLayoutProperty('osm-layer', 'visibility', 'none');
-        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
-      }
+      alert("🗺️ கடல் மேப் லேயர் தீவிரமாகச் செயல்படுகிறது!");
     }
 
     async function connectBluetoothSonar() {
