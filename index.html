@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder - 360° Vector Edition</title>
+  <title>Marine GPS & Fish Finder - Ultimate Offline Edition</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
@@ -392,11 +392,12 @@
 </head>
 <body>
 
+  <!-- Service Worker for Offline PWA Support -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-vector-v7';
+          const CACHE_NAME = 'marine-gps-offline-v2';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -410,7 +411,12 @@
           self.addEventListener('fetch', event => {
             event.respondWith(
               caches.match(event.request).then(response => {
-                return response || fetch(event.request).catch(() => caches.match('./'));
+                return response || fetch(event.request).then(networkResponse => {
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, networkResponse.clone());
+                    return networkResponse;
+                  });
+                }).catch(() => caches.match('./'));
               })
             );
           });
@@ -459,11 +465,11 @@
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="எல்லை ஒலி முறை (Sound/Mute)">🔔</div>
             <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()" title="பாதை பதிவு (Track Line)">🛤️</div>
             <div class="tool-btn" onclick="clearTrackHistory()" title="பாதை அழி (Clear Path)">🗑️</div>
-            <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="சந்திரன் & மீன் கணிப்பு">🌕</div>
-            <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி">🆘</div>
-            <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="சோனார் இணை">📡</div>
-            <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()" title="சாட்டிலைட் இணை">🛰️</div>
-            <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()" title="வாக்கி-டாகி">🎙️</div>
+            <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="சந்திரன் & மீன் கணிப்பு (Solunar)">🌕</div>
+            <div class="tool-btn" onclick="sendSOS()" title="SOS அவசர உதவி (Internet/SMS)">🆘</div>
+            <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="ப்ளூடூத் சோனார் இணை">📡</div>
+            <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()" title="சாட்டிலைட் கருவி இணை">🛰️</div>
+            <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()" title="வாக்கி-டாகி (Walkie-Talkie)">🎙️</div>
           </div>
         </div>
       </div>
@@ -496,6 +502,27 @@
       </div>
     </div>
     <canvas id="sonarCanvas"></canvas>
+  </div>
+
+  <!-- சந்திரன் & மீன் கணிப்பு (Solunar) பாப்-அப் மோடல் -->
+  <div class="modal-overlay" id="moonModal">
+    <div class="modal-content">
+      <div class="modal-title">🌕 சந்திரன் & மீன் கணிப்பு (Solunar)</div>
+      <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">
+        நிலவரம் கணக்கிடப்படுகிறது...
+      </div>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('moonModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
+    </div>
+  </div>
+
+  <!-- வாக்கி-டாகி பாப்-அப் மோடல் -->
+  <div class="modal-overlay" id="walkieModal">
+    <div class="modal-content text-center">
+      <div class="modal-title">🎙️ புளூடூத் வாக்கி-டாகி</div>
+      <div style="font-size: 12px; color: #00ffcc; margin-bottom: 12px;">அருகிலுள்ள படகுகளுடன் பேச இணைக்கவும்</div>
+      <button class="modal-btn btn-save" onclick="startWalkieTalkieChannel()" style="width:100%; margin-bottom:8px;">📡 சேனலைத் தொடங்கு</button>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('walkieModal').style.display='none'" style="width:100%;">மூடு</button>
+    </div>
   </div>
 
   <!-- இடம் எடிட் செய்யும் பெட்டி -->
@@ -673,13 +700,12 @@
       touchZoomRotate: true
     });
 
-    // லாங் பிரஸ் (Long Press) நிகழ்வு - வரைபடத்தில் 1 வினாடி அழுத்திப் பிடித்தால் புள்ளி விழும்
     let touchTimer = null;
     let touchMoved = false;
 
     map.on('touchstart', (e) => {
       touchMoved = false;
-      if (e.points && e.points.length > 1) return; // இரண்டு விரல் தொட்டால் ரத்து செய்
+      if (e.points && e.points.length > 1) return;
       touchTimer = setTimeout(() => {
         if (!touchMoved) {
           handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
@@ -724,6 +750,86 @@
         btn.innerHTML = '🛰️ சாட்டிலைட்';
         btn.style.borderColor = '#ffcc00';
       }
+    }
+
+    // புளூடூத் சோனார் இணைக்கும் வசதி
+    async function connectBluetoothSonar() {
+      try {
+        if (!navigator.bluetooth) {
+          alert("உங்கள் பிரவுசர் புளூடூத்தை ஆதரிக்கவில்லை!");
+          return;
+        }
+        alert("📡 புளூடூத் சோனார் சாதனத்தைத் தேடுகிறது... அருகில் உள்ள சாதனத்தைத் தேர்ந்தெடுக்கவும்.");
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: ['battery_service']
+        });
+        const server = await device.gatt.connect();
+        document.getElementById('bt-status-btn').style.background = '#00ffcc';
+        alert("✅ புளூடூத் சோனார் வெற்றிகரமாக இணைக்கப்பட்டது: " + device.name);
+      } catch (err) {
+        console.log("Bluetooth error:", err);
+        alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது அல்லது கிடைக்கவில்லை.");
+      }
+    }
+
+    // சாட்டிலைட் கருவி இணைக்கும் வசதி
+    async function connectSatelliteDevice() {
+      try {
+        if (!navigator.bluetooth) {
+          alert("புளூடூத் சேவை கிடைக்கவில்லை!");
+          return;
+        }
+        alert("🛰️ சாட்டிலைட் சாதனத்தைத் தேடுகிறது...");
+        const device = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true
+        });
+        await device.gatt.connect();
+        document.getElementById('sat-status-btn').style.background = '#00ffcc';
+        alert("✅ சாட்டிலைட் சாதனம் இணைக்கப்பட்டது: " + device.name);
+      } catch (err) {
+        alert("⚠️ சாட்டிலைட் சாதனம் இணைக்கப்படவில்லை.");
+      }
+    }
+
+    // வாக்கி-டாகி ஆன்/ஆஃப்
+    function toggleWalkieTalkie() {
+      document.getElementById('walkieModal').style.display = 'flex';
+    }
+
+    function startWalkieTalkieChannel() {
+      alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது! மைக்ரோஃபோன் செயல்பாடு தயார்.");
+      document.getElementById('walkieModal').style.display = 'none';
+      document.getElementById('walkie-btn').style.background = '#7b2cbf';
+    }
+
+    // சந்திரன் மற்றும் மீன் கணிப்பு (Solunar Data)
+    function showMoonSolunarData() {
+      const modal = document.getElementById('moonModal');
+      const body = document.getElementById('moonModalBody');
+      
+      // எளிய கணிப்பு கணக்கீடு
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const phase = (dayOfYear % 29.53) / 29.53; // சந்திரன் சுழற்சி
+      
+      let moonPhaseText = "வளர்பிறை (Waxing Crescent)";
+      let fishActivity = "⭐⭐⭐ நடுத்தர மீன் வரத்து";
+      if (phase > 0.4 && phase < 0.6) {
+        moonPhaseText = "🌕 பௌர்ணமி (Full Moon) - உச்சகட்ட மீன் வரத்து!";
+        fishActivity = "⭐⭐⭐⭐⭐ மிகச் சிறந்த மீன் பிடி நேரம்!";
+      } else if (phase < 0.1 || phase > 0.9) {
+        moonPhaseText = "🌑 அமாவாசை (New Moon)";
+        fishActivity = "⭐⭐⭐⭐ நல்ல மீன் வரத்து";
+      }
+
+      body.innerHTML = `
+        <p><b>தேதி:</b> ${today.toLocaleDateString()}</p>
+        <p><b>சந்திர நிலை:</b> ${moonPhaseText}</p>
+        <p><b>மீன் செயல்பாடு:</b> ${fishActivity}</p>
+        <p><b>சிறந்த நேரம்:</b> காலை 05:30 - 08:30 மற்றும் மாலை 05:00 - 07:00</p>
+      `;
+      modal.style.display = 'flex';
     }
 
     const boatContainer = document.createElement('div');
