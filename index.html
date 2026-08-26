@@ -179,7 +179,12 @@
     .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
-    .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; }
+    .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; pointer-events: auto; }
+    
+    /* பின் (Pin) எப்போதுமே நகராமல் உறுதியாக இருக்க */
+    .maplibregl-marker {
+      touch-action: none;
+    }
   </style>
 </head>
 <body>
@@ -707,7 +712,7 @@
     }
 
     function updateBottomSeaType() {
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      const saved = JSON.parse(localStorage.getItem('marineReefs')  || '[]');
       let nearReef = saved.some(item => parseFloat(calcDistanceNM(currentLat, currentLng, item.lat, item.lng)) <= 0.15 && (item.type === 'Reef' || item.type === 'Pin'));
       const bottomEl = document.getElementById('live-bottom');
       if (nearReef) { bottomEl.innerText = "🪨 பாறை (Reef)"; bottomEl.style.color = "#ffcc00"; } 
@@ -732,8 +737,12 @@
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
-        // draggable: false ஆக்கப்பட்டுள்ளதால் இனி கைபட்டு பின் (Pin) நகராது!
+        // draggable: false மற்றும் எந்தவிதமான டச் மூவ் மூலமும் நகராது பூட்டப்பட்டுள்ளது
         const marker = new maplibregl.Marker({ element: el, draggable: false }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
+        
+        // கைபட்டு பின்ஸ் நகர்வதை முழுமையாக தடுக்க தொடுதலை பிளாக் செய்தல்
+        el.addEventListener('touchmove', (e) => { e.stopPropagation(); }, {passive: false});
+        
         activeMarkers.push(marker);
       });
       updateBottomSeaType();
