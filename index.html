@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder - Final Pro Edition</title>
+  <title>Marine GPS & Fish Finder - True Nautical Export Edition</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   
@@ -828,14 +828,12 @@
       const rawData = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       if(rawData.length === 0) { alert("சேமித்த புள்ளிகள் இல்லை!"); return; }
       
-      // Latitude மற்றும் Longitude இரண்டும் தனித்தனியாக nautical வடிவில் சரியாகக் காட்டும்படி திருத்தப்பட்டுள்ளது
+      // நீங்கள் கேட்டபடி nautical_lat மற்றும் nautical_lng சரியாகச் சேமிக்கப்படும் வடிவம்
       const formattedData = rawData.map(item => ({
         id: item.id,
         name: item.name,
-        lat: item.lat,
-        lng: item.lng,
-        nautical_lat: formatCoord(item.lat, true),
-        nautical_lng: formatCoord(item.lng, false),
+        nautical_lat: item.nautical_lat || formatCoord(item.lat, true),
+        nautical_lng: item.nautical_lng || formatCoord(item.lng, false),
         type: item.type || 'Pin'
       }));
 
