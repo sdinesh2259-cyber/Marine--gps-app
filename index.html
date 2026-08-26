@@ -431,9 +431,7 @@
       document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
-      if (userPromptName === null) return;
-      document.getElementById('inputSpotName').value = userPromptName.trim() || new Date().toLocaleString();
+      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -767,7 +765,7 @@
       let id = document.getElementById('editSpotId').value;
       let minLat = parseFloat(document.getElementById('modalLatMin').value);
       let minLng = parseFloat(document.getElementById('modalLngMin').value);
-      let name = document.getElementById('modalSpotName').value.trim() || new Date().toLocaleString();
+      let name = document.getElementById('modalSpotName').value.trim() || ("பார் " + new Date().toLocaleString());
       let type = document.getElementById('modalSpotType').value;
       if(isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -802,9 +800,9 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nLat = formatCoord(currentLat, true);
       let nLng = formatCoord(currentLng, false);
-      let spotName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
+      let spotName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", "பார் " + new Date().toLocaleString());
       if (spotName === null) return;
-      spotName = spotName.trim() || new Date().toLocaleString();
+      spotName = spotName.trim() || ("பார் " + new Date().toLocaleString());
       
       saved.push({
         id: Date.now(),
@@ -822,9 +820,7 @@
 
     function openCoordModal() {
       document.getElementById('coordModalTitle').innerText = "🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு";
-      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
-      if (userPromptName === null) return;
-      document.getElementById('inputSpotName').value = userPromptName.trim() || new Date().toLocaleString();
+      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
@@ -840,7 +836,7 @@
       let lng = 78.0 + (parseFloat(document.getElementById('inputLngMin').value) / 60.0);
       let nLat = formatCoord(lat, true);
       let nLng = formatCoord(lng, false);
-      let spotName = document.getElementById('inputSpotName').value.trim() || new Date().toLocaleString();
+      let spotName = document.getElementById('inputSpotName').value.trim() || ("பார் " + new Date().toLocaleString());
       let spotType = document.getElementById('inputSpotType').value;
       if (isNaN(lat) || isNaN(lng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -864,9 +860,9 @@
       
       const formattedData = rawData.map(item => {
         let cleanName = item.name;
-        // ஒருவேளை பழைய டேட்டாவில் எண்கள் இருந்தாலோ அல்லது புதியதாக சேமித்தாலோ நேராக பெயர்/தேதி மட்டும் எடுப்பது
+        // ஒருவேளை பெயருக்கு பதிலாக எண்கள் இருந்தால் அதை மாற்றிவிட்டு தேதி மற்றும் நேரத்தை தருவது
         if (!cleanName || cleanName.includes('°')) {
-          cleanName = new Date().toLocaleString();
+          cleanName = "பார் " + new Date().toLocaleString();
         }
         return {
           id: item.id,
