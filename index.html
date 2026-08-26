@@ -769,11 +769,11 @@
         let nLng = formatCoord(lng, false);
         saved[idx] = { 
           id: Number(id), 
-          name: name + " - " + nLat + " | " + nLng, 
+          name: name, 
           lat: lat, 
           lng: lng, 
-          nautical_lat: nLat,
-          nautical_lng: nLng,
+          nautical_north: nLat,
+          nautical_east: nLng,
           type: type 
         }; 
       }
@@ -794,11 +794,11 @@
       let nLng = formatCoord(currentLng, false);
       saved.push({
         id: Date.now(),
-        name: "பார் " + new Date().toLocaleDateString() + "\n" + nLat + "\n" + nLng,
+        name: "பார் " + new Date().toLocaleDateString(),
         lat: currentLat,
         lng: currentLng,
-        nautical_lat: nLat,
-        nautical_lng: nLng,
+        nautical_north: nLat,
+        nautical_east: nLng,
         type: 'Pin'
       });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -830,11 +830,11 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.push({
         id: Date.now(),
-        name: spotName + "\n" + nLat + "\n" + nLng,
+        name: spotName,
         lat: lat,
         lng: lng,
-        nautical_lat: nLat,
-        nautical_lng: nLng,
+        nautical_north: nLat,
+        nautical_east: nLng,
         type: spotType
       });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -848,16 +848,16 @@
       
       const formattedData = rawData.map(item => ({
         id: item.id,
-        name: item.name,
-        nautical_lat: item.nautical_lat || formatCoord(item.lat, true),
-        nautical_lng: item.nautical_lng || formatCoord(item.lng, false),
+        name: item.name || "பார் " + new Date().toLocaleDateString(),
+        nautical_north: item.nautical_north || formatCoord(item.lat, true),
+        nautical_east: item.nautical_east || formatCoord(item.lng, false),
         type: item.type || 'Pin'
       }));
 
       const dataStr = JSON.stringify(formattedData, null, 2);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
-      a.download = `Marine_GPS_Data_${new Date().toLocaleDateString()}.json`;
+      a.download = `Marine_GPS_Spots_${new Date().toLocaleDateString()}.json`;
       a.click();
     }
 
