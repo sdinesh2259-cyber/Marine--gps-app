@@ -17,7 +17,6 @@
       width: 100vw;
       z-index: 1;
       background: #001220;
-      transition: filter 0.3s ease;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -406,6 +405,7 @@
           'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
+          { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
           { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
           { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
         ]
