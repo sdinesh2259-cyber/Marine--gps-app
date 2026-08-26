@@ -181,10 +181,7 @@
     .btn-cancel { background: #e63946; color: #fff; }
     .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; pointer-events: auto; }
     
-    /* பின் (Pin) எப்போதுமே நகராமல் உறுதியாக இருக்க */
-    .maplibregl-marker {
-      touch-action: none;
-    }
+    .maplibregl-marker { touch-action: none; }
   </style>
 </head>
 <body>
@@ -399,6 +396,7 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
+    // நெட் இல்லாதபோதும் மேப் லோட் ஆகி உடனே வர இன்டர்னல் ஃபால்பக் (Fallback) வசதியுடன் மேப் உருவாக்கம்
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
@@ -409,6 +407,7 @@
           'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
+          { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
           { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
           { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
         ]
@@ -712,7 +711,7 @@
     }
 
     function updateBottomSeaType() {
-      const saved = JSON.parse(localStorage.getItem('marineReefs')  || '[]');
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nearReef = saved.some(item => parseFloat(calcDistanceNM(currentLat, currentLng, item.lat, item.lng)) <= 0.15 && (item.type === 'Reef' || item.type === 'Pin'));
       const bottomEl = document.getElementById('live-bottom');
       if (nearReef) { bottomEl.innerText = "🪨 பாறை (Reef)"; bottomEl.style.color = "#ffcc00"; } 
@@ -737,12 +736,8 @@
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
-        // draggable: false மற்றும் எந்தவிதமான டச் மூவ் மூலமும் நகராது பூட்டப்பட்டுள்ளது
         const marker = new maplibregl.Marker({ element: el, draggable: false }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
-        
-        // கைபட்டு பின்ஸ் நகர்வதை முழுமையாக தடுக்க தொடுதலை பிளாக் செய்தல்
         el.addEventListener('touchmove', (e) => { e.stopPropagation(); }, {passive: false});
-        
         activeMarkers.push(marker);
       });
       updateBottomSeaType();
