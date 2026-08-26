@@ -395,14 +395,14 @@
     let currentViewMode = 0;
     let activeMarkers = [];
 
-    // மிக வேகமான மற்றும் நெட் ஆன்ல இருக்கும்போது 100% மேப் காட்டும் முறை
+    // இணையம் இருக்கும்போது மேப் லோட் ஆகும், இணையம் இல்லாவிட்டாலும் ஆப் எங்குமே லாக் ஆகாது
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
       style: {
         version: 8,
         sources: {
-          'osm-tiles': { type: 'raster', tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png', 'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
+          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
           { id: 'background', type: 'background', paint: { 'background-color': '#001e3d' } },
@@ -437,7 +437,7 @@
     }
 
     function toggleMapLayer() {
-      alert("🗺️ மேப் லேயர் ஆக்டிவ்வாக உள்ளது!");
+      alert("🗺️ மேப் ஆக்டிவ்வாக உள்ளது!");
     }
 
     async function connectBluetoothSonar() {
