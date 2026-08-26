@@ -732,20 +732,8 @@
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
-        const marker = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
-        marker.on('dragend', () => {
-          let lngLat = marker.getLngLat();
-          let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-          let target = allSpots.find(s => s.id == item.id);
-          if (target) { 
-            target.lat = lngLat.lat; 
-            target.lng = lngLat.lng; 
-            target.nautical_north = formatCoord(lngLat.lat, true);
-            target.nautical_east = formatCoord(lngLat.lng, false);
-            localStorage.setItem('marineReefs', JSON.stringify(allSpots)); 
-          }
-          updateBottomSeaType();
-        });
+        // draggable: false ஆக்கப்பட்டுள்ளதால் இனி கைபட்டு பின் (Pin) நகராது!
+        const marker = new maplibregl.Marker({ element: el, draggable: false }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
         activeMarkers.push(marker);
       });
       updateBottomSeaType();
