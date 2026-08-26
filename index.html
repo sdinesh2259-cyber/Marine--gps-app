@@ -17,7 +17,7 @@
       width: 100vw;
       z-index: 1;
       background: #001220;
-      pointer-events: auto !important;
+      transition: filter 0.3s ease;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -31,7 +31,7 @@
       top: 10px; left: 10px; right: 10px;
       background: rgba(0, 0, 0, 0.95);
       color: white; padding: 8px 10px; border-radius: 10px;
-      z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
+      z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
     }
     .dash-main { display: flex; align-items: center; justify-content: space-between; }
     .coord-section { flex: 1; text-align: left; }
@@ -45,7 +45,7 @@
       background: #111; padding: 4px 8px; border-radius: 8px; border: 1px solid #444; cursor: pointer;
     }
     .compass-container.zoomed {
-      transform: scale(1.6); transform-origin: top right; z-index: 10000;
+      transform: scale(1.6); transform-origin: top right; z-index: 2000;
       background: #000; border: 2px solid #00ffcc; box-shadow: 0 6px 20px rgba(0,0,0,0.9);
     }
     .compass-dial {
@@ -74,7 +74,7 @@
     }
     .sub-tools {
       display: none; position: absolute; top: 48px; right: 0; flex-direction: column; gap: 6px;
-      align-items: flex-end; background: rgba(0,0,0,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; z-index: 10000;
+      align-items: flex-end; background: rgba(0,0,0,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; z-index: 2000;
     }
     .marine-tools-panel.open .sub-tools { display: flex; }
 
@@ -108,30 +108,30 @@
 
     .border-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #d90429; color: white;
-      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
+      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 3000; display: none; border: 2px solid #ffcc00;
     }
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
     .spot-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #2a9d8f; color: white;
-      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
+      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 3000; display: none; border: 2px solid #ffcc00;
     }
 
     .rotate-reset-btn {
       position: absolute; top: 110px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #00ffcc;
       color: #00ffcc; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: bold; cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      font-size: 13px; font-weight: bold; cursor: pointer; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     .layer-toggle-btn {
       position: absolute; top: 154px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #ffcc00;
-      color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
+      color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 999;
       display: flex; align-items: center; gap: 3px;
     }
 
     .sonar-panel {
       position: absolute; bottom: 48px; left: 0; right: 0; height: 115px;
-      background: #020b14; border-top: 2px solid #00ffcc; z-index: 9999; display: flex;
+      background: #020b14; border-top: 2px solid #00ffcc; z-index: 1000; display: flex;
     }
     .sonar-info {
       width: 115px; background: #051422; padding: 6px; border-right: 1px solid #1a3a5a;
@@ -143,7 +143,7 @@
     
     .btn-container {
       position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 4px; z-index: 10000; width: 98%; max-width: 440px; justify-content: center;
+      display: flex; gap: 4px; z-index: 1000; width: 98%; max-width: 440px; justify-content: center;
     }
     .btn-action {
       flex: 1; border: none; padding: 8px 2px; font-size: 10px; font-weight: bold;
@@ -163,7 +163,7 @@
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75); z-index: 20000; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.75); z-index: 2000; display: none; align-items: center; justify-content: center;
     }
     .modal-content {
       background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #444;
@@ -396,7 +396,6 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // பாதுகாப்பான மேப் இன்ஜின் அமைப்பு
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
@@ -443,15 +442,11 @@
       if (currentLayerType === 'satellite') {
         map.setLayoutProperty('satellite-layer', 'visibility', 'none');
         map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; 
-        btn.innerHTML = '🗺️ வரைபடம்'; 
-        btn.style.borderColor = '#00ffcc';
+        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
       } else {
         map.setLayoutProperty('osm-layer', 'visibility', 'none');
         map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite'; 
-        btn.innerHTML = '🛰️ சாட்டிலைட்'; 
-        btn.style.borderColor = '#ffcc00';
+        currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
       }
     }
 
