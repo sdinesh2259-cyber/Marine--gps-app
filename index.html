@@ -3,12 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DM Marine GPS Pro</title>
-  
-  <!-- PWA Manifest & App Icon Link -->
-  <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22DM%20Marine%20GPS%22,%22short_name%22:%22MarineGPS%22,%22start_url%22:%22./%22,%22display%22:%22standalone%22,%22background_color%22:%22%23001220%22,%22theme_color%22:%22%23001220%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2024%2024%27%20fill=%27%2300ffcc%27%3E%3Cpath%20d=%27M20%2021c-1.39%200-2.78-.47-4-1.32-2.44%201.74-5.56%201.74-8%200C6.78%2020.53%205.39%2021%204%2021H2v2h2c1.38%200%252.74-.35%204-.99%202.52%201.29%2%205.48%201.29%208%200%201.26.64%202.62.99%204%20.99h2v-2h-2zM3.95%2019H4c1.6%200%253.02-.88%204-2%201.98%202.24%205.02%202.24%207%200%20.98%201.12%202.4%202%204%202h.05l1.89-6.68c.08-.26.06-.54-.06-.78s-.34-.42-.6-.52l-4-1.5C16.18%209.39%2014.12%209%2012%209s-4.18.39-5.28%.8l-4%201.5c-.26.1-.48.28-.6.52s-.14.52-.06.78L3.95%2019zM12%206c3.31%200%206-2.69%206-6s-2.69-6-6-6-6%202.69-6%206%202.69%206%206%206z%27/%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22}]}">
-
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+  <title>DM Marine GPS - Offline Satellite</title>
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #001220; overflow: hidden; }
@@ -20,12 +15,6 @@
       background: #001a2e;
     }
     
-    body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
-    body.mode-night-red .dashboard, body.mode-night-red .sonar-panel { background: rgba(35, 0, 0, 0.96); border-color: #ff0044; }
-    
-    body.mode-dark #map { filter: brightness(0.7) contrast(1.1); }
-    body.mode-dark .dashboard, body.mode-dark .sonar-panel { background: rgba(10, 10, 10, 0.95); border-color: #555; }
-
     .dashboard {
       position: absolute;
       top: 10px;
@@ -55,17 +44,7 @@
       padding: 4px 8px;
       border-radius: 8px;
       border: 1px solid #444;
-      cursor: pointer;
     }
-    .compass-container.zoomed {
-      transform: scale(1.6);
-      transform-origin: top right;
-      z-index: 2000;
-      background: #000;
-      border: 2px solid #00ffcc;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.9);
-    }
-
     .compass-dial {
       width: 38px;
       height: 38px;
@@ -118,7 +97,6 @@
       justify-content: center;
       font-size: 18px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
     }
     .sub-tools {
       display: none;
@@ -132,10 +110,7 @@
       padding: 8px;
       border-radius: 10px;
       border: 1px solid #444;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.8);
       z-index: 2000;
-      max-height: 70vh;
-      overflow-y: auto;
     }
     .marine-tools-panel.open .sub-tools { display: flex; }
 
@@ -151,16 +126,7 @@
       justify-content: center;
       font-size: 15px;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-    .tool-sonar { border-color: #0077b6; background: rgba(0, 119, 182, 0.9); }
-    .tool-sat { border-color: #d90429; background: rgba(217, 4, 41, 0.9); }
-    .tool-walkie { border-color: #7b2cbf; background: rgba(123, 44, 191, 0.9); }
-    .tool-track { border-color: #ffb703; background: rgba(251, 133, 0, 0.9); }
-    .tool-night { border-color: #e63946; background: rgba(230, 57, 70, 0.9); }
-    .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
-    .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
-    .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
 
     .status-bar {
       font-size: 11px;
@@ -170,123 +136,6 @@
       padding-top: 3px;
       display: flex;
       justify-content: space-between;
-    }
-
-    .nav-bar {
-      display: none;
-      background: #e63946;
-      color: white;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 4px 8px;
-      border-radius: 6px;
-      margin-top: 4px;
-      text-align: center;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .stop-nav-btn {
-      background: #ffffff;
-      color: #e63946;
-      border: none;
-      padding: 2px 6px;
-      font-size: 10px;
-      font-weight: bold;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .boat-marker-container {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-    .boat-heading-arrow {
-      width: 0; 
-      height: 0; 
-      border-left: 9px solid transparent;
-      border-right: 9px solid transparent;
-      border-bottom: 26px solid #00ffcc;
-      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9));
-      transform-origin: center center;
-    }
-
-    .border-alert-banner {
-      position: absolute;
-      top: 105px;
-      left: 10px;
-      right: 10px;
-      background: #d90429;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      z-index: 3000;
-      display: none;
-      box-shadow: 0 4px 15px rgba(255,0,0,0.8);
-      border: 2px solid #ffcc00;
-    }
-    .border-alert-content { display: flex; justify-content: space-between; align-items: center; }
-    .mute-btn { background: #fff; color: #d90429; border: none; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; }
-
-    .spot-alert-banner {
-      position: absolute;
-      top: 105px;
-      left: 10px;
-      right: 10px;
-      background: #2a9d8f;
-      color: white;
-      font-weight: bold;
-      font-size: 12px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      z-index: 3000;
-      display: none;
-      box-shadow: 0 4px 15px rgba(42,157,143,0.8);
-      border: 2px solid #ffcc00;
-    }
-
-    .rotate-reset-btn {
-      position: absolute;
-      top: 110px;
-      left: 12px;
-      background: rgba(0,0,0,0.85);
-      border: 1.5px solid #00ffcc;
-      color: #00ffcc;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-
-    .layer-toggle-btn {
-      position: absolute;
-      top: 154px;
-      left: 12px;
-      background: rgba(0,0,0,0.85);
-      border: 1.5px solid #ffcc00;
-      color: #fff;
-      border-radius: 8px;
-      padding: 4px 6px;
-      font-size: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 999;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-      display: flex;
-      align-items: center;
-      gap: 3px;
     }
 
     .sonar-panel {
@@ -299,7 +148,6 @@
       border-top: 2px solid #00ffcc;
       z-index: 1000;
       display: flex;
-      box-shadow: 0 -4px 12px rgba(0,0,0,0.8);
     }
     .sonar-info {
       width: 115px;
@@ -312,7 +160,6 @@
     }
     .sonar-depth-val { font-size: 13px; font-weight: bold; color: #ffcc00; font-family: monospace; }
     .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
-
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
     .btn-container {
@@ -328,25 +175,18 @@
       justify-content: center;
     }
     .btn-action {
-      flex: 1; border: none; padding: 8px 2px; font-size: 10px; font-weight: bold; border-radius: 16px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; text-align: center;
+      flex: 1; border: none; padding: 8px 2px; font-size: 10px; font-weight: bold; border-radius: 16px; color: white; cursor: pointer; text-align: center;
     }
     .btn-red { background: #e63946; }
     .btn-blue { background: #1d3557; }
     .btn-darkblue { background: #14213d; }
     .btn-green { background: #2a9d8f; }
 
-    .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
-    .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
-    .popup-btn { color: white; border: none; padding: 6px 6px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 3px; width: 100%; display: block; }
-    .popup-nav-btn { background: #e63946; }
-    .popup-edit-btn { background: #0077b6; margin-top: 4px; }
-    .popup-del-btn { background: #d90429; margin-top: 4px; }
-
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); z-index: 2000; display: none; align-items: center; justify-content: center;
     }
     .modal-content {
-      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #444; box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #444;
     }
     .modal-title { font-size: 14px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; text-align: center; }
     .input-group { margin-bottom: 10px; }
@@ -359,35 +199,20 @@
     .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
-    .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="border-alert-banner" id="borderAlert">
-    <div class="border-alert-content">
-      <span>🚨 எச்சரிக்கை! சர்வதேச கடல் எல்லை அருகில்!</span>
-      <button class="mute-btn" id="muteBtn" onclick="toggleAlertSound()">🔇 ஒலி நிறுத்து</button>
-    </div>
-  </div>
-
-  <div class="spot-alert-banner" id="spotAlertBanner">
-    <div class="border-alert-content">
-      <span id="spotAlertText">📍 பார் அருகில் உள்ளது!</span>
-      <button class="mute-btn" onclick="muteSpotAlert()">🔇 அலாரம் நிறுத்து</button>
-    </div>
-  </div>
-
   <div class="dashboard">
     <div class="dash-main">
       <div class="coord-section">
-        <div class="title-bar">🛰️ GPS Sat Position / Speed</div>
+        <div class="title-bar">🛰️ DIRECT SATELLITE GPS</div>
         <div class="coord-val" id="lat-coord">8° 49.406' N</div>
         <div class="coord-val" id="lng-coord">78° 8.971' E</div>
       </div>
       
       <div class="dashboard-right">
-        <div class="compass-container" id="compassBox" onclick="toggleCompassZoom(event)">
+        <div class="compass-container">
           <div class="compass-dial">
             <span class="c-label lbl-n">N</span>
             <span class="c-label lbl-s">S</span>
@@ -404,16 +229,8 @@
         <div class="marine-tools-panel" id="toolsPanel">
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
-            <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
-            <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
-            <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
-            <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()">🛤️</div>
-            <div class="tool-btn" onclick="clearTrackHistory()">🗑️</div>
-            <div class="tool-btn tool-moon" onclick="showMoonSolunarData()">🌕</div>
-            <div class="tool-btn" onclick="sendSOS()">🆘</div>
-            <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡</div>
-            <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️</div>
-            <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()">🎙️</div>
+            <div class="tool-btn" onclick="alert('📡 சாட்டிலைட் சிக்னல் நேரடியாய் பெறப்படுகிறது')">🛰️</div>
+            <div class="tool-btn" onclick="alert('🛟 ஆஃப்லைன் மோட் فعال உள்ளது')">⚓</div>
           </div>
         </div>
       </div>
@@ -423,22 +240,18 @@
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="norm-time">நேரம்: --:--:--</span>
     </div>
-    <div class="nav-bar" id="nav-info">
-      <span>🚀 தூரம்: <span id="target-dist">0.0 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
-      <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
-    </div>
   </div>
 
-  <div id="map"></div>
-  <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()">🧭 N</button>
-  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
+  <div id="map" style="display:flex; align-items:center; justify-content:center; color:#00ffcc; font-size:13px; text-align:center; padding:20px;">
+    🌊 ஆழ்கடல் நேரடி சாட்டிலைட் ஜிபிஎஸ் மோட்<br>(இணையம் தேவையில்லை)
+  </div>
 
   <div class="sonar-panel">
     <div class="sonar-info">
       <div>
         <div style="font-size: 8px; color: #888;">ஆழம்:</div>
         <div class="sonar-depth-val" id="live-depth">12.4 பாவம்</div>
-        <div style="font-size: 8px; color: #00ffcc;" id="live-meters">(22.6 M)</div>
+        <div style="font-size: 8px; color: #00ffcc;">(22.6 M)</div>
       </div>
       <div>
         <div style="font-size: 8px; color: #888;">தரை நிலை:</div>
@@ -448,68 +261,9 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <div class="modal-overlay" id="weatherModal">
-    <div class="modal-content">
-      <div class="modal-title">🌤️ வானிலை & கடல் நிலை</div>
-      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">தகவல் சேகரிக்கப்படுகிறது...</div>
-      <button class="modal-btn btn-cancel" onclick="document.getElementById('weatherModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="moonModal">
-    <div class="modal-content">
-      <div class="modal-title">🌕 சந்திரன் & மீன் கணிப்பு (Solunar)</div>
-      <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">நிலவரம் கணக்கிடப்படுகிறது...</div>
-      <button class="modal-btn btn-cancel" onclick="document.getElementById('moonModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="walkieModal">
-    <div class="modal-content text-center">
-      <div class="modal-title">🎙️ புளூடூத் வாக்கி-டாகி</div>
-      <div style="font-size: 12px; color: #00ffcc; margin-bottom: 12px;">அருகிலுள்ள படகுகளுடன் பேச இணைக்கவும்</div>
-      <button class="modal-btn btn-save" onclick="startWalkieTalkieChannel()" style="width:100%; margin-bottom:8px;">📡 சேனலைத் தொடங்கு</button>
-      <button class="modal-btn btn-cancel" onclick="document.getElementById('walkieModal').style.display='none'" style="width:100%;">மூடு</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="spotModal">
-    <div class="modal-content">
-      <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
-      <input type="hidden" id="editSpotId">
-      <div class="input-group">
-        <label>Latitude (மினிட் மட்டும்):</label>
-        <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="modalLatMin" class="input-box" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
-      </div>
-      <div class="input-group">
-        <label>Longitude (மினிட் மட்டும்):</label>
-        <div class="input-row"><div class="fixed-deg">78°</div><input type="number" id="modalLngMin" class="input-box" step="any"><span style="font-weight:bold; color:#ffcc00;">' E</span></div>
-      </div>
-      <div class="input-group"><label>பெயர்:</label><input type="text" id="modalSpotName" class="input-name"></div>
-      <div class="input-group">
-        <label>ஐகான் தேர்வு:</label>
-        <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
-          <option value="Reef">🪨 பார் / பாறை (Reef)</option>
-          <option value="Island">🌴 தீவு (Island)</option>
-          <option value="Crab">🦀 நண்டு (Crab)</option>
-          <option value="Fish">🐟 மீன் (Fish)</option>
-          <option value="Net">🕸️ வலை (Net)</option>
-          <option value="Conch">🐚 சங்கு (Conch)</option>
-          <option value="Ray">🪼 திருக்கை (Ray)</option>
-          <option value="Squid">🦑 கணவா (Squid)</option>
-        </select>
-      </div>
-      <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="saveSpotFromModal()">💾 மாற்றி சேமி</button>
-        <button class="modal-btn btn-cancel" onclick="closeSpotModal()">ரத்து</button>
-      </div>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title" id="coordModalTitle">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
+      <div class="modal-title">🧭 ஜிபிஎஸ் எண் மூலம் சேமி</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
@@ -518,190 +272,26 @@
         <label>Longitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">78°</div><input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any"><span style="font-weight:bold; color:#ffcc00;">' E</span></div>
       </div>
-      <div class="input-group"><label>பெயர் (விருப்பமிருந்தால்):</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை"></div>
-      <div class="input-group">
-        <label>ஐகான் தேர்வு:</label>
-        <select id="inputSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
-          <option value="Reef">🪨 பார் / பாறை (Reef)</option>
-          <option value="Island">🌴 தீவு (Island)</option>
-          <option value="Crab">🦀 நண்டு (Crab)</option>
-          <option value="Fish">🐟 மீன் (Fish)</option>
-          <option value="Net">🕸️ வலை (Net)</option>
-          <option value="Conch">🐚 சங்கு (Conch)</option>
-          <option value="Ray">🪼 திருக்கை (Ray)</option>
-          <option value="Squid">🦑 கணவா (Squid)</option>
-        </select>
-      </div>
+      <div class="input-group"><label>பெயர்:</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை"></div>
       <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="saveCoordAsPinDirect()">📍 புள்ளியாகச் சேமி</button>
-        <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="searchCoord()">🔍 இடத்திற்கு செல்</button>
+        <button class="modal-btn btn-save" onclick="saveCoordAsPinDirect()">📍 சேமி</button>
+        <button class="modal-btn btn-cancel" onclick="document.getElementById('coordModal').style.display='none'">ரத்து</button>
       </div>
-      <button class="modal-btn btn-cancel" onclick="closeCoordModal()" style="width:100%; margin-top:8px;">ரத்து</button>
     </div>
   </div>
 
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
-    <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
+    <button class="btn-action btn-green" onclick="document.getElementById('coordModal').style.display='flex'">🔍 எண் சேமி</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
 
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
-    let lastValidLat = currentLat;
-    let lastValidLng = currentLng;
-    let lastValidHeading = 0;
-
-    let boatMarker = null;
-    let arrowInnerEl = null;
-    let targetTarget = null;
-    let followBoat = true;
-    let trackRecording = true;
-    let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
-    
-    let borderAlertSoundMuted = false;
-    let spotAlertMutedForId = null; 
-    let audioCtx = null;
-    let beepInterval = null;
-    let spotBeepInterval = null;
-    let currentViewMode = 0;
-    let currentLayerType = 'satellite';
-    let activeMarkers = [];
-
-    const map = new maplibregl.Map({
-      container: 'map',
-      maxZoom: 18.5,
-      style: {
-        version: 8,
-        sources: {
-          'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 },
-          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
-        },
-        layers: [
-          { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
-        ]
-      },
-      center: [currentLng, currentLat],
-      zoom: 14,
-      pitchWithRotate: false,
-      dragRotate: true,
-      touchZoomRotate: true
-    });
-
-    let touchTimer = null;
-    let touchMoved = false;
-    map.on('touchstart', (e) => {
-      touchMoved = false;
-      if (e.points && e.points.length > 1) return;
-      touchTimer = setTimeout(() => { if (!touchMoved) { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); } }, 800);
-    });
-    map.on('touchmove', () => { touchMoved = true; if (touchTimer) clearTimeout(touchTimer); });
-    map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
-    map.on('contextmenu', (e) => { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); });
-
-    function handleLongPressCoord(lat, lng) {
-      if (navigator.vibrate) navigator.vibrate(80);
-      document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
-      document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
-      document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = "புள்ளி " + formatCoord(lat, true);
-      document.getElementById('coordModal').style.display = 'flex';
-    }
-
-    function toggleMapLayer() {
-      const btn = document.getElementById('layerToggleBtn');
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
-      } else {
-        map.setLayoutProperty('osm-layer', 'visibility', 'none');
-        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
-      }
-    }
-
-    async function connectBluetoothSonar() {
-      try {
-        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இல்லை!"); return; }
-        alert("📡 புளூடூத் சோனார் தேடுகிறது...");
-        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
-        await device.gatt.connect();
-        document.getElementById('bt-status-btn').style.background = '#00ffcc';
-        alert("✅ இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது."); }
-    }
-
-    async function connectSatelliteDevice() {
-      try {
-        if (!navigator.bluetooth) return;
-        alert("🛰️ சாட்டிலைட் சாதனம் தேடுகிறது...");
-        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-        await device.gatt.connect();
-        document.getElementById('sat-status-btn').style.background = '#00ffcc';
-        alert("✅ சாட்டிலைட் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ சாட்டிலைட் இணைப்பு கிடைக்கவில்லை."); }
-    }
-
-    function toggleWalkieTalkie() { document.getElementById('walkieModal').style.display = 'flex'; }
-    function startWalkieTalkieChannel() {
-      alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது!");
-      document.getElementById('walkieModal').style.display = 'none';
-      document.getElementById('walkie-btn').style.background = '#7b2cbf';
-    }
-
-    function showWeatherReport() {
-      const modal = document.getElementById('weatherModal');
-      document.getElementById('weatherModalBody').innerHTML = `
-        <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான வானம்</p>
-        <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி</p>
-        <p><b>🌊 அலையின் உயரம்:</b> 1.2 மீட்டர் (மிதமான அலை)</p>
-        <p><b>🌧️ மழை வாய்ப்பு:</b> இல்லை</p>
-        <p><b>🌡️ வெப்பநிலை:</b> 31°C</p>
-      `;
-      modal.style.display = 'flex';
-    }
-
-    function showMoonSolunarData() {
-      const modal = document.getElementById('moonModal');
-      document.getElementById('moonModalBody').innerHTML = `
-        <p><b>தேதி:</b> ${new Date().toLocaleDateString()}</p>
-        <p><b>சந்திர நிலை:</b> வளர்பிறை / நிலவரம் தயார்</p>
-        <p><b>மீன் செயல்பாடு:</b> மிகச் சிறந்த மீன் பிடி நேரம்!</p>
-      `;
-      modal.style.display = 'flex';
-    }
-
-    const boatContainer = document.createElement('div');
-    boatContainer.className = 'boat-marker-container';
-    arrowInnerEl = document.createElement('div');
-    arrowInnerEl.className = 'boat-heading-arrow';
-    boatContainer.appendChild(arrowInnerEl);
-
-    boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
-      .setLngLat([currentLng, currentLat]).addTo(map);
-
-    map.on('rotate', () => {
-      const b = map.getBearing();
-      document.getElementById('resetNorthBtn').style.transform = `rotate(${-b}deg)`;
-    });
-    map.on('dragstart', () => { followBoat = false; });
-    function resetMapBearing() { map.easeTo({ bearing: 0, duration: 500 }); }
-
-    map.on('load', () => {
-      map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
-      map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
-      map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-      map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
-      loadSavedReefs();
-    });
 
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
@@ -716,284 +306,35 @@
       return dirs[Math.round(deg / 45) % 8];
     }
 
-    function calcDistanceNM(lat1, lon1, lat2, lon2) {
-      const R = 3440.065;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      return (R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))).toFixed(2);
+    function toggleToolsMenu(event) {
+      event.stopPropagation();
+      document.getElementById('toolsPanel').classList.toggle('open');
     }
-
-    function calcBearing(lat1, lon1, lat2, lon2) {
-      const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
-      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
-      return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
-    }
-
-    function toggleToolsMenu(event) { event.stopPropagation(); document.getElementById('toolsPanel').classList.toggle('open'); }
-    function toggleCompassZoom(event) { event.stopPropagation(); document.getElementById('compassBox').classList.toggle('zoomed'); }
-    
-    document.addEventListener('click', function(e) {
-      if (!document.getElementById('compassBox').contains(e.target)) document.getElementById('compassBox').classList.remove('zoomed');
-      if (!document.getElementById('toolsPanel').contains(e.target)) document.getElementById('toolsPanel').classList.remove('open');
-    });
-
-    function cycleViewModes() {
-      currentViewMode = (currentViewMode + 1) % 3;
-      document.body.classList.remove('mode-night-red', 'mode-dark');
-      const btn = document.getElementById('viewModeBtn');
-      if (currentViewMode === 1) { document.body.classList.add('mode-night-red'); btn.innerText = "🔴"; } 
-      else if (currentViewMode === 2) { document.body.classList.add('mode-dark'); btn.innerText = "🌑"; } 
-      else { btn.innerText = "☀️"; }
-    }
-
-    function playBeepSound() {
-      if (borderAlertSoundMuted) return;
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-      } catch(e) {}
-    }
-
-    function playSpotBeep() {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
-      } catch(e) {}
-    }
-
-    function toggleAlertSound() {
-      borderAlertSoundMuted = !borderAlertSoundMuted;
-      const muteBtn = document.getElementById('muteBtn');
-      const menuBtn = document.getElementById('borderSoundToggleBtn');
-      if (borderAlertSoundMuted) {
-        muteBtn.innerText = "🔔 ஒலி இயக்கு"; menuBtn.innerText = "🔕";
-        if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
-      } else {
-        muteBtn.innerText = "🔇 ஒலி நிறுத்து"; menuBtn.innerText = "🔔";
-      }
-    }
-
-    function muteSpotAlert() {
-      document.getElementById('spotAlertBanner').style.display = 'none';
-      if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
-    }
-
-    function checkSpotProximity(lat, lng) {
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let foundNearSpot = false;
-      let spotNameStr = "";
-      for (let item of saved) {
-        let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
-        if (distMeters <= 100) {
-          if (spotAlertMutedForId !== item.id) {
-            foundNearSpot = true;
-            spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
-            break;
-          }
-        }
-      }
-      const banner = document.getElementById('spotAlertBanner');
-      if (foundNearSpot) {
-        document.getElementById('spotAlertText').innerText = spotNameStr;
-        banner.style.display = 'block';
-        if (!spotBeepInterval) { playSpotBeep(); spotBeepInterval = setInterval(playSpotBeep, 1500); }
-      } else {
-        if (!spotBeepInterval) { banner.style.display = 'none'; }
-      }
-    }
-
-    function checkBorderProximity(lat, lng) {
-      const banner = document.getElementById('borderAlert');
-      if (lng >= 79.35 || lat <= 8.10) {
-        banner.style.display = 'block';
-        if (!borderAlertSoundMuted && !beepInterval) { playBeepSound(); beepInterval = setInterval(playBeepSound, 1200); }
-      } else {
-        banner.style.display = 'none';
-        if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
-      }
-    }
-
-    function toggleTrackRecorder() {
-      trackRecording = !trackRecording;
-      const btn = document.getElementById('track-btn');
-      if (trackRecording) { btn.style.background = "rgba(251, 133, 0, 0.9)"; alert("🛤️ வழித்தடப் பதிவு இயக்கப்பட்டது!"); } 
-      else { btn.style.background = "#555"; alert("⏸️ வழித்தடப் பதிவு தற்காலிகமாக நிறுத்தப்பட்டது."); }
-    }
-
-    function clearTrackHistory() {
-      if (confirm("படகின் பழைய பாதை முழுவதையும் அழிக்கவா?")) {
-        boatTrackCoords = [];
-        localStorage.removeItem('marineTrackHistory');
-        const s = map.getSource('trackSource');
-        if (s) s.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
-        alert("🗑️ பழைய பாதை அழிக்கப்பட்டது!");
-      }
-    }
-
-    function sendSOS() {
-      const msg = `🚨 SOS! ஆழ்கடல் அவசர உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
-      if (confirm("🚨 அவசர உதவி (SOS):\n\n[OK] - வாட்ஸ்அப் மூலம் அனுப்ப\n[Cancel] - சாதாரண SMS மூலம் அனுப்ப")) {
-        window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
-      } else {
-        window.open(`sms:?body=${encodeURIComponent(msg)}`);
-      }
-    }
-
-    window.startNavigation = function(tLat, tLng) {
-      targetTarget = { lat: tLat, lng: tLng };
-      document.getElementById('nav-info').style.display = 'flex';
-      map.easeTo({ bearing: calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng), duration: 600 });
-      updateNavigation();
-    };
-
-    window.stopNavigation = function() {
-      targetTarget = null;
-      const navSrc = map.getSource('navSource');
-      if (navSrc) navSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
-      document.getElementById('nav-info').style.display = 'none';
-      map.easeTo({ bearing: 0, duration: 400 });
-    };
-
-    function updateNavigation() {
-      if (!targetTarget) return;
-      document.getElementById('target-dist').innerText = `${calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng)} NM`;
-      let brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
-      document.getElementById('target-bearing').innerText = `${Math.round(brng)}° ${getHeadingDir(brng)}`;
-      const navSrc = map.getSource('navSource');
-      if (navSrc) navSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[currentLng, currentLat], [targetTarget.lng, targetTarget.lat]] } });
-    }
-
-    function getIconDetails(type) {
-      if (type === 'Fish') return '<div style="font-size:24px; cursor:pointer;">🐟</div>';
-      if (type === 'Net') return '<div style="font-size:24px; cursor:pointer;">🕸️</div>';
-      if (type === 'Squid') return '<div style="font-size:24px; cursor:pointer;">🦑</div>';
-      if (type === 'Ray') return '<div style="font-size:24px; cursor:pointer;">🪼</div>';
-      if (type === 'Reef') return '<div style="font-size:24px; cursor:pointer;">🪨</div>';
-      if (type === 'Island') return '<div style="font-size:24px; cursor:pointer;">🌴</div>';
-      if (type === 'Crab') return '<div style="font-size:24px; cursor:pointer;">🦀</div>';
-      if (type === 'Conch') return '<div style="font-size:24px; cursor:pointer;">🐚</div>';
-      return `<svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/><defs><radialGradient id="redGrad" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#F87171"/><stop offset="50%" stop-color="#EF4444"/><stop offset="100%" stop-color="#B91C1C"/></radialGradient></defs></svg>`;
-    }
-
-    function updateBottomSeaType() {
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let nearReef = saved.some(item => parseFloat(calcDistanceNM(currentLat, currentLng, item.lat, item.lng)) <= 0.15 && (item.type === 'Reef' || item.type === 'Pin'));
-      const bottomEl = document.getElementById('live-bottom');
-      if (nearReef) { bottomEl.innerText = "🪨 பாறை (Reef)"; bottomEl.style.color = "#ffcc00"; } 
-      else { bottomEl.innerText = "🏖️ மணல் (Sand)"; bottomEl.style.color = "#00ffcc"; }
-    }
-
-    function loadSavedReefs() {
-      activeMarkers.forEach(m => m.remove());
-      activeMarkers = [];
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.forEach(item => {
-        const el = document.createElement('div');
-        el.innerHTML = getIconDetails(item.type);
-        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
-          <div class="popup-box">
-            <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
-            <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
-            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
-            <button class="popup-btn popup-edit-btn" onclick="openSpotModalForCoord(${item.lat}, ${item.lng}, '${item.name}', '${item.type}', ${item.id})">✏️ எடிட்</button>
-            <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
-          </div>
-        `);
-        const marker = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
-        marker.on('dragend', () => {
-          let lngLat = marker.getLngLat();
-          let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-          let target = allSpots.find(s => s.id == item.id);
-          if (target) { target.lat = lngLat.lat; target.lng = lngLat.lng; localStorage.setItem('marineReefs', JSON.stringify(allSpots)); }
-          updateBottomSeaType();
-        });
-        activeMarkers.push(marker);
-      });
-      updateBottomSeaType();
-    }
-
-    function openSpotModalForCoord(lat, lng, name, type, id) {
-      document.getElementById('editSpotId').value = id;
-      document.getElementById('modalLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
-      document.getElementById('modalLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('modalSpotName').value = name;
-      document.getElementById('modalSpotType').value = type;
-      document.getElementById('spotModal').style.display = 'flex';
-    }
-    function closeSpotModal() { document.getElementById('spotModal').style.display = 'none'; }
-
-    function saveSpotFromModal() {
-      let id = document.getElementById('editSpotId').value;
-      let minLat = parseFloat(document.getElementById('modalLatMin').value);
-      let minLng = parseFloat(document.getElementById('modalLngMin').value);
-      let name = document.getElementById('modalSpotName').value.trim() || 'புள்ளி';
-      let type = document.getElementById('modalSpotType').value;
-      if(isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let idx = saved.findIndex(item => item.id == id);
-      if(idx !== -1) { saved[idx] = { id: Number(id), name: name, lat: 8.0 + (minLat / 60.0), lng: 78.0 + (minLng / 60.0), type: type }; }
-      localStorage.setItem('marineReefs', JSON.stringify(saved));
-      loadSavedReefs(); closeSpotModal();
-    }
-
-    window.deleteSpot = function(id) {
-      if (confirm("இந்த இடத்தை நீக்க விரும்புகிறீர்களா?")) {
-        localStorage.setItem('marineReefs', JSON.stringify(JSON.parse(localStorage.getItem('marineReefs') || '[]').filter(item => item.id !== id)));
-        loadSavedReefs(); if (targetTarget) stopNavigation();
-      }
-    };
 
     window.saveCurrentBoatSpotDirect = function() {
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.push({ id: Date.now(), name: "பார் " + new Date().toLocaleDateString(), lat: currentLat, lng: currentLng, type: 'Pin' });
+      saved.push({ id: Date.now(), name: "பார் " + new Date().toLocaleDateString(), lat: currentLat, lng: currentLng });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      loadSavedReefs();
-      alert("📍 பார் (3D சிவப்பு பின்) வெற்றிகரமாக சேமிக்கப்பட்டது!");
+      alert("📍 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
-
-    function openCoordModal() {
-      document.getElementById('coordModalTitle').innerText = "🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு";
-      document.getElementById('inputSpotName').value = '';
-      document.getElementById('coordModal').style.display = 'flex';
-    }
-    function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
-
-    function searchCoord() {
-      let lat = 8.0 + (parseFloat(document.getElementById('inputLatMin').value) / 60.0);
-      let lng = 78.0 + (parseFloat(document.getElementById('inputLngMin').value) / 60.0);
-      if (!isNaN(lat) && !isNaN(lng)) { map.flyTo({ center: [lng, lat], zoom: 16 }); closeCoordModal(); } else { alert("சரியான எண்களை உள்ளிடவும்!"); }
-    }
 
     function saveCoordAsPinDirect() {
       let lat = 8.0 + (parseFloat(document.getElementById('inputLatMin').value) / 60.0);
       let lng = 78.0 + (parseFloat(document.getElementById('inputLngMin').value) / 60.0);
-      let spotName = document.getElementById('inputSpotName').value.trim() || "புள்ளி " + formatCoord(lat, true);
-      let spotType = document.getElementById('inputSpotType').value;
+      let spotName = document.getElementById('inputSpotName').value.trim() || "புள்ளி";
       if (isNaN(lat) || isNaN(lng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.push({ id: Date.now(), name: spotName, lat: lat, lng: lng, type: spotType });
+      saved.push({ id: Date.now(), name: spotName, lat: lat, lng: lng });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      loadSavedReefs(); map.flyTo({ center: [lng, lat], zoom: 16 }); closeCoordModal();
+      document.getElementById('coordModal').style.display = 'none';
       alert("📍 " + spotName + " சேமிக்கப்பட்டது!");
     }
 
     function exportData() {
       const data = localStorage.getItem('marineReefs') || '[]';
-      if(data === '[]') { alert("சேமித்த புள்ளிகள் இல்லை!"); return; }
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-      a.download = `Marine_GPS_Data_${new Date().toLocaleDateString()}.json`;
+      a.download = `Marine_Offline_GPS_${new Date().toLocaleDateString()}.json`;
       a.click();
     }
 
@@ -1002,11 +343,8 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
-        try {
-          JSON.parse(evt.target.result);
-          localStorage.setItem('marineReefs', evt.target.result);
-          loadSavedReefs(); alert('தரவு ஏற்றப்பட்டது!');
-        } catch(e) { alert("தவறான ஃபைல்!"); }
+        localStorage.setItem('marineReefs', evt.target.result);
+        alert('தரவு வெற்றிகரமாக ஏற்றப்பட்டது!');
       };
       reader.readAsText(file);
     }
@@ -1021,16 +359,13 @@
 
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
-        let rawLat = pos.coords.latitude;
-        let rawLng = pos.coords.longitude;
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-        if (calcDistanceNM(lastValidLat, lastValidLng, rawLat, rawLng) * 1852 > 4 || rawSpeed > 0.8) {
-          currentLat = rawLat; currentLng = rawLng; lastValidLat = rawLat; lastValidLng = rawLng;
+        
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+          currentHeading = Math.round(pos.coords.heading);
         }
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.5) {
-          if (Math.abs(pos.coords.heading - lastValidHeading) >= 8) lastValidHeading = Math.round(pos.coords.heading);
-        }
-        currentHeading = lastValidHeading;
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
@@ -1039,30 +374,12 @@
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
-
-        boatMarker.setLngLat([currentLng, currentLat]);
-        if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
-
-        if (trackRecording && rawSpeed > 0.8) {
-          boatTrackCoords.push([currentLng, currentLat]);
-          if (boatTrackCoords.length > 500) boatTrackCoords.shift();
-          localStorage.setItem('marineTrackHistory', JSON.stringify(boatTrackCoords));
-          const tSrc = map.getSource('trackSource');
-          if (tSrc) tSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
-        }
-
-        checkBorderProximity(currentLat, currentLng);
-        checkSpotProximity(currentLat, currentLng);
-        updateBottomSeaType();
-
-        if (followBoat) map.easeTo({ center: [currentLng, currentLat], duration: 200 });
-        if (targetTarget) updateNavigation();
       }, () => {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
-    let fishList = [{x: 50, y: 25, s: 1.2, size: 7, color: '#ffcc00'}, {x: 120, y: 18, s: 0.9, size: 5, color: '#00ffcc'}, {x: 200, y: 38, s: 1.4, size: 8, color: '#ff5722'}];
+    let fishList = [{x: 50, y: 25, s: 1.2, size: 7, color: '#ffcc00'}, {x: 120, y: 18, s: 0.9, size: 5, color: '#00ffcc'}];
 
     function drawSonar() {
       canvas.width = canvas.parentElement.clientWidth - 115;
