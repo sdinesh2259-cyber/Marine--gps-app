@@ -719,12 +719,14 @@
       activeMarkers = [];
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
+        let nLat = item.nautical_north || formatCoord(item.lat, true);
+        let nLng = item.nautical_east || formatCoord(item.lng, false);
         const el = document.createElement('div');
         el.innerHTML = getIconDetails(item.type);
         const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
           <div class="popup-box">
             <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
-            <div class="popup-coord">${formatCoord(item.lat, true)}<br>${formatCoord(item.lng, false)}</div>
+            <div class="popup-coord">${nLat}<br>${nLng}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 வழிகாட்டு</button>
             <button class="popup-btn popup-edit-btn" onclick="openSpotModalForCoord(${item.lat}, ${item.lng}, '${item.name}', '${item.type}', ${item.id})">✏️ எடிட்</button>
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
@@ -735,7 +737,13 @@
           let lngLat = marker.getLngLat();
           let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
           let target = allSpots.find(s => s.id == item.id);
-          if (target) { target.lat = lngLat.lat; target.lng = lngLat.lng; localStorage.setItem('marineReefs', JSON.stringify(allSpots)); }
+          if (target) { 
+            target.lat = lngLat.lat; 
+            target.lng = lngLat.lng; 
+            target.nautical_north = formatCoord(lngLat.lat, true);
+            target.nautical_east = formatCoord(lngLat.lng, false);
+            localStorage.setItem('marineReefs', JSON.stringify(allSpots)); 
+          }
           updateBottomSeaType();
         });
         activeMarkers.push(marker);
@@ -857,7 +865,7 @@
       const dataStr = JSON.stringify(formattedData, null, 2);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
-      a.download = `Marine_GPS_Spots_${new Date().toLocaleDateString()}.json`;
+      a.download = `Marine_GPS_Data_${new Date().toLocaleDateString()}.json`;
       a.click();
     }
 
