@@ -16,7 +16,7 @@
       height: calc(100vh - 165px);
       width: 100vw;
       z-index: 1;
-      background: #0a192f;
+      background: #001e3d;
       pointer-events: auto !important;
     }
     
@@ -395,17 +395,17 @@
     let currentViewMode = 0;
     let activeMarkers = [];
 
-    // மிகச்சிறந்த ஓபன் ஸ்ட்ரீட் மேப் (OSM) முறை - நெட் இருக்கும்போது மேப் வரும், நெட் போனாலும் லாக் ஆகாது
+    // மிக வேகமான மற்றும் நெட் ஆன்ல இருக்கும்போது 100% மேப் காட்டும் முறை
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
       style: {
         version: 8,
         sources: {
-          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
+          'osm-tiles': { type: 'raster', tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png', 'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
         },
         layers: [
-          { id: 'background', type: 'background', paint: { 'background-color': '#0a192f' } },
+          { id: 'background', type: 'background', paint: { 'background-color': '#001e3d' } },
           { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22 }
         ]
       },
@@ -437,7 +437,7 @@
     }
 
     function toggleMapLayer() {
-      alert("🗺️ கடல் மேப் லேயர் தீவிரமாகச் செயல்படுகிறது!");
+      alert("🗺️ மேப் லேயர் ஆக்டிவ்வாக உள்ளது!");
     }
 
     async function connectBluetoothSonar() {
