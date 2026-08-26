@@ -253,7 +253,7 @@
 
   <div id="map"></div>
   <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()">🧭 N</button>
-  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
+  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🗺️ வரைபடம்</button>
 
   <div class="sonar-panel">
     <div class="sonar-info">
@@ -393,22 +393,23 @@
     let beepInterval = null;
     let spotBeepInterval = null;
     let currentViewMode = 0;
-    let currentLayerType = 'satellite';
+    let currentLayerType = 'osm'; // ஆரம்பத்தில் சாதாரண மேப் இருக்கும்
     let activeMarkers = [];
 
-    // சாட்டிலைட் மற்றும் சாதாரண மேப் இரண்டையும் மாற்றிப் பயன்படுத்தும் வசதியுடன் மேப் அமைப்பு
+    // சாட்டிலைட் மற்றும் சாதாரண மேப் இரண்டையும் கொண்டுள்ள மேப் அமைப்பு
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
       style: {
         version: 8,
         sources: {
-          'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 },
-          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
+          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 },
+          'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 }
         },
         layers: [
-          { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
+          { id: 'background', type: 'background', paint: { 'background-color': '#001e3d' } },
+          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
+          { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
         ]
       },
       center: [currentLng, currentLat],
@@ -440,14 +441,14 @@
 
     function toggleMapLayer() {
       const btn = document.getElementById('layerToggleBtn');
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
-      } else {
+      if (currentLayerType === 'osm') {
         map.setLayoutProperty('osm-layer', 'visibility', 'none');
         map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
         currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
+      } else {
+        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
+        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
       }
     }
 
