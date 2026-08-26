@@ -431,9 +431,9 @@
       document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", "பார் " + new Date().toLocaleString());
+      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
       if (userPromptName === null) return;
-      document.getElementById('inputSpotName').value = userPromptName.trim() || ("பார் " + new Date().toLocaleString());
+      document.getElementById('inputSpotName').value = userPromptName.trim() || new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
