@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder - Ultimate Pro Edition</title>
+  <title>Marine GPS & Fish Finder - True Offline Map Edition</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
@@ -249,7 +249,6 @@
       cursor: pointer;
     }
 
-    /* பார் நெருங்கும் அலாரத்திற்கான பதாகை (Spot Proximity Alert Banner) */
     .spot-alert-banner {
       position: absolute;
       top: 105px;
@@ -411,33 +410,48 @@
 </head>
 <body>
 
-  <!-- Service Worker for True Offline PWA Support -->
+  <!-- Service Worker for True Offline PWA Support with Map Tile Caching -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-offline-v3';
-          const urlsToCache = [
+          const CACHE_NAME = 'marine-gps-core-v5';
+          const TILE_CACHE = 'marine-gps-tiles-v1';
+          const coreUrls = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'
           ];
+
           self.addEventListener('install', event => {
             event.waitUntil(
-              caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache).catch(() => {}))
+              caches.open(CACHE_NAME).then(cache => cache.addAll(coreUrls))
             );
           });
+
           self.addEventListener('fetch', event => {
-            event.respondWith(
-              caches.match(event.request).then(response => {
-                return response || fetch(event.request).then(networkResponse => {
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, networkResponse.clone());
-                    return networkResponse;
+            const url = new URL(event.request.url);
+
+            // மேப் படங்களை (Map Tiles) தனியாகச் சேமிக்கும் பகுதி
+            if (url.hostname.includes('arcgisonline.com') || url.hostname.includes('openstreetmap.org')) {
+              event.respondWith(
+                caches.open(TILE_CACHE).then(cache => {
+                  return cache.match(event.request).then(response => {
+                    if (response) return response; // ஆஃப்லைனில் இருந்தால் சேமித்ததைக் கொடுக்கும்
+                    return fetch(event.request).then(networkResponse => {
+                      cache.put(event.request, networkResponse.clone()); // ஆன்லைனில் இருந்தால் படங்களைச் சேமிக்கும்
+                      return networkResponse;
+                    }).catch(() => new Response()); // முழுமையாக நெட் இல்லை என்றால் வெற்றுப் படத்தைக் காட்டும்
                   });
-                }).catch(() => caches.match('./'));
-              })
-            );
+                })
+              );
+            } else {
+              event.respondWith(
+                caches.match(event.request).then(response => {
+                  return response || fetch(event.request).catch(() => caches.match('./'));
+                })
+              );
+            }
           });
         `;
         const blob = new Blob([swCode], { type: 'text/javascript' });
@@ -454,7 +468,6 @@
     </div>
   </div>
 
-  <!-- பார் / பதிவு நெருங்கும் அலாரம் பதாகை -->
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
       <span id="spotAlertText">📍 பார் அருகில் உள்ளது!</span>
@@ -532,7 +545,7 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- வானிலை & கடல் நிலை (Weather & Sea Conditions) பாப்-அப் மோடல் -->
+  <!-- வானிலை & கடல் நிலை பாப்-அப் -->
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
       <div class="modal-title">🌤️ வானிலை & கடல் நிலை</div>
@@ -543,7 +556,7 @@
     </div>
   </div>
 
-  <!-- சந்திரன் & மீன் கணிப்பு (Solunar) பாப்-அப் மோடல் -->
+  <!-- சந்திரன் & மீன் கணிப்பு பாப்-அப் -->
   <div class="modal-overlay" id="moonModal">
     <div class="modal-content">
       <div class="modal-title">🌕 சந்திரன் & மீன் கணிப்பு (Solunar)</div>
@@ -554,7 +567,7 @@
     </div>
   </div>
 
-  <!-- வாக்கி-டாகி பாப்-அப் மோடல் -->
+  <!-- வாக்கி-டாகி பாப்-அப் -->
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content text-center">
       <div class="modal-title">🎙️ புளூடூத் வாக்கி-டாகி</div>
@@ -683,7 +696,7 @@
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     
     let borderAlertSoundMuted = false;
-    let spotAlertMutedForId = null; // ஏற்கனவே மியூட் செய்த புள்ளி ஐடி
+    let spotAlertMutedForId = null; 
     let audioCtx = null;
     let beepInterval = null;
     let spotBeepInterval = null;
@@ -793,24 +806,15 @@
       }
     }
 
-    // புளூடூத் சோனார் இணைக்கும் வசதி
     async function connectBluetoothSonar() {
       try {
-        if (!navigator.bluetooth) {
-          alert("உங்கள் பிரவுசர் புளூடூத்தை ஆதரிக்கவில்லை!");
-          return;
-        }
+        if (!navigator.bluetooth) { alert("உங்கள் பிரவுசர் புளூடூத்தை ஆதரிக்கவில்லை!"); return; }
         alert("📡 புளூடூத் சோனார் சாதனத்தைத் தேடுகிறது...");
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: ['battery_service']
-        });
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
         alert("✅ புளூடூத் சோனார் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) {
-        alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது.");
-      }
+      } catch (err) { alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது."); }
     }
 
     async function connectSatelliteDevice() {
@@ -821,26 +825,19 @@
         await device.gatt.connect();
         document.getElementById('sat-status-btn').style.background = '#00ffcc';
         alert("✅ சாட்டிலைட் சாதனம் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) {
-        alert("⚠️ சாட்டிலைட் சாதனம் இணைக்கப்படவில்லை.");
-      }
+      } catch (err) { alert("⚠️ சாட்டிலைட் சாதனம் இணைக்கப்படவில்லை."); }
     }
 
-    function toggleWalkieTalkie() {
-      document.getElementById('walkieModal').style.display = 'flex';
-    }
-
+    function toggleWalkieTalkie() { document.getElementById('walkieModal').style.display = 'flex'; }
     function startWalkieTalkieChannel() {
       alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது!");
       document.getElementById('walkieModal').style.display = 'none';
       document.getElementById('walkie-btn').style.background = '#7b2cbf';
     }
 
-    // வானிலை & கடல் நிலை (Weather & Waves Report)
     function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
       const body = document.getElementById('weatherModalBody');
-      
       body.innerHTML = `
         <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான வானம்</p>
         <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி (Kiln/SW)</p>
@@ -883,13 +880,8 @@
     arrowInnerEl.className = 'boat-heading-arrow';
     boatContainer.appendChild(arrowInnerEl);
 
-    boatMarker = new maplibregl.Marker({ 
-      element: boatContainer, 
-      anchor: 'center',
-      rotationAlignment: 'map'
-    })
-      .setLngLat([currentLng, currentLat])
-      .addTo(map);
+    boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
+      .setLngLat([currentLng, currentLat]).addTo(map);
 
     map.on('rotate', () => {
       const b = map.getBearing();
@@ -898,50 +890,13 @@
 
     map.on('dragstart', () => { followBoat = false; });
 
-    function resetMapBearing() {
-      map.easeTo({ bearing: 0, duration: 500 });
-    }
+    function resetMapBearing() { map.easeTo({ bearing: 0, duration: 500 }); }
 
     map.on('load', () => {
-      map.addSource('trackSource', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: boatTrackCoords
-          }
-        }
-      });
-
-      map.addLayer({
-        id: 'trackLayer',
-        type: 'line',
-        source: 'trackSource',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 }
-      });
-
-      map.addSource('navSource', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates: [] }
-        }
-      });
-
-      map.addLayer({
-        id: 'navLayer',
-        type: 'line',
-        source: 'navSource',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': '#ff0055',
-          'line-width': 4,
-          'line-dasharray': [2, 2]
-        }
-      });
-
+      map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
+      map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
+      map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
+      map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
       loadSavedReefs();
     });
 
@@ -962,17 +917,14 @@
       const R = 3440.065;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       return (R * c).toFixed(2);
     }
 
     function calcBearing(lat1, lon1, lat2, lon2) {
       const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
-      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
+      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
       let brng = Math.atan2(y, x) * 180 / Math.PI;
       return (brng + 360) % 360;
     }
@@ -998,16 +950,9 @@
       currentViewMode = (currentViewMode + 1) % 3;
       document.body.classList.remove('mode-night-red', 'mode-dark');
       const btn = document.getElementById('viewModeBtn');
-
-      if (currentViewMode === 1) {
-        document.body.classList.add('mode-night-red');
-        btn.innerText = "🔴";
-      } else if (currentViewMode === 2) {
-        document.body.classList.add('mode-dark');
-        btn.innerText = "🌑";
-      } else {
-        btn.innerText = "☀️";
-      }
+      if (currentViewMode === 1) { document.body.classList.add('mode-night-red'); btn.innerText = "🔴"; } 
+      else if (currentViewMode === 2) { document.body.classList.add('mode-dark'); btn.innerText = "🌑"; } 
+      else { btn.innerText = "☀️"; }
     }
 
     function playBeepSound() {
@@ -1019,10 +964,8 @@
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       } catch(e) {}
     }
 
@@ -1034,10 +977,8 @@
         osc.type = 'sine';
         osc.frequency.setValueAtTime(650, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
       } catch(e) {}
     }
 
@@ -1045,14 +986,11 @@
       borderAlertSoundMuted = !borderAlertSoundMuted;
       const muteBtn = document.getElementById('muteBtn');
       const menuBtn = document.getElementById('borderSoundToggleBtn');
-
       if (borderAlertSoundMuted) {
-        muteBtn.innerText = "🔔 ஒலி இயக்கு";
-        menuBtn.innerText = "🔕";
+        muteBtn.innerText = "🔔 ஒலி இயக்கு"; menuBtn.innerText = "🔕";
         if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
       } else {
-        muteBtn.innerText = "🔇 ஒலி நிறுத்து";
-        menuBtn.innerText = "🔔";
+        muteBtn.innerText = "🔇 ஒலி நிறுத்து"; menuBtn.innerText = "🔔";
       }
     }
 
@@ -1060,32 +998,24 @@
       const banner = document.getElementById('spotAlertBanner');
       banner.style.display = 'none';
       if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
-      // எந்த புள்ளி அருகில் இருந்ததோ அதன் ID-ஐ தற்காலிகமாக சேமித்துக்கொள்வோம், அப்பொழுதுதான் அந்தப் புள்ளியைவிட்டு விலகி வேறு புள்ளிக்குப் போகும்போது மீண்டும் அலாரம் அடிக்கும்.
     }
 
-    // சேமித்த பதிவுகள் அருகில் வந்தால் அலாரம் அடிப்பதைச் சரிபார்க்கும் வசதி
     function checkSpotProximity(lat, lng) {
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let foundNearSpot = false;
       let spotNameStr = "";
 
       for (let item of saved) {
-        // தூரத்தை மீட்டரில் கணக்கிடுதல் (1 NM = 1852 meters -> 0.05 NM = ~90 meters)
         let distNM = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng));
         let distMeters = distNM * 1852;
-
-        if (distMeters <= 100) { // 100 மீட்டருக்கு அருகில் வந்தால்
-          // ஏற்கனவே இந்தப் புள்ளிக்கு மியூட் செய்யப்பட்டிருக்கிறதா எனப் பார்க்கவும்
+        if (distMeters <= 100) {
           if (spotAlertMutedForId !== item.id) {
             foundNearSpot = true;
-            spotNameStr = `📍 அருகில் உள்ள பார்/பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
+            spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
             break;
           }
         } else {
-          // படகு அந்தப் புள்ளியை விட்டு 150 மீட்டருக்கு அப்பால் சென்றுவிட்டால், அந்த மியூட் பூட்டு விடுவிக்கப்படும்
-          if (spotAlertMutedForId === item.id && distMeters > 150) {
-            spotAlertMutedForId = null;
-          }
+          if (spotAlertMutedForId === item.id && distMeters > 150) { spotAlertMutedForId = null; }
         }
       }
 
@@ -1093,14 +1023,9 @@
       if (foundNearSpot) {
         document.getElementById('spotAlertText').innerText = spotNameStr;
         banner.style.display = 'block';
-        if (!spotBeepInterval) {
-          playSpotBeep();
-          spotBeepInterval = setInterval(playSpotBeep, 1500);
-        }
+        if (!spotBeepInterval) { playSpotBeep(); spotBeepInterval = setInterval(playSpotBeep, 1500); }
       } else {
-        if (!spotBeepInterval) {
-          banner.style.display = 'none';
-        }
+        if (!spotBeepInterval) { banner.style.display = 'none'; }
       }
     }
 
@@ -1108,10 +1033,7 @@
       const banner = document.getElementById('borderAlert');
       if (lng >= 79.35 || lat <= 8.10) {
         banner.style.display = 'block';
-        if (!borderAlertSoundMuted && !beepInterval) {
-          playBeepSound();
-          beepInterval = setInterval(playBeepSound, 1200);
-        }
+        if (!borderAlertSoundMuted && !beepInterval) { playBeepSound(); beepInterval = setInterval(playBeepSound, 1200); }
       } else {
         banner.style.display = 'none';
         if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
@@ -1121,13 +1043,8 @@
     function toggleTrackRecorder() {
       trackRecording = !trackRecording;
       const btn = document.getElementById('track-btn');
-      if (trackRecording) {
-        btn.style.background = "rgba(251, 133, 0, 0.9)";
-        alert("🛤️ வழித்தடப் பதிவு இயக்கப்பட்டது!");
-      } else {
-        btn.style.background = "#555";
-        alert("⏸️ வழித்தடப் பதிவு தற்காலிகமாக நிறுத்தப்பட்டது.");
-      }
+      if (trackRecording) { btn.style.background = "rgba(251, 133, 0, 0.9)"; alert("🛤️ வழித்தடப் பதிவு இயக்கப்பட்டது!"); } 
+      else { btn.style.background = "#555"; alert("⏸️ வழித்தடப் பதிவு தற்காலிகமாக நிறுத்தப்பட்டது."); }
     }
 
     function clearTrackHistory() {
@@ -1143,20 +1060,15 @@
     function sendSOS() {
       const msg = `🚨 SOS! ஆழ்கடல் அவசர உதவி தேவை. இடம்: https://maps.google.com/?q=${currentLat},${currentLng} (${formatCoord(currentLat, true)}, ${formatCoord(currentLng, false)})`;
       let choice = confirm("🚨 அவசர உதவி (SOS):\n\n[OK] - வாட்ஸ்அப் மூலம் அனுப்ப\n[Cancel] - சாதாரண SMS மூலம் அனுப்ப");
-      if (choice) {
-        window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`);
-      } else {
-        window.open(`sms:?body=${encodeURIComponent(msg)}`);
-      }
+      if (choice) { window.open(`whatsapp://send?text=${encodeURIComponent(msg)}`); } 
+      else { window.open(`sms:?body=${encodeURIComponent(msg)}`); }
     }
 
     window.startNavigation = function(tLat, tLng) {
       targetTarget = { lat: tLat, lng: tLng };
       document.getElementById('nav-info').style.display = 'flex';
-      
       const brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
       map.easeTo({ bearing: brng, duration: 600 });
-
       updateNavigation();
     };
 
@@ -1172,20 +1084,10 @@
       if (!targetTarget) return;
       const dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
       const brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
-
       document.getElementById('target-dist').innerText = `${dist} NM`;
       document.getElementById('target-bearing').innerText = `${Math.round(brng)}° ${getHeadingDir(brng)}`;
-
       const navSrc = map.getSource('navSource');
-      if (navSrc) {
-        navSrc.setData({
-          type: 'Feature',
-          geometry: {
-            type: 'LineString',
-            coordinates: [[currentLng, currentLat], [targetTarget.lng, targetTarget.lat]]
-          }
-        });
-      }
+      if (navSrc) { navSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[currentLng, currentLat], [targetTarget.lng, targetTarget.lat]] } }); }
     }
 
     function getIconDetails(type) {
@@ -1204,13 +1106,7 @@
             <svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/>
               <circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/>
-              <defs>
-                <radialGradient id="redGrad" cx="30%" cy="30%" r="70%">
-                  <stop offset="0%" stop-color="#F87171"/>
-                  <stop offset="50%" stop-color="#EF4444"/>
-                  <stop offset="100%" stop-color="#B91C1C"/>
-                </radialGradient>
-              </defs>
+              <defs><radialGradient id="redGrad" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#F87171"/><stop offset="50%" stop-color="#EF4444"/><stop offset="100%" stop-color="#B91C1C"/></radialGradient></defs>
             </svg>`;
           break;
       }
@@ -1220,34 +1116,22 @@
     function updateBottomSeaType() {
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nearReef = false;
-
       for (let item of saved) {
         let d = parseFloat(calcDistanceNM(currentLat, currentLng, item.lat, item.lng));
-        if (d <= 0.15 && (item.type === 'Reef' || item.type === 'Pin')) {
-          nearReef = true;
-          break;
-        }
+        if (d <= 0.15 && (item.type === 'Reef' || item.type === 'Pin')) { nearReef = true; break; }
       }
-
       const bottomEl = document.getElementById('live-bottom');
-      if (nearReef) {
-        bottomEl.innerText = "🪨 பாறை (Reef)";
-        bottomEl.style.color = "#ffcc00";
-      } else {
-        bottomEl.innerText = "🏖️ மணல் (Sand)";
-        bottomEl.style.color = "#00ffcc";
-      }
+      if (nearReef) { bottomEl.innerText = "🪨 பாறை (Reef)"; bottomEl.style.color = "#ffcc00"; } 
+      else { bottomEl.innerText = "🏖️ மணல் (Sand)"; bottomEl.style.color = "#00ffcc"; }
     }
 
     function loadSavedReefs() {
       activeMarkers.forEach(m => m.remove());
       activeMarkers = [];
-
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
         const el = document.createElement('div');
         el.innerHTML = getIconDetails(item.type);
-
         const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
           <div class="popup-box">
             <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
@@ -1257,24 +1141,14 @@
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
-
-        const marker = new maplibregl.Marker({ element: el, draggable: true })
-          .setLngLat([item.lng, item.lat])
-          .setPopup(popup)
-          .addTo(map);
-
+        const marker = new maplibregl.Marker({ element: el, draggable: true }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
         marker.on('dragend', () => {
           const lngLat = marker.getLngLat();
           let allSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
           let target = allSpots.find(s => s.id == item.id);
-          if (target) {
-            target.lat = lngLat.lat;
-            target.lng = lngLat.lng;
-            localStorage.setItem('marineReefs', JSON.stringify(allSpots));
-          }
+          if (target) { target.lat = lngLat.lat; target.lng = lngLat.lng; localStorage.setItem('marineReefs', JSON.stringify(allSpots)); }
           updateBottomSeaType();
         });
-
         activeMarkers.push(marker);
       });
       updateBottomSeaType();
@@ -1297,16 +1171,12 @@
       let minLng = parseFloat(document.getElementById('modalLngMin').value);
       let name = document.getElementById('modalSpotName').value.trim() || 'புள்ளி';
       let type = document.getElementById('modalSpotType').value;
-
       if(isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
-
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
-
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let idx = saved.findIndex(item => item.id == id);
       if(idx !== -1) { saved[idx] = { id: Number(id), name: name, lat: lat, lng: lng, type: type }; }
-
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       loadSavedReefs();
       closeSpotModal();
@@ -1346,9 +1216,7 @@
         let lng = 78.0 + (lngMin / 60.0);
         map.flyTo({ center: [lng, lat], zoom: 16 });
         closeCoordModal();
-      } else {
-        alert("சரியான எண்களை உள்ளிடவும்!");
-      }
+      } else { alert("சரியான எண்களை உள்ளிடவும்!"); }
     }
 
     function saveCoordAsPinDirect() {
@@ -1356,17 +1224,10 @@
       let lngMin = parseFloat(document.getElementById('inputLngMin').value);
       let spotName = document.getElementById('inputSpotName').value.trim();
       let spotType = document.getElementById('inputSpotType').value;
-
-      if (isNaN(latMin) || isNaN(lngMin)) {
-        alert("சரியான Latitude மற்றும் Longitude எண்களை உள்ளிடவும்!");
-        return;
-      }
-
+      if (isNaN(latMin) || isNaN(lngMin)) { alert("சரியான Latitude மற்றும் Longitude எண்களை உள்ளிடவும்!"); return; }
       let lat = 8.0 + (latMin / 60.0);
       let lng = 78.0 + (lngMin / 60.0);
-
       if (!spotName) spotName = "புள்ளி " + formatCoord(lat, true);
-
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.push({ id: Date.now(), name: spotName, lat: lat, lng: lng, type: spotType });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -1396,9 +1257,7 @@
             localStorage.setItem('marineReefs', evt.target.result);
             loadSavedReefs();
             alert('தரவு வெற்றிகரமாக ஏற்றப்பட்டது!');
-        } catch(e) {
-            alert("தவறான ஃபைல் வடிவம்!");
-        }
+        } catch(e) { alert("தவறான ஃபைல் வடிவம்!"); }
       };
       reader.readAsText(file);
     }
@@ -1418,22 +1277,15 @@
         let rawLat = pos.coords.latitude;
         let rawLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-
         let distMoved = calcDistanceNM(lastValidLat, lastValidLng, rawLat, rawLng) * 1852; 
         if (distMoved > 4 || rawSpeed > 0.8) {
-            currentLat = rawLat;
-            currentLng = rawLng;
-            lastValidLat = rawLat;
-            lastValidLng = rawLng;
+            currentLat = rawLat; currentLng = rawLng; lastValidLat = rawLat; lastValidLng = rawLng;
         }
-
         if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.5) {
           let newHead = Math.round(pos.coords.heading);
           let diff = Math.abs(newHead - lastValidHeading);
           if (diff > 180) diff = 360 - diff;
-          if (diff >= 8) {
-            lastValidHeading = newHead;
-          }
+          if (diff >= 8) { lastValidHeading = newHead; }
         }
         currentHeading = lastValidHeading;
 
@@ -1446,28 +1298,21 @@
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
         boatMarker.setLngLat([currentLng, currentLat]);
-        if (arrowInnerEl) {
-          arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
-        }
+        if (arrowInnerEl) { arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`; }
 
         if (trackRecording && rawSpeed > 0.8) {
           boatTrackCoords.push([currentLng, currentLat]);
           if (boatTrackCoords.length > 500) boatTrackCoords.shift();
           localStorage.setItem('marineTrackHistory', JSON.stringify(boatTrackCoords));
           const tSrc = map.getSource('trackSource');
-          if (tSrc) {
-            tSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
-          }
+          if (tSrc) { tSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } }); }
         }
 
         checkBorderProximity(currentLat, currentLng);
         checkSpotProximity(currentLat, currentLng);
         updateBottomSeaType();
 
-        if (followBoat) {
-          map.easeTo({ center: [currentLng, currentLat], duration: 200 });
-        }
-
+        if (followBoat) { map.easeTo({ center: [currentLng, currentLat], duration: 200 }); }
         if (targetTarget) updateNavigation();
         
       }, err => {
@@ -1477,7 +1322,6 @@
 
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
-    
     let fishList = [
       { x: 50, y: 25, s: 1.2, size: 7, color: '#ffcc00' },
       { x: 120, y: 18, s: 0.9, size: 5, color: '#00ffcc' },
@@ -1489,7 +1333,6 @@
       canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       ctx.beginPath();
       ctx.fillStyle = '#062038';
       ctx.strokeStyle = '#00ffcc';
@@ -1500,8 +1343,7 @@
         ctx.lineTo(x, y);
       }
       ctx.lineTo(canvas.width, canvas.height);
-      ctx.fill();
-      ctx.stroke();
+      ctx.fill(); ctx.stroke();
 
       ctx.strokeStyle = '#2a9d8f';
       ctx.lineWidth = 2;
@@ -1517,12 +1359,10 @@
       fishList.forEach(f => {
         f.x -= f.s;
         if(f.x < -20) f.x = canvas.width + 20;
-
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2.2, 0, 0, Math.PI * 2);
         ctx.fill();
-
         ctx.beginPath();
         ctx.moveTo(f.x + f.size - 1, f.y);
         ctx.lineTo(f.x + f.size + 4, f.y - 3);
@@ -1530,7 +1370,6 @@
         ctx.closePath();
         ctx.fill();
       });
-
       requestAnimationFrame(drawSonar);
     }
     drawSonar();
