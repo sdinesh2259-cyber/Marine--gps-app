@@ -362,7 +362,7 @@
   </div>
 
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
+    <button class="btn-action btn-red" onclick="saveCurrentBoatSpotDirect()">📍 பார் சேமி</button>
     <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
@@ -431,7 +431,9 @@
       document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = new Date().toLocaleString();
+      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
+      if (userPromptName === null) return;
+      document.getElementById('inputSpotName').value = userPromptName.trim() || new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -796,20 +798,33 @@
       }
     };
 
-    // 'பார் சேமி' பட்டனை அழுத்தும்போது கோஆர்டினேட் பாப்அப் (ஐகான் மற்றும் பெயர் மாற்றும் வசதியுடன்) வருவது
-    window.openCurrentBoatModal = function() {
-      document.getElementById('coordModalTitle').innerText = "📍 படகு உள்ள இடத்தில் பார் சேமிக்க";
-      document.getElementById('inputLatMin').value = ((currentLat - Math.floor(currentLat)) * 60).toFixed(3);
-      document.getElementById('inputLngMin').value = ((currentLng - Math.floor(currentLng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = new Date().toLocaleString();
-      document.getElementById('coordModal').style.display = 'flex';
+    window.saveCurrentBoatSpotDirect = function() {
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let nLat = formatCoord(currentLat, true);
+      let nLng = formatCoord(currentLng, false);
+      let spotName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
+      if (spotName === null) return;
+      spotName = spotName.trim() || new Date().toLocaleString();
+      
+      saved.push({
+        id: Date.now(),
+        name: spotName,
+        lat: currentLat,
+        lng: currentLng,
+        nautical_north: nLat,
+        nautical_east: nLng,
+        type: 'Pin'
+      });
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      loadSavedReefs();
+      alert("📍 பார் வெற்றிகரமாக சேமிக்கப்பட்டது!");
     };
 
     function openCoordModal() {
       document.getElementById('coordModalTitle').innerText = "🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு";
-      document.getElementById('inputLatMin').value = "";
-      document.getElementById('inputLngMin').value = "";
-      document.getElementById('inputSpotName').value = new Date().toLocaleString();
+      let userPromptName = prompt("பார் / இடத்தின் பெயரை உள்ளிடவும்:", new Date().toLocaleString());
+      if (userPromptName === null) return;
+      document.getElementById('inputSpotName').value = userPromptName.trim() || new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
     }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
