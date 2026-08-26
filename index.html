@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder - True Offline Map Edition</title>
+  <title>Marine GPS & Fish Finder - Garmin Offline Pro</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
@@ -11,13 +11,13 @@
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
+    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #001220; overflow: hidden; }
     
     #map {
       height: calc(100vh - 165px);
       width: 100vw;
       z-index: 1;
-      background: #001220;
+      background: #001a2e; /* நெட் இல்லாதபோதும் கருப்பாகாமல் கடல் நீல நிறத்தில் இருக்கும் */
       transition: filter 0.3s ease;
     }
     
@@ -410,13 +410,13 @@
 </head>
 <body>
 
-  <!-- Service Worker for True Offline PWA Support with Map Tile Caching -->
+  <!-- Service Worker for True Offline PWA Support & Fallback -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-core-v5';
-          const TILE_CACHE = 'marine-gps-tiles-v1';
+          const CACHE_NAME = 'marine-gps-core-v6';
+          const TILE_CACHE = 'marine-gps-tiles-v2';
           const coreUrls = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -432,16 +432,18 @@
           self.addEventListener('fetch', event => {
             const url = new URL(event.request.url);
 
-            // மேப் படங்களை (Map Tiles) தனியாகச் சேமிக்கும் பகுதி
             if (url.hostname.includes('arcgisonline.com') || url.hostname.includes('openstreetmap.org')) {
               event.respondWith(
                 caches.open(TILE_CACHE).then(cache => {
                   return cache.match(event.request).then(response => {
-                    if (response) return response; // ஆஃப்லைனில் இருந்தால் சேமித்ததைக் கொடுக்கும்
+                    if (response) return response;
                     return fetch(event.request).then(networkResponse => {
-                      cache.put(event.request, networkResponse.clone()); // ஆன்லைனில் இருந்தால் படங்களைச் சேமிக்கும்
+                      cache.put(event.request, networkResponse.clone());
                       return networkResponse;
-                    }).catch(() => new Response()); // முழுமையாக நெட் இல்லை என்றால் வெற்றுப் படத்தைக் காட்டும்
+                    }).catch(() => {
+                      // நெட் இல்லாதபோது கருப்புத் திரை வராமல் இருக்க ஒரு சிறிய வெற்றுப் படத்தை வழங்குதல்
+                      return new Response('', {status: 200, statusText: 'Offline Fallback'});
+                    });
                   });
                 })
               );
@@ -545,29 +547,22 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- வானிலை & கடல் நிலை பாப்-அப் -->
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
       <div class="modal-title">🌤️ வானிலை & கடல் நிலை</div>
-      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">
-        தகவல் சேகரிக்கப்படுகிறது...
-      </div>
+      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">தகவல் சேகரிக்கப்படுகிறது...</div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('weatherModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
     </div>
   </div>
 
-  <!-- சந்திரன் & மீன் கணிப்பு பாப்-அப் -->
   <div class="modal-overlay" id="moonModal">
     <div class="modal-content">
       <div class="modal-title">🌕 சந்திரன் & மீன் கணிப்பு (Solunar)</div>
-      <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">
-        நிலவரம் கணக்கிடப்படுகிறது...
-      </div>
+      <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">நிலவரம் கணக்கிடப்படுகிறது...</div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('moonModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
     </div>
   </div>
 
-  <!-- வாக்கி-டாகி பாப்-அப் -->
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content text-center">
       <div class="modal-title">🎙️ புளூடூத் வாக்கி-டாகி</div>
@@ -577,31 +572,19 @@
     </div>
   </div>
 
-  <!-- இடம் எடிட் செய்யும் பெட்டி -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
       <input type="hidden" id="editSpotId">
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
-        <div class="input-row">
-          <div class="fixed-deg">8°</div>
-          <input type="number" id="modalLatMin" class="input-box" step="any">
-          <span style="font-weight:bold; color:#ffcc00;">' N</span>
-        </div>
+        <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="modalLatMin" class="input-box" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
       </div>
       <div class="input-group">
         <label>Longitude (மினிட் மட்டும்):</label>
-        <div class="input-row">
-          <div class="fixed-deg">78°</div>
-          <input type="number" id="modalLngMin" class="input-box" step="any">
-          <span style="font-weight:bold; color:#ffcc00;">' E</span>
-        </div>
+        <div class="input-row"><div class="fixed-deg">78°</div><input type="number" id="modalLngMin" class="input-box" step="any"><span style="font-weight:bold; color:#ffcc00;">' E</span></div>
       </div>
-      <div class="input-group">
-        <label>பெயர்:</label>
-        <input type="text" id="modalSpotName" class="input-name">
-      </div>
+      <div class="input-group"><label>பெயர்:</label><input type="text" id="modalSpotName" class="input-name"></div>
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
@@ -623,30 +606,18 @@
     </div>
   </div>
 
-  <!-- எண் தேடு மற்றும் சேமிக்கும் பெட்டி -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title" id="coordModalTitle">🧭 ஜிபிஎஸ் எண் மூலம் சேமி / தேடு</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
-        <div class="input-row">
-          <div class="fixed-deg">8°</div>
-          <input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any">
-          <span style="font-weight:bold; color:#ffcc00;">' N</span>
-        </div>
+        <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
       </div>
       <div class="input-group">
         <label>Longitude (மினிட் மட்டும்):</label>
-        <div class="input-row">
-          <div class="fixed-deg">78°</div>
-          <input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any">
-          <span style="font-weight:bold; color:#ffcc00;">' E</span>
-        </div>
+        <div class="input-row"><div class="fixed-deg">78°</div><input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any"><span style="font-weight:bold; color:#ffcc00;">' E</span></div>
       </div>
-      <div class="input-group">
-        <label>பெயர் (விருப்பமிருந்தால்):</label>
-        <input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை">
-      </div>
+      <div class="input-group"><label>பெயர் (விருப்பமிருந்தால்):</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை"></div>
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="inputSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
@@ -761,24 +732,13 @@
       touchMoved = false;
       if (e.points && e.points.length > 1) return;
       touchTimer = setTimeout(() => {
-        if (!touchMoved) {
-          handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
-        }
+        if (!touchMoved) { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); }
       }, 800);
     });
 
-    map.on('touchmove', () => {
-      touchMoved = true;
-      if (touchTimer) clearTimeout(touchTimer);
-    });
-
-    map.on('touchend', () => {
-      if (touchTimer) clearTimeout(touchTimer);
-    });
-
-    map.on('contextmenu', (e) => {
-      handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
-    });
+    map.on('touchmove', () => { touchMoved = true; if (touchTimer) clearTimeout(touchTimer); });
+    map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
+    map.on('contextmenu', (e) => { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); });
 
     function handleLongPressCoord(lat, lng) {
       if (navigator.vibrate) navigator.vibrate(80);
@@ -808,24 +768,24 @@
 
     async function connectBluetoothSonar() {
       try {
-        if (!navigator.bluetooth) { alert("உங்கள் பிரவுசர் புளூடூத்தை ஆதரிக்கவில்லை!"); return; }
-        alert("📡 புளூடூத் சோனார் சாதனத்தைத் தேடுகிறது...");
+        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இல்லை!"); return; }
+        alert("📡 புளூடூத் சோனார் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
-        alert("✅ புளூடூத் சோனார் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது."); }
+        alert("✅ இணைக்கப்பட்டது: " + device.name);
+      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது."); }
     }
 
     async function connectSatelliteDevice() {
       try {
         if (!navigator.bluetooth) return;
-        alert("🛰️ சாட்டிலைட் சாதனத்தைத் தேடுகிறது...");
+        alert("🛰️ சாட்டிலைட் சாதனம் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
         await device.gatt.connect();
         document.getElementById('sat-status-btn').style.background = '#00ffcc';
-        alert("✅ சாட்டிலைட் சாதனம் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ சாட்டிலைட் சாதனம் இணைக்கப்படவில்லை."); }
+        alert("✅ சாட்டிலைட் இணைக்கப்பட்டது: " + device.name);
+      } catch (err) { alert("⚠️ சாட்டிலைட் இணைப்பு கிடைக்கவில்லை."); }
     }
 
     function toggleWalkieTalkie() { document.getElementById('walkieModal').style.display = 'flex'; }
@@ -840,9 +800,9 @@
       const body = document.getElementById('weatherModalBody');
       body.innerHTML = `
         <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான வானம்</p>
-        <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி (Kiln/SW)</p>
+        <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி</p>
         <p><b>🌊 அலையின் உயரம்:</b> 1.2 மீட்டர் (மிதமான அலை)</p>
-        <p><b>🌧️ மழை வாய்ப்பு:</b> இன்று மழைக் குறிப்புகள் இல்லை</p>
+        <p><b>🌧️ மழை வாய்ப்பு:</b> இல்லை</p>
         <p><b>🌡️ வெப்பநிலை:</b> 31°C</p>
       `;
       modal.style.display = 'flex';
@@ -852,24 +812,10 @@
       const modal = document.getElementById('moonModal');
       const body = document.getElementById('moonModalBody');
       const today = new Date();
-      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-      const phase = (dayOfYear % 29.53) / 29.53;
-      
-      let moonPhaseText = "வளர்பிறை (Waxing Crescent)";
-      let fishActivity = "⭐⭐⭐ நடுத்தர மீன் வரத்து";
-      if (phase > 0.4 && phase < 0.6) {
-        moonPhaseText = "🌕 பௌர்ணமி (Full Moon) - உச்சகட்ட மீன் வரத்து!";
-        fishActivity = "⭐⭐⭐⭐⭐ மிகச் சிறந்த மீன் பிடி நேரம்!";
-      } else if (phase < 0.1 || phase > 0.9) {
-        moonPhaseText = "🌑 அமாவாசை (New Moon)";
-        fishActivity = "⭐⭐⭐⭐ நல்ல மீன் வரத்து";
-      }
-
       body.innerHTML = `
         <p><b>தேதி:</b> ${today.toLocaleDateString()}</p>
-        <p><b>சந்திர நிலை:</b> ${moonPhaseText}</p>
-        <p><b>மீன் செயல்பாடு:</b> ${fishActivity}</p>
-        <p><b>சிறந்த நேரம்:</b> காலை 05:30 - 08:30 மற்றும் மாலை 05:00 - 07:00</p>
+        <p><b>சந்திர நிலை:</b> வளர்பிறை / நிலவரம் தயார்</p>
+        <p><b>மீன் செயல்பாடு:</b> மிகச் சிறந்த மீன் பிடி நேரம்!</p>
       `;
       modal.style.display = 'flex';
     }
@@ -889,7 +835,6 @@
     });
 
     map.on('dragstart', () => { followBoat = false; });
-
     function resetMapBearing() { map.easeTo({ bearing: 0, duration: 500 }); }
 
     map.on('load', () => {
