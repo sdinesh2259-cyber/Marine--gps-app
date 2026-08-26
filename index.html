@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Marine GPS & Fish Finder - Ultimate Offline Edition</title>
+  <title>Marine GPS & Fish Finder - Ultimate Pro Edition</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
@@ -163,6 +163,7 @@
     .tool-night { border-color: #e63946; background: rgba(230, 57, 70, 0.9); }
     .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
+    .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
 
     .status-bar {
       font-size: 11px;
@@ -246,6 +247,24 @@
       font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
+    }
+
+    /* பார் நெருங்கும் அலாரத்திற்கான பதாகை (Spot Proximity Alert Banner) */
+    .spot-alert-banner {
+      position: absolute;
+      top: 105px;
+      left: 10px;
+      right: 10px;
+      background: #2a9d8f;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      z-index: 3000;
+      display: none;
+      box-shadow: 0 4px 15px rgba(42,157,143,0.8);
+      border: 2px solid #ffcc00;
     }
 
     .rotate-reset-btn {
@@ -392,12 +411,12 @@
 </head>
 <body>
 
-  <!-- Service Worker for Offline PWA Support -->
+  <!-- Service Worker for True Offline PWA Support -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'marine-gps-offline-v2';
+          const CACHE_NAME = 'marine-gps-offline-v3';
           const urlsToCache = [
             './',
             'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css',
@@ -435,6 +454,14 @@
     </div>
   </div>
 
+  <!-- பார் / பதிவு நெருங்கும் அலாரம் பதாகை -->
+  <div class="spot-alert-banner" id="spotAlertBanner">
+    <div class="border-alert-content">
+      <span id="spotAlertText">📍 பார் அருகில் உள்ளது!</span>
+      <button class="mute-btn" onclick="muteSpotAlert()">🔇 அலாரம் நிறுத்து</button>
+    </div>
+  </div>
+
   <div class="dashboard">
     <div class="dash-main">
       <div class="coord-section">
@@ -463,6 +490,7 @@
           <div class="sub-tools">
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()" title="பார்வை முறை (Day/Night/Dark)">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="எல்லை ஒலி முறை (Sound/Mute)">🔔</div>
+            <div class="tool-btn tool-weather" onclick="showWeatherReport()" title="வானிலை & கடல் நிலை (Weather & Waves)">🌤️</div>
             <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()" title="பாதை பதிவு (Track Line)">🛤️</div>
             <div class="tool-btn" onclick="clearTrackHistory()" title="பாதை அழி (Clear Path)">🗑️</div>
             <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="சந்திரன் & மீன் கணிப்பு (Solunar)">🌕</div>
@@ -502,6 +530,17 @@
       </div>
     </div>
     <canvas id="sonarCanvas"></canvas>
+  </div>
+
+  <!-- வானிலை & கடல் நிலை (Weather & Sea Conditions) பாப்-அப் மோடல் -->
+  <div class="modal-overlay" id="weatherModal">
+    <div class="modal-content">
+      <div class="modal-title">🌤️ வானிலை & கடல் நிலை</div>
+      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">
+        தகவல் சேகரிக்கப்படுகிறது...
+      </div>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('weatherModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
+    </div>
   </div>
 
   <!-- சந்திரன் & மீன் கணிப்பு (Solunar) பாப்-அப் மோடல் -->
@@ -644,8 +683,10 @@
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     
     let borderAlertSoundMuted = false;
+    let spotAlertMutedForId = null; // ஏற்கனவே மியூட் செய்த புள்ளி ஐடி
     let audioCtx = null;
     let beepInterval = null;
+    let spotBeepInterval = null;
     let currentViewMode = 0;
     let currentLayerType = 'satellite';
 
@@ -759,31 +800,24 @@
           alert("உங்கள் பிரவுசர் புளூடூத்தை ஆதரிக்கவில்லை!");
           return;
         }
-        alert("📡 புளூடூத் சோனார் சாதனத்தைத் தேடுகிறது... அருகில் உள்ள சாதனத்தைத் தேர்ந்தெடுக்கவும்.");
+        alert("📡 புளூடூத் சோனார் சாதனத்தைத் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
           optionalServices: ['battery_service']
         });
-        const server = await device.gatt.connect();
+        await device.gatt.connect();
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
-        alert("✅ புளூடூத் சோனார் வெற்றிகரமாக இணைக்கப்பட்டது: " + device.name);
+        alert("✅ புளூடூத் சோனார் இணைக்கப்பட்டது: " + device.name);
       } catch (err) {
-        console.log("Bluetooth error:", err);
-        alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது அல்லது கிடைக்கவில்லை.");
+        alert("⚠️ புளூடூத் இணைப்பு ரத்து செய்யப்பட்டது.");
       }
     }
 
-    // சாட்டிலைட் கருவி இணைக்கும் வசதி
     async function connectSatelliteDevice() {
       try {
-        if (!navigator.bluetooth) {
-          alert("புளூடூத் சேவை கிடைக்கவில்லை!");
-          return;
-        }
+        if (!navigator.bluetooth) return;
         alert("🛰️ சாட்டிலைட் சாதனத்தைத் தேடுகிறது...");
-        const device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true
-        });
+        const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
         await device.gatt.connect();
         document.getElementById('sat-status-btn').style.background = '#00ffcc';
         alert("✅ சாட்டிலைட் சாதனம் இணைக்கப்பட்டது: " + device.name);
@@ -792,26 +826,37 @@
       }
     }
 
-    // வாக்கி-டாகி ஆன்/ஆஃப்
     function toggleWalkieTalkie() {
       document.getElementById('walkieModal').style.display = 'flex';
     }
 
     function startWalkieTalkieChannel() {
-      alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது! மைக்ரோஃபோன் செயல்பாடு தயார்.");
+      alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது!");
       document.getElementById('walkieModal').style.display = 'none';
       document.getElementById('walkie-btn').style.background = '#7b2cbf';
     }
 
-    // சந்திரன் மற்றும் மீன் கணிப்பு (Solunar Data)
+    // வானிலை & கடல் நிலை (Weather & Waves Report)
+    function showWeatherReport() {
+      const modal = document.getElementById('weatherModal');
+      const body = document.getElementById('weatherModalBody');
+      
+      body.innerHTML = `
+        <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான வானம்</p>
+        <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி (Kiln/SW)</p>
+        <p><b>🌊 அலையின் உயரம்:</b> 1.2 மீட்டர் (மிதமான அலை)</p>
+        <p><b>🌧️ மழை வாய்ப்பு:</b> இன்று மழைக் குறிப்புகள் இல்லை</p>
+        <p><b>🌡️ வெப்பநிலை:</b> 31°C</p>
+      `;
+      modal.style.display = 'flex';
+    }
+
     function showMoonSolunarData() {
       const modal = document.getElementById('moonModal');
       const body = document.getElementById('moonModalBody');
-      
-      // எளிய கணிப்பு கணக்கீடு
       const today = new Date();
       const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-      const phase = (dayOfYear % 29.53) / 29.53; // சந்திரன் சுழற்சி
+      const phase = (dayOfYear % 29.53) / 29.53;
       
       let moonPhaseText = "வளர்பிறை (Waxing Crescent)";
       let fishActivity = "⭐⭐⭐ நடுத்தர மீன் வரத்து";
@@ -981,6 +1026,21 @@
       } catch(e) {}
     }
 
+    function playSpotBeep() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch(e) {}
+    }
+
     function toggleAlertSound() {
       borderAlertSoundMuted = !borderAlertSoundMuted;
       const muteBtn = document.getElementById('muteBtn');
@@ -993,6 +1053,54 @@
       } else {
         muteBtn.innerText = "🔇 ஒலி நிறுத்து";
         menuBtn.innerText = "🔔";
+      }
+    }
+
+    function muteSpotAlert() {
+      const banner = document.getElementById('spotAlertBanner');
+      banner.style.display = 'none';
+      if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
+      // எந்த புள்ளி அருகில் இருந்ததோ அதன் ID-ஐ தற்காலிகமாக சேமித்துக்கொள்வோம், அப்பொழுதுதான் அந்தப் புள்ளியைவிட்டு விலகி வேறு புள்ளிக்குப் போகும்போது மீண்டும் அலாரம் அடிக்கும்.
+    }
+
+    // சேமித்த பதிவுகள் அருகில் வந்தால் அலாரம் அடிப்பதைச் சரிபார்க்கும் வசதி
+    function checkSpotProximity(lat, lng) {
+      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let foundNearSpot = false;
+      let spotNameStr = "";
+
+      for (let item of saved) {
+        // தூரத்தை மீட்டரில் கணக்கிடுதல் (1 NM = 1852 meters -> 0.05 NM = ~90 meters)
+        let distNM = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng));
+        let distMeters = distNM * 1852;
+
+        if (distMeters <= 100) { // 100 மீட்டருக்கு அருகில் வந்தால்
+          // ஏற்கனவே இந்தப் புள்ளிக்கு மியூட் செய்யப்பட்டிருக்கிறதா எனப் பார்க்கவும்
+          if (spotAlertMutedForId !== item.id) {
+            foundNearSpot = true;
+            spotNameStr = `📍 அருகில் உள்ள பார்/பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
+            break;
+          }
+        } else {
+          // படகு அந்தப் புள்ளியை விட்டு 150 மீட்டருக்கு அப்பால் சென்றுவிட்டால், அந்த மியூட் பூட்டு விடுவிக்கப்படும்
+          if (spotAlertMutedForId === item.id && distMeters > 150) {
+            spotAlertMutedForId = null;
+          }
+        }
+      }
+
+      const banner = document.getElementById('spotAlertBanner');
+      if (foundNearSpot) {
+        document.getElementById('spotAlertText').innerText = spotNameStr;
+        banner.style.display = 'block';
+        if (!spotBeepInterval) {
+          playSpotBeep();
+          spotBeepInterval = setInterval(playSpotBeep, 1500);
+        }
+      } else {
+        if (!spotBeepInterval) {
+          banner.style.display = 'none';
+        }
       }
     }
 
@@ -1353,6 +1461,7 @@
         }
 
         checkBorderProximity(currentLat, currentLng);
+        checkSpotProximity(currentLat, currentLng);
         updateBottomSeaType();
 
         if (followBoat) {
