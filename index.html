@@ -17,6 +17,7 @@
       width: 100vw;
       z-index: 1;
       background: #001220;
+      pointer-events: auto !important;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -30,7 +31,8 @@
       top: 10px; left: 10px; right: 10px;
       background: rgba(0, 0, 0, 0.95);
       color: white; padding: 8px 10px; border-radius: 10px;
-      z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
+      z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
+      pointer-events: auto !important;
     }
     .dash-main { display: flex; align-items: center; justify-content: space-between; }
     .coord-section { flex: 1; text-align: left; }
@@ -42,9 +44,10 @@
     .compass-container {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: #111; padding: 4px 8px; border-radius: 8px; border: 1px solid #444; cursor: pointer;
+      pointer-events: auto !important;
     }
     .compass-container.zoomed {
-      transform: scale(1.6); transform-origin: top right; z-index: 2000;
+      transform: scale(1.6); transform-origin: top right; z-index: 10000;
       background: #000; border: 2px solid #00ffcc; box-shadow: 0 6px 20px rgba(0,0,0,0.9);
     }
     .compass-dial {
@@ -66,14 +69,14 @@
     .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
-    .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; }
+    .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
     .main-menu-btn {
       width: 40px; height: 40px; border-radius: 50%; background: #1d3557; border: 2px solid #ffcc00;
       color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
     }
     .sub-tools {
       display: none; position: absolute; top: 48px; right: 0; flex-direction: column; gap: 6px;
-      align-items: flex-end; background: rgba(0,0,0,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; z-index: 2000;
+      align-items: flex-end; background: rgba(0,0,0,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; z-index: 10000;
     }
     .marine-tools-panel.open .sub-tools { display: flex; }
 
@@ -101,30 +104,33 @@
 
     .border-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #d90429; color: white;
-      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 3000; display: none; border: 2px solid #ffcc00;
+      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
     }
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
     .spot-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #2a9d8f; color: white;
-      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 3000; display: none; border: 2px solid #ffcc00;
+      font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
     }
 
     .rotate-reset-btn {
       position: absolute; top: 110px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #00ffcc;
       color: #00ffcc; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: bold; cursor: pointer; z-index: 999; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      font-size: 13px; font-weight: bold; cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      pointer-events: auto !important;
     }
     .layer-toggle-btn {
       position: absolute; top: 154px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #ffcc00;
-      color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 999;
+      color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
       display: flex; align-items: center; gap: 3px;
+      pointer-events: auto !important;
     }
 
     .sonar-panel {
       position: absolute; bottom: 48px; left: 0; right: 0; height: 115px;
-      background: #020b14; border-top: 2px solid #00ffcc; z-index: 1000; display: flex;
+      background: #020b14; border-top: 2px solid #00ffcc; z-index: 9999; display: flex;
+      pointer-events: auto !important;
     }
     .sonar-info {
       width: 115px; background: #051422; padding: 6px; border-right: 1px solid #1a3a5a;
@@ -136,11 +142,13 @@
     
     .btn-container {
       position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 4px; z-index: 1000; width: 98%; max-width: 440px; justify-content: center;
+      display: flex; gap: 4px; z-index: 10000; width: 98%; max-width: 440px; justify-content: center;
+      pointer-events: auto !important;
     }
     .btn-action {
       flex: 1; border: none; padding: 8px 2px; font-size: 10px; font-weight: bold;
       border-radius: 16px; color: white; cursor: pointer; text-align: center;
+      pointer-events: auto !important;
     }
     .btn-red { background: #e63946; }
     .btn-blue { background: #1d3557; }
@@ -156,7 +164,8 @@
 
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75); z-index: 2000; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.75); z-index: 20000; display: none; align-items: center; justify-content: center;
+      pointer-events: auto !important;
     }
     .modal-content {
       background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #444;
@@ -388,24 +397,23 @@
     let isSatellite = true;
     let activeMarkers = [];
 
-    // Leaflet Map Initialization
     const map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 14);
 
-    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri' });
-    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM' });
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri', updateWhenIdle: true, keepBuffer: 4 });
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM', updateWhenIdle: true, keepBuffer: 4 });
 
     satLayer.addTo(map);
 
     function toggleMapLayer() {
       const btn = document.getElementById('layerToggleBtn');
       if (isSatellite) {
-        map.removeLayer(satLayer);
+        if (map.hasLayer(satLayer)) map.removeLayer(satLayer);
         osmLayer.addTo(map);
         isSatellite = false;
         btn.innerHTML = '🗺️ வரைபடம்';
         btn.style.borderColor = '#00ffcc';
       } else {
-        map.removeLayer(osmLayer);
+        if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
         satLayer.addTo(map);
         isSatellite = true;
         btn.innerHTML = '🛰️ சாட்டிலைட்';
@@ -413,7 +421,6 @@
       }
     }
 
-    // Boat Marker with Arrow
     const boatIcon = L.divIcon({
       className: 'boat-arrow-icon',
       html: `<div class="arrow-inner" id="boatArrow"></div>`,
@@ -798,6 +805,7 @@
     function exportData() {
       const rawData = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       if(rawData.length === 0) { alert("சேமித்த புள்ளிகள் இல்லை!"); return; }
+      
       const formattedData = rawData.map(item => ({
         id: item.id,
         name: item.name,
@@ -805,6 +813,7 @@
         nautical_east: item.nautical_east || formatCoord(item.lng, false),
         type: item.type || 'Pin'
       }));
+
       const dataStr = JSON.stringify(formattedData, null, 2);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
@@ -877,6 +886,7 @@
 
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
+    
     let fishList = [
       {x: 60, y: 35, s: 1.2, sizeX: 14, sizeY: 7, color: '#ffcc00'}, 
       {x: 170, y: 22, s: 0.9, sizeX: 12, sizeY: 6, color: '#00ffcc'}, 
@@ -903,17 +913,30 @@
       fishList.forEach(f => {
         f.x -= f.s; 
         if(f.x < -40) f.x = canvas.width + 40;
+        
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.sizeX, f.sizeY, 0, 0, Math.PI * 2);
         ctx.fill();
+        
         ctx.beginPath();
         ctx.moveTo(f.x + f.sizeX, f.y);
         ctx.lineTo(f.x + f.sizeX + 9, f.y - 6);
         ctx.lineTo(f.x + f.sizeX + 9, f.y + 6);
         ctx.closePath();
         ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 1, 0, Math.PI * 2);
+        ctx.fill();
       });
+
       requestAnimationFrame(drawSonar);
     }
     drawSonar();
