@@ -7,7 +7,7 @@
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
@@ -17,7 +17,6 @@
       width: 100vw;
       z-index: 1;
       background: #001220;
-      pointer-events: auto !important;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -102,12 +101,6 @@
     }
     .stop-nav-btn { background: #ffffff; color: #e63946; border: none; padding: 2px 6px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-    .boat-marker-container { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-    .boat-heading-arrow {
-      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 30px solid #00ffcc;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
-    }
-
     .border-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #d90429; color: white;
       font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
@@ -187,9 +180,14 @@
     .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
-    .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; pointer-events: auto; }
-    
-    .maplibregl-marker { touch-action: none; }
+
+    .boat-arrow-icon {
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    }
+    .arrow-inner {
+      width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-bottom: 26px solid #00ffcc;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.9)); transform-origin: center center;
+    }
   </style>
 </head>
 <body>
@@ -379,17 +377,11 @@
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
 
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
-    let lastValidLat = currentLat;
-    let lastValidLng = currentLng;
-    let lastValidHeading = 0;
-
-    let boatMarker = null;
-    let arrowInnerEl = null;
     let targetTarget = null;
     let followBoat = true;
     let trackRecording = true;
@@ -401,44 +393,48 @@
     let beepInterval = null;
     let spotBeepInterval = null;
     let currentViewMode = 0;
-    let currentLayerType = 'satellite';
+    let isSatellite = true;
     let activeMarkers = [];
 
-    // MapLibre with full 3D / 360 rotation & offline-safe UI touch protection
-    const map = new maplibregl.Map({
-      container: 'map',
-      maxZoom: 18.5,
-      style: {
-        version: 8,
-        sources: {
-          'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 },
-          'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
-        },
-        layers: [
-          { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
-          { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-          { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
-        ]
-      },
-      center: [currentLng, currentLat],
-      zoom: 14,
-      pitch: 45,
-      bearing: 0,
-      pitchWithRotate: true,
-      dragRotate: true,
-      touchZoomRotate: true
-    });
+    const map = L.map('map', { zoomControl: false }).setView([currentLat, currentLng], 14);
 
-    let touchTimer = null;
-    let touchMoved = false;
-    map.on('touchstart', (e) => {
-      touchMoved = false;
-      if (e.points && e.points.length > 1) return;
-      touchTimer = setTimeout(() => { if (!touchMoved) { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); } }, 800);
+    const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, attribution: 'Esri' });
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OSM' });
+
+    satLayer.addTo(map);
+
+    function toggleMapLayer() {
+      const btn = document.getElementById('layerToggleBtn');
+      if (isSatellite) {
+        if (map.hasLayer(satLayer)) map.removeLayer(satLayer);
+        osmLayer.addTo(map);
+        isSatellite = false;
+        btn.innerHTML = '🗺️ வரைபடம்';
+        btn.style.borderColor = '#00ffcc';
+      } else {
+        if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
+        satLayer.addTo(map);
+        isSatellite = true;
+        btn.innerHTML = '🛰️ சாட்டிலைட்';
+        btn.style.borderColor = '#ffcc00';
+      }
+    }
+
+    const boatIcon = L.divIcon({
+      className: 'boat-arrow-icon',
+      html: `<div class="arrow-inner" id="boatArrow"></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
     });
-    map.on('touchmove', () => { touchMoved = true; if (touchTimer) clearTimeout(touchTimer); });
-    map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
-    map.on('contextmenu', (e) => { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); });
+    const boatMarker = L.marker([currentLat, currentLng], { icon: boatIcon }).addTo(map);
+
+    let trackLine = L.polyline(boatTrackCoords, { color: '#ffcc00', weight: 3.5, opacity: 0.85 }).addTo(map);
+    let navLine = L.polyline([], { color: '#ff0055', weight: 4, dashArray: '5, 5' }).addTo(map);
+
+    map.on('dragstart', () => { followBoat = false; });
+    function resetMapBearing() { map.setView([currentLat, currentLng], map.getZoom()); followBoat = true; }
+
+    map.on('contextmenu', (e) => { handleLongPressCoord(e.latlng.lat, e.latlng.lng); });
 
     function handleLongPressCoord(lat, lng) {
       if (navigator.vibrate) navigator.vibrate(80);
@@ -447,19 +443,6 @@
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
       document.getElementById('inputSpotName').value = new Date().toLocaleString();
       document.getElementById('coordModal').style.display = 'flex';
-    }
-
-    function toggleMapLayer() {
-      const btn = document.getElementById('layerToggleBtn');
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
-      } else {
-        map.setLayoutProperty('osm-layer', 'visibility', 'none');
-        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
-      }
     }
 
     async function connectBluetoothSonar() {
@@ -512,30 +495,6 @@
       `;
       modal.style.display = 'flex';
     }
-
-    const boatContainer = document.createElement('div');
-    boatContainer.className = 'boat-marker-container';
-    arrowInnerEl = document.createElement('div');
-    arrowInnerEl.className = 'boat-heading-arrow';
-    boatContainer.appendChild(arrowInnerEl);
-
-    boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
-      .setLngLat([currentLng, currentLat]).addTo(map);
-
-    map.on('rotate', () => {
-      const b = map.getBearing();
-      document.getElementById('resetNorthBtn').style.transform = `rotate(${-b}deg)`;
-    });
-    map.on('dragstart', () => { followBoat = false; });
-    function resetMapBearing() { map.easeTo({ bearing: 0, pitch: 45, duration: 500 }); }
-
-    map.on('load', () => {
-      map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
-      map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
-      map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-      map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
-      loadSavedReefs();
-    });
 
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
@@ -669,8 +628,7 @@
       if (confirm("படகின் பழைய பாதை முழுவதையும் அழிக்கவா?")) {
         boatTrackCoords = [];
         localStorage.removeItem('marineTrackHistory');
-        const s = map.getSource('trackSource');
-        if (s) s.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+        trackLine.setLatLngs([]);
         alert("🗑️ பழைய பாதை அழிக்கப்பட்டது!");
       }
     }
@@ -687,16 +645,13 @@
     window.startNavigation = function(tLat, tLng) {
       targetTarget = { lat: tLat, lng: tLng };
       document.getElementById('nav-info').style.display = 'flex';
-      map.easeTo({ bearing: calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng), duration: 600 });
       updateNavigation();
     };
 
     window.stopNavigation = function() {
       targetTarget = null;
-      const navSrc = map.getSource('navSource');
-      if (navSrc) navSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+      navLine.setLatLngs([]);
       document.getElementById('nav-info').style.display = 'none';
-      map.easeTo({ bearing: 0, pitch: 45, duration: 400 });
     };
 
     function updateNavigation() {
@@ -704,20 +659,19 @@
       document.getElementById('target-dist').innerText = `${calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng)} NM`;
       let brng = calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
       document.getElementById('target-bearing').innerText = `${Math.round(brng)}° ${getHeadingDir(brng)}`;
-      const navSrc = map.getSource('navSource');
-      if (navSrc) navSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[currentLng, currentLat], [targetTarget.lng, targetTarget.lat]] } });
+      navLine.setLatLngs([[currentLat, currentLng], [targetTarget.lat, targetTarget.lng]]);
     }
 
-    function getIconDetails(type) {
-      if (type === 'Fish') return '<div style="font-size:24px; cursor:pointer;">🐟</div>';
-      if (type === 'Net') return '<div style="font-size:24px; cursor:pointer;">🕸️</div>';
-      if (type === 'Squid') return '<div style="font-size:24px; cursor:pointer;">🦑</div>';
-      if (type === 'Ray') return '<div style="font-size:24px; cursor:pointer;">🪼</div>';
-      if (type === 'Reef') return '<div style="font-size:24px; cursor:pointer;">🪨</div>';
-      if (type === 'Island') return '<div style="font-size:24px; cursor:pointer;">🌴</div>';
-      if (type === 'Crab') return '<div style="font-size:24px; cursor:pointer;">🦀</div>';
-      if (type === 'Conch') return '<div style="font-size:24px; cursor:pointer;">🐚</div>';
-      return `<svg class="pure-red-pin" viewBox="0 0 24 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.37258 0 0 5.37258 0 12C0 20 12 36 12 36C12 36 24 20 24 12C24 5.37258 18.6274 0 12 0Z" fill="url(#redGrad)" stroke="#7F1D1D" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="#FFFFFF" stroke="#DC2626" stroke-width="1"/><defs><radialGradient id="redGrad" cx="30%" cy="30%" r="70%"><stop offset="0%" stop-color="#F87171"/><stop offset="50%" stop-color="#EF4444"/><stop offset="100%" stop-color="#B91C1C"/></radialGradient></defs></svg>`;
+    function getIconHtml(type) {
+      if (type === 'Fish') return '🐟';
+      if (type === 'Net') return '🕸️';
+      if (type === 'Squid') return '🦑';
+      if (type === 'Ray') return '🪼';
+      if (type === 'Reef') return '🪨';
+      if (type === 'Island') return '🌴';
+      if (type === 'Crab') return '🦀';
+      if (type === 'Conch') return '🐚';
+      return '📍';
     }
 
     function updateBottomSeaType() {
@@ -729,15 +683,20 @@
     }
 
     function loadSavedReefs() {
-      activeMarkers.forEach(m => m.remove());
+      activeMarkers.forEach(m => map.removeLayer(m));
       activeMarkers = [];
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       saved.forEach(item => {
         let nLat = item.nautical_north || formatCoord(item.lat, true);
         let nLng = item.nautical_east || formatCoord(item.lng, false);
-        const el = document.createElement('div');
-        el.innerHTML = getIconDetails(item.type);
-        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`
+        const customIcon = L.divIcon({
+          className: 'custom-spot-icon',
+          html: `<div style="font-size:24px; filter:drop-shadow(2px 4px 6px rgba(0,0,0,0.9));">${getIconHtml(item.type)}</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        const marker = L.marker([item.lat, item.lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup(`
           <div class="popup-box">
             <b style="color:#00ffcc; font-size:13px;">${item.name}</b>
             <div class="popup-coord">${nLat}<br>${nLng}</div>
@@ -746,8 +705,6 @@
             <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `);
-        const marker = new maplibregl.Marker({ element: el, draggable: false }).setLngLat([item.lng, item.lat]).setPopup(popup).addTo(map);
-        el.addEventListener('touchmove', (e) => { e.stopPropagation(); }, {passive: false});
         activeMarkers.push(marker);
       });
       updateBottomSeaType();
@@ -818,7 +775,7 @@
     function searchCoord() {
       let lat = 8.0 + (parseFloat(document.getElementById('inputLatMin').value) / 60.0);
       let lng = 78.0 + (parseFloat(document.getElementById('inputLngMin').value) / 60.0);
-      if (!isNaN(lat) && !isNaN(lng)) { map.flyTo({ center: [lng, lat], zoom: 16 }); closeCoordModal(); } else { alert("சரியான எண்களை உள்ளிடவும்!"); }
+      if (!isNaN(lat) && !isNaN(lng)) { map.setView([lat, lng], 16); closeCoordModal(); } else { alert("சரியான எண்களை உள்ளிடவும்!"); }
     }
 
     function saveCoordAsPinDirect() {
@@ -840,14 +797,13 @@
         type: spotType
       });
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      loadSavedReefs(); map.flyTo({ center: [lng, lat], zoom: 16 }); closeCoordModal();
+      loadSavedReefs(); map.setView([lat, lng], 16); closeCoordModal();
       alert("📍 " + spotName + " சேமிக்கப்பட்டது!");
     }
 
     function exportData() {
       const rawData = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       if(rawData.length === 0) { alert("சேமித்த புள்ளிகள் இல்லை!"); return; }
-      
       const formattedData = rawData.map(item => ({
         id: item.id,
         name: item.name,
@@ -855,7 +811,6 @@
         nautical_east: item.nautical_east || formatCoord(item.lng, false),
         type: item.type || 'Pin'
       }));
-
       const dataStr = JSON.stringify(formattedData, null, 2);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([dataStr], { type: 'application/json' }));
@@ -890,13 +845,11 @@
         let rawLat = pos.coords.latitude;
         let rawLng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-        if (calcDistanceNM(lastValidLat, lastValidLng, rawLat, rawLng) * 1852 > 4 || rawSpeed > 0.8) {
-          currentLat = rawLat; currentLng = rawLng; lastValidLat = rawLat; lastValidLng = rawLng;
+        
+        currentLat = rawLat; currentLng = rawLng;
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.0) {
+          currentHeading = Math.round(pos.coords.heading);
         }
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && rawSpeed > 1.5) {
-          if (Math.abs(pos.coords.heading - lastValidHeading) >= 8) lastValidHeading = Math.round(pos.coords.heading);
-        }
-        currentHeading = lastValidHeading;
 
         document.getElementById('lat-coord').innerText = formatCoord(currentLat, true);
         document.getElementById('lng-coord').innerText = formatCoord(currentLng, false);
@@ -906,29 +859,30 @@
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-        boatMarker.setLngLat([currentLng, currentLat]);
-        if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
+        boatMarker.setLatLng([currentLat, currentLng]);
+        const arrowEl = document.getElementById('boatArrow');
+        if (arrowEl) arrowEl.style.transform = `rotate(${currentHeading}deg)`;
 
         if (trackRecording && rawSpeed > 0.8) {
-          boatTrackCoords.push([currentLng, currentLat]);
+          boatTrackCoords.push([currentLat, currentLng]);
           if (boatTrackCoords.length > 500) boatTrackCoords.shift();
           localStorage.setItem('marineTrackHistory', JSON.stringify(boatTrackCoords));
-          const tSrc = map.getSource('trackSource');
-          if (tSrc) tSrc.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
+          trackLine.setLatLngs(boatTrackCoords);
         }
 
         checkBorderProximity(currentLat, currentLng);
         checkSpotProximity(currentLat, currentLng);
         updateBottomSeaType();
 
-        if (followBoat) map.easeTo({ center: [currentLng, currentLat], duration: 200 });
+        if (followBoat) map.setView([currentLat, currentLng]);
         if (targetTarget) updateNavigation();
       }, () => {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
+    loadSavedReefs();
+
     const canvas = document.getElementById('sonarCanvas');
     const ctx = canvas.getContext('2d');
-    
     let fishList = [
       {x: 60, y: 35, s: 1.2, sizeX: 14, sizeY: 7, color: '#ffcc00'}, 
       {x: 170, y: 22, s: 0.9, sizeX: 12, sizeY: 6, color: '#00ffcc'}, 
@@ -955,30 +909,17 @@
       fishList.forEach(f => {
         f.x -= f.s; 
         if(f.x < -40) f.x = canvas.width + 40;
-        
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.sizeX, f.sizeY, 0, 0, Math.PI * 2);
         ctx.fill();
-        
         ctx.beginPath();
         ctx.moveTo(f.x + f.sizeX, f.y);
         ctx.lineTo(f.x + f.sizeX + 9, f.y - 6);
         ctx.lineTo(f.x + f.sizeX + 9, f.y + 6);
         ctx.closePath();
         ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(f.x - f.sizeX / 2.5, f.y - 2, 1, 0, Math.PI * 2);
-        ctx.fill();
       });
-
       requestAnimationFrame(drawSonar);
     }
     drawSonar();
