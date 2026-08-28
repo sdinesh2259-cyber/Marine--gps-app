@@ -159,9 +159,9 @@
       pointer-events: auto !important;
     }
     .btn-red { background: #e63946; }
-    .btn-blue { background: #1d3557; }
-    .btn-darkblue { background: #14213d; }
-    .btn-green { background: #2a9d8f; }
+    .btn-green-save { background: #2a9d8f; }
+    .btn-blue-list { background: #1d3557; }
+    .btn-darkblue-export { background: #14213d; }
 
     .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
@@ -199,14 +199,12 @@
     .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
     .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
 
-    /* Number Badge on Pin Marker */
     .custom-marker-wrapper { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
     .marker-number-badge {
       position: absolute; top: -8px; right: -10px; background: #ff0055; color: #fff;
       font-size: 9px; font-weight: bold; padding: 1px 4px; border-radius: 50%; border: 1.5px solid #fff;
       font-family: monospace; box-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
-
     .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); }
     .maplibregl-marker { touch-action: none; }
   </style>
@@ -373,7 +371,7 @@
 
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title" id="coordModalTitle">🧭 எண் மூலம் சேமி / தேடு</div>
+      <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பார் சேமி</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
@@ -382,7 +380,7 @@
         <label>Longitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">78°</div><input type="number" id="inputLngMin" class="input-box" placeholder="8.972" step="any"><span style="font-weight:bold; color:#ffcc00;">' E</span></div>
       </div>
-      <div class="input-group"><label>பெயர் (விருப்பமிருந்தால்):</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை"></div>
+      <div class="input-group"><label>பெயர் / விபரம்:</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை / மீன் பார்"></div>
       <div class="input-group">
         <label>ஐகான் தேர்வு:</label>
         <select id="inputSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
@@ -399,17 +397,16 @@
       </div>
       <div class="modal-btn-row">
         <button class="modal-btn btn-save" onclick="saveCoordAsPinDirect()">💾 சேமி</button>
-        <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="searchCoord()">🔍 இடத்திற்கு செல்</button>
+        <button class="modal-btn btn-cancel" onclick="closeCoordModal()">ரத்து</button>
       </div>
-      <button class="modal-btn btn-cancel" onclick="closeCoordModal()" style="width:100%; margin-top:8px;">ரத்து</button>
     </div>
   </div>
 
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
-    <button class="btn-action btn-green" onclick="openCoordModal()">💾 சேமி</button>
-    <button class="btn-action btn-blue" onclick="openSpotsListModal()">📁 பட்டியல்</button>
-    <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
+    <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
+    <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
+    <button class="btn-action btn-darkblue-export" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
 
@@ -460,13 +457,11 @@
       touchZoomRotate: true
     });
 
-    // Double Tap or Long Press to save spot
     let lastTapTime = 0;
     map.on('click', (e) => {
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
       if (tapLength < 300 && tapLength > 0) {
-        // Double Tap detected!
         handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
       }
       lastTapTime = currentTime;
@@ -863,7 +858,7 @@
           div.className = 'spot-item';
           div.innerHTML = `
             <div class="spot-info">
-              <div>📍 [${numSeq}] ${item.name}</div>
+              <div>📍 [பதிவு #${numSeq}] ${item.name}</div>
               <div style="color:#ffcc00;">${item.time || ''}</div>
               <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
             </div>
@@ -880,6 +875,7 @@
 
     function exportSingleSpotFile(spotObj) {
       let seqNo = spotObj.seq || 1;
+      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
       const exportData = {
         number: `பதிவு #${seqNo}`,
         name: spotObj.name,
@@ -892,7 +888,6 @@
       const blob = new Blob([dataStr], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
       a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
       a.click();
     }
@@ -1000,7 +995,6 @@
       if (confirm("இந்த இடத்தை நீக்க விரும்புகிறீர்களா?")) {
         let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved = saved.filter(item => item.id != id);
-        // Re-assign sequence numbers sequentially
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
