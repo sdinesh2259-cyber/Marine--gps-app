@@ -280,15 +280,15 @@
 
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
-      <div class="modal-title">🌤️ வானிலை & கடல் நிலை</div>
-      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">தகவல் சேகரிக்கப்படுகிறது...</div>
+      <div class="modal-title">🌤️ நேரலை வானிலை & கடல் நிலை</div>
+      <div id="weatherModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">இன்றைய தரவுகள் பெறப்படுகின்றன...</div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('weatherModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="moonModal">
     <div class="modal-content">
-      <div class="modal-title">🌕 சந்திரன் & மீன் கணிப்பு (Solunar)</div>
+      <div class="modal-title">🌕 நிலவு நிலை & மீன் கணிப்பு</div>
       <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">நிலவரம் கணக்கிடப்படுகிறது...</div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('moonModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
     </div>
@@ -404,7 +404,6 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // MapLibre with full 3D / 360 rotation & touch support with offline safety
     const map = new maplibregl.Map({
       container: 'map',
       maxZoom: 18.5,
@@ -491,24 +490,66 @@
       document.getElementById('walkie-btn').style.background = '#7b2cbf';
     }
 
-    function showWeatherReport() {
+    // Live Weather API Integration based on real date & location
+    async function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
-      document.getElementById('weatherModalBody').innerHTML = `
-        <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான வானம்</p>
-        <p><b>💨 காற்றின் வேகம்:</b> 12 - 15 கி.மீ / மணி</p>
-        <p><b>🌊 அலையின் உயரம்:</b> 1.2 மீட்டர் (மிதமான அலை)</p>
-        <p><b>🌧️ மழை வாய்ப்பு:</b> இல்லை</p>
-        <p><b>🌡️ வெப்பநிலை:</b> 31°C</p>
-      `;
+      document.getElementById('weatherModalBody').innerHTML = `⏳ இன்றைய நேரலை வானிலை பெறப்படுகிறது...`;
       modal.style.display = 'flex';
+
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`);
+        const data = await res.json();
+        const cur = data.current;
+        
+        let waveHeight = (cur.wind_speed_10m * 0.08).toFixed(1); // Approximate wave height calculation
+        document.getElementById('weatherModalBody').innerHTML = `
+          <p><b>📅 தேதி:</b> ${new Date().toLocaleDateString()}</p>
+          <p><b>🌡️ வெப்பநிலை:</b> ${cur.temperature_2m}°C</p>
+          <p><b>💨 காற்றின் வேகம்:</b> ${cur.wind_speed_10m} கி.மீ / மணி</p>
+          <p><b>🌊 அலை உயரம் (மதிப்பீடு):</b> ${waveHeight} மீட்டர்</p>
+          <p><b>🌧️ மழை அளவு:</b> ${cur.precipitation} மி.மீ</p>
+          <p style="color: #00ffcc; margin-top: 8px;">✅ இன்றைய நேரலைத் தரவுகள் வெற்றிகரமாக புதுப்பிக்கப்பட்டன!</p>
+        `;
+      } catch (err) {
+        document.getElementById('weatherModalBody').innerHTML = `
+          <p><b>🌤️ வானிலை நிலை:</b> தெளிவான வெயில் / மிதமான கடல்</p>
+          <p><b>💨 காற்றின் வேகம்:</b> 12 கி.மீ / மணி</p>
+          <p><b>🌊 அலை உயரம்:</b> 1.0 மீட்டர்</p>
+          <p style="color: #ffcc00;">⚠️ ஆஃப்லைன் மோட்: வழக்கமான தரவுகள் காட்டப்படுகின்றன.</p>
+        `;
+      }
     }
 
+    // Live Moon Phase & Solunar Calculator for today's real date
     function showMoonSolunarData() {
       const modal = document.getElementById('moonModal');
+      const now = new Date();
+      
+      // Calculate lunar cycle approximation
+      const knownNewMoon = new Date('2026-01-19');
+      const diffDays = (now - knownNewMoon) / (1000 * 60 * 60 * 24);
+      const cycle = 29.53;
+      const moonAge = diffDays % cycle;
+      
+      let phaseName = "வளர்பிறை (Waxing)";
+      let fishActivity = "மிகச் சிறந்த மீன் பிடி நேரம்! 🐟🔥";
+      if (moonAge > 13 && moonAge < 16) {
+        phaseName = "🌕 பௌர்ணமி (Full Moon)";
+        fishActivity = "பௌர்ணமி நாள் - மீன்கள் அதிகம் மேற்பரப்பில் இருக்கும்!";
+      } else if (moonAge < 2 || moonAge > 28) {
+        phaseName = "🌑 அமாவாசை (New Moon)";
+        fishActivity = "அமாவாசை நாள் - ஆழ்கடலில் மீன் வேட்டை சிறக்கும்!";
+      } else if (moonAge > 6 && moonAge < 9) {
+        phaseName = "🌓 முதல் கால் பகுதி";
+      } else if (moonAge > 20 && moonAge < 23) {
+        phaseName = "🌗 தேய்பிறை";
+      }
+
       document.getElementById('moonModalBody').innerHTML = `
-        <p><b>தேதி:</b> ${new Date().toLocaleDateString()}</p>
-        <p><b>சந்திர நிலை:</b> வளர்பிறை / நிலவரம் தயார்</p>
-        <p><b>மீன் செயல்பாடு:</b> மிகச் சிறந்த மீன் பிடி நேரம்!</p>
+        <p><b>📅 தேதி:</b> ${now.toLocaleDateString()}</p>
+        <p><b>🌕 சந்திர நிலை:</b> ${phaseName} (வயது: ${Math.round(moonAge)} நாட்கள்)</p>
+        <p><b>🐟 மீன் செயல்பாடு:</b> ${fishActivity}</p>
+        <p><b>⏰ சிறந்த நேரம்:</b> காலை 05:30 - 08:30 மற்றும் மாலை 05:00 - 07:30</p>
       `;
       modal.style.display = 'flex';
     }
