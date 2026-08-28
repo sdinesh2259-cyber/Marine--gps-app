@@ -353,8 +353,8 @@
 
   <div class="modal-overlay" id="spotsListModal">
     <div class="modal-content">
-      <div class="modal-title">📁 DM சோனார் பார் ஃபைல் (தனித்தனி பதிவுகள்)</div>
-      <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px; text-align: center;">ஒவ்வொரு முறையும் தனித்தனியாகப் பதிந்த பார்கள்:</div>
+      <div class="modal-title">📁 DM Marine GPS பதிவுகள்</div>
+      <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px; text-align: center;">நீங்கள் சேமித்த தனித்தனி பார்கள் பட்டியல்:</div>
       <div id="spotsContainer" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
         <!-- Dynamic list -->
       </div>
@@ -399,8 +399,8 @@
 
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
-    <button class="btn-action btn-green" onclick="openSpotsListModal()">📁 DM சோனார் ஃபைல்</button>
-    <button class="btn-action btn-blue" onclick="exportAllPhoneMemoryFiles()">💾 எடு</button>
+    <button class="btn-action btn-green" onclick="openSpotsListModal()">📁 DM மெரைன் ஃபைல்</button>
+    <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
@@ -771,6 +771,8 @@
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
       let timeStr = new Date().toLocaleString();
+      let latStr = formatCoord(lat, true);
+      let lngStr = formatCoord(lng, false);
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let newSpot = null;
@@ -778,14 +780,14 @@
         let index = saved.findIndex(item => item.id == id);
         if (index !== -1) {
           saved[index].lat = lat; saved[index].lng = lng; saved[index].name = name; saved[index].type = type;
+          saved[index].latNautical = latStr; saved[index].lngNautical = lngStr;
         }
       } else {
-        newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr };
+        newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latStr, lngNautical: lngStr };
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // Save this single new spot directly as an individual file in phone memory
       if (newSpot) {
         exportSingleSpotFile(newSpot);
       }
@@ -806,9 +808,11 @@
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
       let timeStr = new Date().toLocaleString();
+      let latStr = formatCoord(lat, true);
+      let lngStr = formatCoord(lng, false);
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr };
+      let newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latStr, lngNautical: lngStr };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
@@ -841,15 +845,15 @@
         container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:20px;">சேமிக்கப்பட்ட பார்கள் எதுவும் இல்லை!</div>';
       } else {
         saved.forEach(item => {
-          let latMin = ((item.lat - Math.floor(item.lat)) * 60).toFixed(3);
-          let lngMin = ((item.lng - Math.floor(item.lng)) * 60).toFixed(3);
+          let latNaut = item.latNautical || formatCoord(item.lat, true);
+          let lngNaut = item.lngNautical || formatCoord(item.lng, false);
           const div = document.createElement('div');
           div.className = 'spot-item';
           div.innerHTML = `
             <div class="spot-info">
               <div>📍 ${item.name}</div>
-              <div style="color:#00ffcc;">${item.time || 'நேரம் இல்லை'}</div>
-              <div>8° ${latMin}' N | 78° ${lngMin}' E</div>
+              <div style="color:#ffcc00;">${item.time || 'நேரம் இல்லை'}</div>
+              <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
             </div>
             <div class="spot-actions">
               <button class="single-download-btn" onclick='exportSingleSpotById(${item.id})'>டவுன்லோட்</button>
@@ -868,7 +872,7 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
-      a.download = `DM_Sonar_Spot_${safeName}.json`;
+      a.download = `DM_Marine_GPS_${safeName}.json`;
       a.click();
     }
 
@@ -882,7 +886,14 @@
     }
 
     function exportAllPhoneMemoryFiles() {
-      const dataStr = localStorage.getItem('marineReefs') || '[]';
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      saved.forEach(item => {
+        if(!item.latNautical) {
+          item.latNautical = formatCoord(item.lat, true);
+          item.lngNautical = formatCoord(item.lng, false);
+        }
+      });
+      const dataStr = JSON.stringify(saved, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -929,15 +940,14 @@
         el.innerHTML = getSpotSvgIcon(item.type || 'Pin');
         el.style.cursor = 'pointer';
 
-        let latMin = ((item.lat - Math.floor(item.lat)) * 60).toFixed(3);
-        let lngMin = ((item.lng - Math.floor(item.lng)) * 60).toFixed(3);
-        let coordStr = `8° ${latMin}' N | 78° ${lngMin}' E`;
+        let latNaut = item.latNautical || formatCoord(item.lat, true);
+        let lngNaut = item.lngNautical || formatCoord(item.lng, false);
 
         let popupHtml = `
           <div class="popup-box">
             <b>📍 ${item.name}</b>
             <div style="font-size:10px; color:#ffcc00;">${item.time || ''}</div>
-            <div class="popup-coord">${coordStr}</div>
+            <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
             <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
