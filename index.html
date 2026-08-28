@@ -406,8 +406,7 @@
     <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
     <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
-    <button class="btn-action btn-darkblue-export" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
-    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+    <button class="btn-action btn-darkblue-export" onclick="exportData()">📁 எடு</button>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -462,7 +461,7 @@
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
       if (tapLength < 300 && tapLength > 0) {
-        handleLongPressCoord(e.lngLat.lat, e.lngLat.lng);
+        handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng);
       }
       lastTapTime = currentTime;
     });
@@ -472,18 +471,18 @@
     map.on('touchstart', (e) => {
       touchMoved = false;
       if (e.points && e.points.length > 1) return;
-      touchTimer = setTimeout(() => { if (!touchMoved) { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); } }, 800);
+      touchTimer = setTimeout(() => { if (!touchMoved) { handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng); } }, 800);
     });
     map.on('touchmove', () => { touchMoved = true; if (touchTimer) clearTimeout(touchTimer); });
     map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
-    map.on('contextmenu', (e) => { handleLongPressCoord(e.lngLat.lat, e.lngLat.lng); });
+    map.on('contextmenu', (e) => { handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng); });
 
-    function handleLongPressCoord(lat, lng) {
+    function handleDoubleTapCoord(lat, lng) {
       if (navigator.vibrate) navigator.vibrate(80);
-      document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
+      document.getElementById('coordModalTitle').innerText = "📍 டபுள் டேப் மூலம் பார் சேமிக்கவா?";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = "புள்ளி " + new Date().toLocaleTimeString();
+      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -930,29 +929,6 @@
 
     function exportData() {
       exportAllPhoneMemoryFiles();
-    }
-
-    function importData(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-          if (Array.isArray(imported)) {
-            imported.forEach(imp => {
-              saved.push({ id: Date.now() + Math.random(), seq: saved.length + 1, lat: 8.8, lng: 78.1, name: imp.name || "இம்போர்ட்", type: imp.type || "Pin", time: imp.time || new Date().toLocaleString(), latNautical: imp.Latitude, lngNautical: imp.Longitude });
-            });
-          } else if (imported && (imported.Latitude || imported.lat)) {
-            saved.push({ id: Date.now(), seq: saved.length + 1, lat: 8.8, lng: 78.1, name: imported.name || "இம்போர்ட்", type: imported.type || "Pin", time: imported.time || new Date().toLocaleString(), latNautical: imported.Latitude, lngNautical: imported.Longitude });
-          }
-          localStorage.setItem('marineReefs', JSON.stringify(saved));
-          loadSavedReefs();
-          alert("📂 ஃபைல் வெற்றிகரமாக ஏற்றப்பட்டது!");
-        } catch(err) { alert("⚠️ ஃபைல் வாசிப்பதில் பிழை."); }
-      };
-      reader.readAsText(file);
     }
 
     function loadSavedReefs() {
