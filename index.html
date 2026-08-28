@@ -982,7 +982,7 @@
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
-        openSpotsListModal();
+        // Removed openSpotsListModal() here so list modal won't auto-open
       }
     }
 
