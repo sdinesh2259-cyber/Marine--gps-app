@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DM Sonar GPS</title>
+  <title>DM Marine GPS</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M10 84 Q 25 80 50 84 T 90 84' stroke='%2300d4ff' stroke-width='3' fill='none'/%3E%3C/svg%3E">
   
@@ -38,7 +38,6 @@
     .coord-section { flex: 1; text-align: left; }
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
     
-    /* Step-by-step Coords Display */
     .coord-container-step { display: flex; flex-direction: column; gap: 2px; }
     .coord-val { font-size: 12px; font-weight: bold; color: #00ffcc; font-family: monospace; white-space: nowrap; }
     
@@ -177,7 +176,7 @@
       pointer-events: auto !important;
     }
     .modal-content {
-      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 90%; max-width: 320px; border: 1px solid #444;
+      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 92%; max-width: 350px; border: 1px solid #444; max-height: 80vh; overflow-y: auto;
     }
     .modal-title { font-size: 14px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; text-align: center; }
     .input-group { margin-bottom: 10px; }
@@ -190,8 +189,17 @@
     .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
+
+    .spot-item {
+      background: #071628; border: 1px solid #1f3a60; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .spot-info div:first-child { font-size: 12px; font-weight: bold; color: #00ffcc; }
+    .spot-info div:last-child { font-size: 10px; color: #ffcc00; font-family: monospace; margin-top: 2px; }
+    .spot-actions { display: flex; gap: 4px; }
+    .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
+
     .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); cursor: pointer; pointer-events: auto; }
-    
     .maplibregl-marker { touch-action: none; }
   </style>
 </head>
@@ -214,7 +222,7 @@
   <div class="dashboard">
     <div class="dash-main">
       <div class="coord-section">
-        <div class="title-bar">🛰️ DM Sonar GPS Live</div>
+        <div class="title-bar">🛰️ DM Marine GPS Live</div>
         <div class="coord-container-step">
           <div class="coord-val" id="lat-coord">Lat: 8° 49.406' N</div>
           <div class="coord-val" id="lng-coord">Lng: 78° 8.971' E</div>
@@ -283,7 +291,7 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- Modal Dialogs -->
+  <!-- Modals -->
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
       <div class="modal-title">🌤️ நேரலை வானிலை & கடல் நிலை</div>
@@ -311,7 +319,7 @@
 
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
-      <div class="modal-title" id="modalTitle">✏️ இடத்தை எடிட் செய்</div>
+      <div class="modal-title" id="modalTitle">📍 பார் சேமிக்க</div>
       <input type="hidden" id="editSpotId">
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
@@ -337,9 +345,21 @@
         </select>
       </div>
       <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="saveSpotFromModal()">💾 மாற்றி சேமி</button>
+        <button class="modal-btn btn-save" onclick="saveSpotFromModal()">💾 சேமி</button>
         <button class="modal-btn btn-cancel" onclick="closeSpotModal()">ரத்து</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="spotsListModal">
+    <div class="modal-content">
+      <div class="modal-title">📁 DM சோனார் பார் ஃபைல் (தனித்தனி பதிவுகள்)</div>
+      <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px; text-align: center;">ஒவ்வொரு முறையும் தனித்தனியாகப் பதிந்த பார்கள்:</div>
+      <div id="spotsContainer" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
+        <!-- Dynamic list -->
+      </div>
+      <button class="modal-btn btn-save" onclick="exportAllPhoneMemoryFiles()" style="width:100%; margin-bottom:6px;">📥 அத்தனையும் ஒரு ஃபைலாகப் பதி</button>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('spotsListModal').style.display='none'" style="width:100%;">மூடு</button>
     </div>
   </div>
 
@@ -379,8 +399,8 @@
 
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
-    <button class="btn-action btn-green" onclick="openCoordModal()">🔍 எண் தேடு</button>
-    <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
+    <button class="btn-action btn-green" onclick="openSpotsListModal()">📁 DM சோனார் ஃபைல்</button>
+    <button class="btn-action btn-blue" onclick="exportAllPhoneMemoryFiles()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
   </div>
@@ -390,8 +410,6 @@
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
-    let lastValidLat = currentLat;
-    let lastValidLng = currentLng;
     let lastValidHeading = 0;
 
     let boatMarker = null;
@@ -450,7 +468,7 @@
       document.getElementById('coordModalTitle').innerText = "📍 தொட்ட இடத்தில் புள்ளி சேமிக்க";
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = new Date().toLocaleString();
+      document.getElementById('inputSpotName').value = "புள்ளி " + new Date().toLocaleTimeString();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -718,7 +736,7 @@
     }
 
     function openCurrentBoatModal() {
-      document.getElementById('modalTitle').innerText = "📍 தற்போதைய பார் சேமிக்க";
+      document.getElementById('modalTitle').innerText = "📍 பார் சேமிக்க";
       document.getElementById('editSpotId').value = "";
       document.getElementById('modalLatMin').value = ((currentLat - Math.floor(currentLat)) * 60).toFixed(3);
       document.getElementById('modalLngMin').value = ((currentLng - Math.floor(currentLng)) * 60).toFixed(3);
@@ -752,46 +770,53 @@
 
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
+      let timeStr = new Date().toLocaleString();
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let newSpot = null;
       if (id) {
         let index = saved.findIndex(item => item.id == id);
         if (index !== -1) {
           saved[index].lat = lat; saved[index].lng = lng; saved[index].name = name; saved[index].type = type;
         }
       } else {
-        saved.push({ id: Date.now(), lat, lng, name, type });
+        newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr };
+        saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // Auto save directly to device memory as DM_Marine_GPS.json
-      exportDirectToPhoneMemory(saved);
+      // Save this single new spot directly as an individual file in phone memory
+      if (newSpot) {
+        exportSingleSpotFile(newSpot);
+      }
 
       closeSpotModal();
       loadSavedReefs();
-      alert("📍 '" + name + "' வெற்றிகரமாகச் சேமிக்கப்பட்டு போன் மெமரிக்குள் பதியப்பட்டது!");
+      alert("📍 '" + name + "' தனி ஃபைலாகவும் பட்டியலிலும் வெற்றிகரமாகப் பதிந்துவிட்டது!");
     }
 
     function saveCoordAsPinDirect() {
       let minLat = parseFloat(document.getElementById('inputLatMin').value);
       let minLng = parseFloat(document.getElementById('inputLngMin').value);
-      let name = document.getElementById('inputSpotName').value.trim() || "இடம் " + new Date().toLocaleTimeString();
+      let name = document.getElementById('inputSpotName').value.trim() || "புள்ளி " + new Date().toLocaleTimeString();
       let type = document.getElementById('inputSpotType').value;
 
       if (isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
 
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
+      let timeStr = new Date().toLocaleString();
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.push({ id: Date.now(), lat, lng, name, type });
+      let newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr };
+      saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      
-      exportDirectToPhoneMemory(saved);
+
+      exportSingleSpotFile(newSpot);
 
       closeCoordModal();
       loadSavedReefs();
-      alert("📍 '" + name + "' வெற்றிகரமாகச் சேமிக்கப்பட்டு போன் மெமரிக்குள் பதியப்பட்டது!");
+      alert("📍 '" + name + "' தனி ஃபைலாகவும் பட்டியலிலும் வெற்றிகரமாகப் பதிந்துவிட்டது!");
     }
 
     function searchCoord() {
@@ -807,19 +832,67 @@
       document.getElementById('nav-info').style.display = 'flex';
     }
 
-    function exportDirectToPhoneMemory(dataObj) {
-      const dataStr = JSON.stringify(dataObj, null, 2);
+    function openSpotsListModal() {
+      const container = document.getElementById('spotsContainer');
+      container.innerHTML = '';
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      
+      if(saved.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:20px;">சேமிக்கப்பட்ட பார்கள் எதுவும் இல்லை!</div>';
+      } else {
+        saved.forEach(item => {
+          let latMin = ((item.lat - Math.floor(item.lat)) * 60).toFixed(3);
+          let lngMin = ((item.lng - Math.floor(item.lng)) * 60).toFixed(3);
+          const div = document.createElement('div');
+          div.className = 'spot-item';
+          div.innerHTML = `
+            <div class="spot-info">
+              <div>📍 ${item.name}</div>
+              <div style="color:#00ffcc;">${item.time || 'நேரம் இல்லை'}</div>
+              <div>8° ${latMin}' N | 78° ${lngMin}' E</div>
+            </div>
+            <div class="spot-actions">
+              <button class="single-download-btn" onclick='exportSingleSpotById(${item.id})'>டவுன்லோட்</button>
+              <button class="del-spot-btn" onclick="deleteSpot(${item.id})">நீக்கு</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+      document.getElementById('spotsListModal').style.display = 'flex';
+    }
+
+    function exportSingleSpotFile(spotObj) {
+      const dataStr = JSON.stringify(spotObj, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = "DM_Marine_GPS.json";
+      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
+      a.download = `DM_Sonar_Spot_${safeName}.json`;
       a.click();
     }
 
+    function exportSingleSpotById(id) {
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let item = saved.find(s => s.id == id);
+      if (item) {
+        exportSingleSpotFile(item);
+        alert("📥 இந்த ஒரு புள்ளியின் ஃபைல் மட்டும் டவுன்லோட் செய்யப்பட்டது!");
+      }
+    }
+
+    function exportAllPhoneMemoryFiles() {
+      const dataStr = localStorage.getItem('marineReefs') || '[]';
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `DM_Marine_GPS_All_Spots_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+      a.click();
+      alert("📥 அனைத்து பார்களின் தொகுப்பு ஃபைலும் டவுன்லோட் ஆனது!");
+    }
+
     function exportData() {
-      const saved = localStorage.getItem('marineReefs') || '[]';
-      exportDirectToPhoneMemory(JSON.parse(saved));
-      alert("💾 'DM_Marine_GPS.json' ஃபைல் போன் டவுன்லோட்ஸ் (Downloads) ஃபோல்டருக்குள் வெற்றிகரமாக டவுன்லோட் ஆனது!");
+      exportAllPhoneMemoryFiles();
     }
 
     function importData(event) {
@@ -833,6 +906,12 @@
             localStorage.setItem('marineReefs', JSON.stringify(imported));
             loadSavedReefs();
             alert("📂 ஃபைல் வெற்றிகரமாக ஏற்றப்பட்டது!");
+          } else if (imported && imported.lat && imported.lng) {
+            let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+            saved.push(imported);
+            localStorage.setItem('marineReefs', JSON.stringify(saved));
+            loadSavedReefs();
+            alert("📂 தனிப் புள்ளி ஃபைல் வெற்றிகரமாக இணைக்கப்பட்டது!");
           } else {
             alert("⚠️ தவறான ஃபைல் வடிவம்.");
           }
@@ -857,6 +936,7 @@
         let popupHtml = `
           <div class="popup-box">
             <b>📍 ${item.name}</b>
+            <div style="font-size:10px; color:#ffcc00;">${item.time || ''}</div>
             <div class="popup-coord">${coordStr}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
@@ -890,8 +970,8 @@
         let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved = saved.filter(item => item.id != id);
         localStorage.setItem('marineReefs', JSON.stringify(saved));
-        exportDirectToPhoneMemory(saved);
         loadSavedReefs();
+        openSpotsListModal();
       }
     }
 
@@ -922,7 +1002,7 @@
         let heading = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : lastValidHeading;
 
         currentLat = lat; currentLng = lng; currentHeading = heading;
-        lastValidLat = lat; lastValidLng = lng; lastValidHeading = heading;
+        lastValidHeading = heading;
 
         let latStr = formatCoord(lat, true);
         let lngStr = formatCoord(lng, false);
