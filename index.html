@@ -399,7 +399,7 @@
 
   <div class="btn-container">
     <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
-    <button class="btn-action btn-green" onclick="openSpotsListModal()">📁 DM மெரைன் ஃபைல்</button>
+    <button class="btn-action btn-green" onclick="openSpotsListModal()">📁 ஏடு</button>
     <button class="btn-action btn-blue" onclick="exportData()">💾 எடு</button>
     <button class="btn-action btn-darkblue" onclick="document.getElementById('import-file').click()">📂 ஏற்று</button>
     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
@@ -771,8 +771,8 @@
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
       let timeStr = new Date().toLocaleString();
-      let latStr = formatCoord(lat, true);
-      let lngStr = formatCoord(lng, false);
+      let latNaut = `8° ${minLat.toFixed(3)}' N`;
+      let lngNaut = `78° ${minLng.toFixed(3)}' E`;
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let newSpot = null;
@@ -780,10 +780,10 @@
         let index = saved.findIndex(item => item.id == id);
         if (index !== -1) {
           saved[index].lat = lat; saved[index].lng = lng; saved[index].name = name; saved[index].type = type;
-          saved[index].latNautical = latStr; saved[index].lngNautical = lngStr;
+          saved[index].latNautical = latNaut; saved[index].lngNautical = lngNaut;
         }
       } else {
-        newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latStr, lngNautical: lngStr };
+        newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -808,11 +808,11 @@
       let lat = 8.0 + (minLat / 60.0);
       let lng = 78.0 + (minLng / 60.0);
       let timeStr = new Date().toLocaleString();
-      let latStr = formatCoord(lat, true);
-      let lngStr = formatCoord(lng, false);
+      let latNaut = `8° ${minLat.toFixed(3)}' N`;
+      let lngNaut = `78° ${minLng.toFixed(3)}' E`;
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latStr, lngNautical: lngStr };
+      let newSpot = { id: Date.now(), lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
@@ -867,7 +867,14 @@
     }
 
     function exportSingleSpotFile(spotObj) {
-      const dataStr = JSON.stringify(spotObj, null, 2);
+      const exportData = {
+        name: spotObj.name,
+        type: spotObj.type,
+        time: spotObj.time,
+        Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
+        Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
+      };
+      const dataStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -887,13 +894,14 @@
 
     function exportAllPhoneMemoryFiles() {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      saved.forEach(item => {
-        if(!item.latNautical) {
-          item.latNautical = formatCoord(item.lat, true);
-          item.lngNautical = formatCoord(item.lng, false);
-        }
-      });
-      const dataStr = JSON.stringify(saved, null, 2);
+      let cleanList = saved.map(item => ({
+        name: item.name,
+        type: item.type,
+        time: item.time,
+        Latitude: item.latNautical || formatCoord(item.lat, true),
+        Longitude: item.lngNautical || formatCoord(item.lng, false)
+      }));
+      const dataStr = JSON.stringify(cleanList, null, 2);
       const blob = new Blob([dataStr], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -917,7 +925,7 @@
             localStorage.setItem('marineReefs', JSON.stringify(imported));
             loadSavedReefs();
             alert("📂 ஃபைல் வெற்றிகரமாக ஏற்றப்பட்டது!");
-          } else if (imported && imported.lat && imported.lng) {
+          } else if (imported && (imported.lat || imported.Latitude)) {
             let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
             saved.push(imported);
             localStorage.setItem('marineReefs', JSON.stringify(saved));
