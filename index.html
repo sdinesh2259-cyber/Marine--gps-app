@@ -191,13 +191,18 @@
     .btn-cancel { background: #e63946; color: #fff; }
 
     .spot-item {
-      background: #071628; border: 1px solid #1f3a60; padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+      background: #071628; border: 1px solid #1f3a60; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
     }
-    .spot-info div:first-child { font-size: 12px; font-weight: bold; color: #00ffcc; }
-    .spot-info div:last-child { font-size: 10px; color: #ffcc00; font-family: monospace; margin-top: 2px; }
-    .spot-actions { display: flex; gap: 4px; }
-    .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
-    .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .spot-left-group { display: flex; align-items: center; gap: 10px; }
+    .list-item-badge {
+      background: #000; color: #ffcc00; font-size: 16px; font-weight: 900;
+      padding: 4px 10px; border-radius: 8px; border: 2px solid #00ffcc; font-family: monospace;
+    }
+    .spot-info div:first-child { font-size: 13px; font-weight: bold; color: #ffffff; }
+    .spot-info div:last-child { font-size: 11px; color: #00ffcc; font-family: monospace; margin-top: 2px; }
+    .spot-actions { display: flex; gap: 6px; }
+    .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
     /* HUGE & BOLD Marker Number Badge */
     .custom-marker-wrapper { position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
@@ -360,7 +365,7 @@
 
   <div class="modal-overlay" id="spotsListModal">
     <div class="modal-content">
-      <div class="modal-title">📁 DM Marine GPS பதிவுகள்</div>
+      <div class="modal-title" id="listModalTitle">📁 DM Marine GPS பதிவுகள் (#0)</div>
       <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px; text-align: center;">நீங்கள் சேமித்த தனித்தனி பார்கள் பட்டியல்:</div>
       <div id="spotsContainer" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
         <!-- Dynamic list -->
@@ -372,7 +377,7 @@
 
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பார் சேமி</div>
+      <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பதிவு #1 சேமி</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
@@ -480,7 +485,9 @@
 
     function handleDoubleTapCoord(lat, lng) {
       if (navigator.vibrate) navigator.vibrate(80);
-      document.getElementById('coordModalTitle').innerText = "📍 டபுள் டேப் மூலம் பார் சேமிக்கவா?";
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let nextNum = saved.length + 1;
+      document.getElementById('coordModalTitle').innerText = `🧭 புதிய எண் மூலம் பதிவு #${nextNum} சேமி`;
       document.getElementById('inputLatMin').value = ((lat - Math.floor(lat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - Math.floor(lng)) * 60).toFixed(3);
       document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
@@ -488,7 +495,9 @@
     }
 
     function openCoordModal() {
-      document.getElementById('coordModalTitle').innerText = "🧭 புதிய எண் மூலம் பார் சேமி";
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let nextNum = saved.length + 1;
+      document.getElementById('coordModalTitle').innerText = `🧭 புதிய எண் மூலம் பதிவு #${nextNum} சேமி`;
       document.getElementById('inputLatMin').value = ((currentLat - Math.floor(currentLat)) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((currentLng - Math.floor(currentLng)) * 60).toFixed(3);
       document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
@@ -855,6 +864,8 @@
       container.innerHTML = '';
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       
+      document.getElementById('listModalTitle').innerText = `📁 DM Marine GPS பதிவுகள் (#${saved.length})`;
+
       if(saved.length === 0) {
         container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:20px;">சேமிக்கப்பட்ட பார்கள் எதுவும் இல்லை!</div>';
       } else {
@@ -862,13 +873,28 @@
           let numSeq = item.seq || (index + 1);
           let latNaut = item.latNautical || formatCoord(item.lat, true);
           let lngNaut = item.lngNautical || formatCoord(item.lng, false);
+          
+          let iconSvg = '<svg width="24" height="30" viewBox="0 0 24 32"><path fill="#d90429" stroke="#fff" stroke-width="1.5" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 20 12 20s12-12.8 12-20c0-6.6-5.4-12-12-12zm0 16a4 4 0 110-8 4 4 0 010 8z"/></svg>';
+          if (item.type === 'Reef') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#ffcc00" stroke="#000" stroke-width="1.5" d="M2 18h20l-2-10h-16zM4 14l3-6h10l3 6z"/></svg>';
+          else if (item.type === 'Island') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#2a9d8f" stroke="#000" stroke-width="1.5" d="M12 2C8 8 4 14 2 18h20c-2-4-6-10-10-16z"/></svg>';
+          else if (item.type === 'Crab') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#e63946" stroke="#000" stroke-width="1.5" d="M6 8l3 3M18 8l-3 3M7 13h10a3 3 0 013 3v2H4v-2a3 3 0 013-3z"/></svg>';
+          else if (item.type === 'Fish') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#00ffcc" stroke="#000" stroke-width="1.5" d="M2 12c4-3 10-6 20-2-4 4-10 1-20 2z"/></svg>';
+          else if (item.type === 'Net') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#f77f00" stroke="#000" stroke-width="1.5" d="M3 3h18v18H3z"/></svg>';
+          else if (item.type === 'Conch') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#ffd166" stroke="#000" stroke-width="1.5" d="M4 12c0-4 4-8 10-8s8 4 8 8-4 8-8 8H4z"/></svg>';
+          else if (item.type === 'Ray') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#118ab2" stroke="#000" stroke-width="1.5" d="M12 2l10 10-10 10L2 12z"/></svg>';
+          else if (item.type === 'Squid') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#ef476f" stroke="#000" stroke-width="1.5" d="M8 4h8v10a4 4 0 01-8 0V4z"/></svg>';
+
           const div = document.createElement('div');
           div.className = 'spot-item';
           div.innerHTML = `
-            <div class="spot-info">
-              <div>📍 [பதிவு #${numSeq}] ${item.name}</div>
-              <div style="color:#ffcc00;">${item.time || ''}</div>
-              <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
+            <div class="spot-left-group">
+              <div class="list-item-badge">${numSeq}</div>
+              <div>${iconSvg}</div>
+              <div class="spot-info">
+                <div>📍 ${item.name}</div>
+                <div style="color:#ffcc00;">${item.time || ''}</div>
+                <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
+              </div>
             </div>
             <div class="spot-actions">
               <button class="single-download-btn" onclick='exportSingleSpotById(${item.id})'>டவுன்லோட்</button>
@@ -983,6 +1009,7 @@
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
+        openSpotsListModal(); // Refresh list modal after delete
       }
     }
 
@@ -1073,7 +1100,7 @@
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 2.5;
       ctx.moveTo(0, canvas.height);
-      for(let x = 0; x <= canvas.width; x += 3) {
+      for(x = 0; x <= canvas.width; x += 3) {
         ctx.lineTo(x, canvas.height - 25 + Math.sin((x + Date.now()/20)/40) * 8);
       }
       ctx.lineTo(canvas.width, canvas.height);
