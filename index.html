@@ -1012,7 +1012,7 @@
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
-        // Removed openSpotsListModal() so deleting won't force list modal open
+        // Removed openSpotsListModal() completely so list modal won't trigger on delete
       }
     }
 
