@@ -195,8 +195,9 @@
     }
     .spot-left-group { display: flex; align-items: center; gap: 10px; }
     .list-item-badge {
-      background: #000; color: #ffcc00; font-size: 16px; font-weight: 900;
-      padding: 4px 10px; border-radius: 8px; border: 2px solid #00ffcc; font-family: monospace;
+      background: #000000; color: #00ffcc; font-size: 20px; font-weight: 900;
+      padding: 6px 14px; border-radius: 10px; border: 3px solid #ffcc00; font-family: monospace;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.9);
     }
     .spot-info div:first-child { font-size: 13px; font-weight: bold; color: #ffffff; }
     .spot-info div:last-child { font-size: 11px; color: #00ffcc; font-family: monospace; margin-top: 2px; }
@@ -365,7 +366,7 @@
 
   <div class="modal-overlay" id="spotsListModal">
     <div class="modal-content">
-      <div class="modal-title" id="listModalTitle">📁 DM Marine GPS பதிவுகள் (#0)</div>
+      <div class="modal-title" id="listModalTitle">📁 DM Marine GPS பதிவுகள்</div>
       <div style="font-size: 11px; color: #00ffcc; margin-bottom: 8px; text-align: center;">நீங்கள் சேமித்த தனித்தனி பார்கள் பட்டியல்:</div>
       <div id="spotsContainer" style="max-height: 220px; overflow-y: auto; margin-bottom: 10px;">
         <!-- Dynamic list -->
@@ -377,7 +378,7 @@
 
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
-      <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பதிவு #1 சேமி</div>
+      <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பார் சேமி</div>
       <div class="input-group">
         <label>Latitude (மினிட் மட்டும்):</label>
         <div class="input-row"><div class="fixed-deg">8°</div><input type="number" id="inputLatMin" class="input-box" placeholder="49.406" step="any"><span style="font-weight:bold; color:#ffcc00;">' N</span></div>
@@ -768,7 +769,9 @@
     }
 
     function openCurrentBoatModal() {
-      document.getElementById('modalTitle').innerText = "📍 பார் சேமிக்க";
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let nextNum = saved.length + 1;
+      document.getElementById('modalTitle').innerText = `📍 பார் சேமிக்க (பதிவு #${nextNum})`;
       document.getElementById('editSpotId').value = "";
       document.getElementById('modalLatMin').value = ((currentLat - Math.floor(currentLat)) * 60).toFixed(3);
       document.getElementById('modalLngMin').value = ((currentLng - Math.floor(currentLng)) * 60).toFixed(3);
@@ -1009,7 +1012,7 @@
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
-        openSpotsListModal(); // Refresh list modal after delete
+        openSpotsListModal();
       }
     }
 
@@ -1100,7 +1103,7 @@
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 2.5;
       ctx.moveTo(0, canvas.height);
-      for(x = 0; x <= canvas.width; x += 3) {
+      for(let x = 0; x <= canvas.width; x += 3) {
         ctx.lineTo(x, canvas.height - 25 + Math.sin((x + Date.now()/20)/40) * 8);
       }
       ctx.lineTo(canvas.width, canvas.height);
