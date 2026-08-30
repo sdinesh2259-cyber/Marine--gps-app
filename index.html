@@ -186,7 +186,7 @@
     .input-box { flex: 1; background: #000; color: #00ffcc; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 14px; font-family: monospace; font-weight: bold; }
     .input-name { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
     .modal-btn-row { display: flex; gap: 6px; margin-top: 10px; }
-    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .modal-btn { flex: 1; padding: 9px 6px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
@@ -234,12 +234,12 @@
     /* 3-Second Hold Coast Guard SMS Button */
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
-      color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold;
-      text-align: center; cursor: pointer; user-select: none;
+      color: #fff; padding: 11px 8px; border-radius: 8px; font-size: 12px; font-weight: bold;
+      text-align: center; cursor: pointer; user-select: none; margin-top: 4px;
     }
     .hold-progress-bar {
       position: absolute; top: 0; left: 0; bottom: 0; width: 0%;
-      background: #ff0055; z-index: 1; transition: width 0.1s linear; opacity: 0.8;
+      background: #ff0055; z-index: 1; transition: width 0.1s linear; opacity: 0.85;
     }
     .hold-btn-text { position: relative; z-index: 2; pointer-events: none; }
 
@@ -349,12 +349,13 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- SOS Emergency Modal with 3s Hold + OK Confirmation for Coast Guard SMS -->
+  <!-- SOS Emergency Modal -->
   <div class="modal-overlay" id="sosModal">
     <div class="modal-content">
-      <div class="modal-title" style="color:#ff0055; font-size:16px;">🆘 அவசர உதவி (SOS ALERT)</div>
-      <div style="background:#1a0005; border:1px solid #ff0055; padding:8px; border-radius:8px; margin-bottom:10px; font-size:11px;">
-        <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">📍 உங்கள் தற்போதைய இடம்:</div>
+      <div class="modal-title" style="color:#ff0055; font-size:15px;">🆘 அவசர உதவி (SOS GPS ALERT)</div>
+      
+      <div style="background:#1a0005; border:1.5px solid #ff0055; padding:8px; border-radius:8px; margin-bottom:10px; font-size:11px;">
+        <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">📍 உங்கள் தற்போதைய லைவ் இடம்:</div>
         <div id="sosLocationText" style="color:#00ffcc; font-family:monospace; font-size:12px; font-weight:bold;">Lat: -- | Lng: --</div>
       </div>
 
@@ -363,24 +364,27 @@
         <input type="tel" id="emergencyPhoneInput" class="input-name" placeholder="எ.கா. 9876543210" oninput="saveEmergencyContact()">
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <!-- WhatsApp SOS -->
         <button class="modal-btn" style="background:#25D366; color:#fff;" onclick="sendSOSWhatsApp()">
-          💬 வாட்ஸ்அப் மெசேஜ் அனுப்பு (WhatsApp)
+          💬 வாட்ஸ்அப்பில் இடம் அனுப்பு (WhatsApp)
         </button>
+
+        <!-- Relative SMS -->
         <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="sendSOSSMS()">
           ✉️ உறவினருக்கு SMS மெசேஜ் அனுப்பு
         </button>
         
-        <!-- 3-Second Hold + OK Confirmation to Send SMS to Coast Guard -->
+        <!-- 3-Second Hold to Send SMS directly to Coast Guard (1554) -->
         <div class="hold-call-btn" id="holdCallBtn" 
              onmousedown="startCallHold()" onmouseup="cancelCallHold()" onmouseleave="cancelCallHold()" 
              ontouchstart="startCallHold()" ontouchend="cancelCallHold()" ontouchcancel="cancelCallHold()">
           <div class="hold-progress-bar" id="holdProgressBar"></div>
-          <div class="hold-btn-text" id="holdBtnText">✉️ Coast Guard (1554) SMS மெசேஜ் (3 விநாடி அழுத்திப் பிடிக்கவும்)</div>
+          <div class="hold-btn-text" id="holdBtnText">✉️ Coast Guard (1554) SMS (3 விநாடி அழுத்திப் பிடிக்கவும்)</div>
         </div>
       </div>
 
-      <button class="modal-btn btn-cancel" onclick="document.getElementById('sosModal').style.display='none'" style="width:100%; margin-top:10px;">மூடு</button>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('sosModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
     </div>
   </div>
 
@@ -644,7 +648,7 @@
       const latStr = formatCoord(currentLat, true);
       const lngStr = formatCoord(currentLng, false);
       const mapLink = `https://maps.google.com/?q=${currentLat.toFixed(6)},${currentLng.toFixed(6)}`;
-      return `🚨 அவசர உதவி! (DM Marine GPS Alert) 🚨\nஎங்கள் படகு கடலில் சிக்கியுள்ளது / ஆபத்தில் உள்ளது.\n\n📍 அட்சரேகை/தீர்க்கரேகை:\nLat: ${latStr}\nLng: ${lngStr}\n\n🗺️ வரைபட இருப்பிடம்:\n${mapLink}`;
+      return `🚨 அவசர உதவி! (DM Marine GPS Alert) 🚨\nஎங்கள் படகு கடலில் ஆபத்தில் உள்ளது. எங்களை காப்பாற்றவும்!\n\n📍 அட்சரேகை/தீர்க்கரேகை:\nLat: ${latStr}\nLng: ${lngStr}\n\n🗺️ நேரலை வரைபடம்:\n${mapLink}`;
     }
 
     function sendSOSWhatsApp() {
@@ -666,8 +670,7 @@
       window.location.href = smsUrl;
     }
 
-    /* --- 3-Second Hold + OK Confirmation to Send SMS to Coast Guard --- */
-    let callHoldTimer = null;
+    /* --- 3-Second Hold + Confirmation to Send SMS to Coast Guard --- */
     let callHoldProgress = 0;
     let callInterval = null;
 
@@ -695,12 +698,12 @@
           
           setTimeout(() => {
             cancelCallHold();
-            let confirmSms = confirm("🚨 அவசர உதவி: கடலோர காவல்படைக்கு (Coast Guard 1554) உங்கள் ஜிபிஎஸ் தகவலுடன் SMS மெசேஜ் அனுப்பவா?");
+            let confirmSms = confirm("🚨 அவசர உதவி: கடலோர காவல்படைக்கு (Coast Guard 1554) உங்கள் ஜிபிஎஸ் அட்சரேகை/தீர்க்கரேகை விவரங்களுடன் SMS அனுப்பவா?");
             if (confirmSms) {
               const text = encodeURIComponent(getSosMessageText());
               window.location.href = `sms:1554?body=${text}`;
             }
-          }, 200);
+          }, 150);
         }
       }, 100);
     }
@@ -713,7 +716,7 @@
       const bar = document.getElementById('holdProgressBar');
       const text = document.getElementById('holdBtnText');
       if (bar) bar.style.width = '0%';
-      if (text) text.innerText = "✉️ Coast Guard (1554) SMS மெசேஜ் (3 விநாடி அழுத்திப் பிடிக்கவும்)";
+      if (text) text.innerText = "✉️ Coast Guard (1554) SMS (3 விநாடி அழுத்திப் பிடிக்கவும்)";
     }
 
     /* --- Walkie-Talkie Implementation --- */
