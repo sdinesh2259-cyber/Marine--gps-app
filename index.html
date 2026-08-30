@@ -231,7 +231,7 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* 3-Second Hold Coast Guard Button */
+    /* 3-Second Hold Coast Guard SMS Button */
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
       color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold;
@@ -349,7 +349,7 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- SOS Emergency Modal with 3s Hold Safety -->
+  <!-- SOS Emergency Modal with 3s Hold + OK Confirmation for Coast Guard SMS -->
   <div class="modal-overlay" id="sosModal">
     <div class="modal-content">
       <div class="modal-title" style="color:#ff0055; font-size:16px;">🆘 அவசர உதவி (SOS ALERT)</div>
@@ -368,15 +368,15 @@
           💬 வாட்ஸ்அப் மெசேஜ் அனுப்பு (WhatsApp)
         </button>
         <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="sendSOSSMS()">
-          ✉️ சாதாரண மெசேஜ் அனுப்பு (Normal SMS)
+          ✉️ உறவினருக்கு SMS மெசேஜ் அனுப்பு
         </button>
         
-        <!-- 3-Second Hold to Call Coast Guard -->
+        <!-- 3-Second Hold + OK Confirmation to Send SMS to Coast Guard -->
         <div class="hold-call-btn" id="holdCallBtn" 
              onmousedown="startCallHold()" onmouseup="cancelCallHold()" onmouseleave="cancelCallHold()" 
              ontouchstart="startCallHold()" ontouchend="cancelCallHold()" ontouchcancel="cancelCallHold()">
           <div class="hold-progress-bar" id="holdProgressBar"></div>
-          <div class="hold-btn-text" id="holdBtnText">📞 Coast Guard / 112 (3 வினாடி அழுத்திப் பிடிக்கவும்)</div>
+          <div class="hold-btn-text" id="holdBtnText">✉️ Coast Guard (1554) SMS மெசேஜ் (3 விநாடி அழுத்திப் பிடிக்கவும்)</div>
         </div>
       </div>
 
@@ -666,7 +666,7 @@
       window.location.href = smsUrl;
     }
 
-    /* --- 3-Second Hold to Call Coast Guard (112) --- */
+    /* --- 3-Second Hold + OK Confirmation to Send SMS to Coast Guard --- */
     let callHoldTimer = null;
     let callHoldProgress = 0;
     let callInterval = null;
@@ -679,7 +679,7 @@
       if (navigator.vibrate) navigator.vibrate(50);
       
       callInterval = setInterval(() => {
-        callHoldProgress += 3.33; // 100% in 3 seconds (30 steps of 100ms)
+        callHoldProgress += 3.33; // 100% in 3 seconds
         bar.style.width = `${callHoldProgress}%`;
         let remaining = (3 - (callHoldProgress * 3 / 100)).toFixed(1);
         if (remaining < 0) remaining = 0;
@@ -689,12 +689,18 @@
           clearInterval(callInterval);
           callInterval = null;
           bar.style.width = '100%';
-          text.innerText = "📞 இணைக்கப்படுகிறது...";
+          text.innerText = "உறுதிப்படுத்தவும்...";
+          
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+          
           setTimeout(() => {
-            window.location.href = "tel:112";
             cancelCallHold();
-          }, 300);
+            let confirmSms = confirm("🚨 அவசர உதவி: கடலோர காவல்படைக்கு (Coast Guard 1554) உங்கள் ஜிபிஎஸ் தகவலுடன் SMS மெசேஜ் அனுப்பவா?");
+            if (confirmSms) {
+              const text = encodeURIComponent(getSosMessageText());
+              window.location.href = `sms:1554?body=${text}`;
+            }
+          }, 200);
         }
       }, 100);
     }
@@ -707,7 +713,7 @@
       const bar = document.getElementById('holdProgressBar');
       const text = document.getElementById('holdBtnText');
       if (bar) bar.style.width = '0%';
-      if (text) text.innerText = "📞 Coast Guard / 112 (3 வினாடி அழுத்திப் பிடிக்கவும்)";
+      if (text) text.innerText = "✉️ Coast Guard (1554) SMS மெசேஜ் (3 விநாடி அழுத்திப் பிடிக்கவும்)";
     }
 
     /* --- Walkie-Talkie Implementation --- */
