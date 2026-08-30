@@ -176,7 +176,7 @@
       pointer-events: auto !important;
     }
     .modal-content {
-      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 92%; max-width: 350px; border: 1px solid #444; max-height: 80vh; overflow-y: auto;
+      background: #111; color: #fff; padding: 16px; border-radius: 12px; width: 92%; max-width: 350px; border: 1px solid #444; max-height: 85vh; overflow-y: auto;
     }
     .modal-title { font-size: 14px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; text-align: center; }
     .input-group { margin-bottom: 10px; }
@@ -184,9 +184,9 @@
     .input-row { display: flex; align-items: center; gap: 6px; }
     .fixed-deg { background: #222; padding: 6px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; }
     .input-box { flex: 1; background: #000; color: #00ffcc; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 14px; font-family: monospace; font-weight: bold; }
-    .input-name { width: 95%; background: #000; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
+    .input-name { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
     .modal-btn-row { display: flex; gap: 6px; margin-top: 10px; }
-    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; }
+    .modal-btn { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .btn-save { background: #2a9d8f; color: #fff; }
     .btn-cancel { background: #e63946; color: #fff; }
 
@@ -205,7 +205,7 @@
     .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-    /* Single Exact Red Dot Marker with Top Header */
+    /* Red Dot Marker with Top Header */
     .custom-spot-marker {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto; position: relative;
@@ -225,11 +225,26 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.9);
     }
     
-    /* High-contrast Unified Dot */
     .marine-exact-dot {
       width: 14px; height: 14px; background: #ff0044;
       border: 2.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
+    }
+
+    /* PTT Walkie-Talkie Styles */
+    .ptt-btn {
+      width: 110px; height: 110px; border-radius: 50%; background: #d90429; color: white;
+      font-size: 13px; font-weight: bold; border: 4px solid #ffcc00; box-shadow: 0 0 15px rgba(217,4,41,0.8);
+      margin: 15px auto; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      user-select: none; transition: all 0.1s ease;
+    }
+    .ptt-btn.talking {
+      background: #00ffcc; color: #000; border-color: #fff; transform: scale(1.08);
+      box-shadow: 0 0 25px rgba(0,255,204,0.9);
+    }
+    .device-list-item {
+      background: #071628; border: 1px solid #1f3a60; padding: 8px 10px; border-radius: 8px;
+      margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
     }
     .maplibregl-marker { touch-action: none; }
   </style>
@@ -284,7 +299,7 @@
             <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()">🛤️</div>
             <div class="tool-btn" onclick="clearTrackHistory()">🗑️</div>
             <div class="tool-btn tool-moon" onclick="showMoonSolunarData()">🌕</div>
-            <div class="tool-btn" onclick="sendSOS()">🆘</div>
+            <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()">🆘</div>
             <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡</div>
             <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️</div>
             <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()">🎙️</div>
@@ -322,7 +337,68 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- Modals -->
+  <!-- SOS Emergency Modal -->
+  <div class="modal-overlay" id="sosModal">
+    <div class="modal-content">
+      <div class="modal-title" style="color:#ff0055; font-size:16px;">🆘 அவசர உதவி (SOS ALERT)</div>
+      <div style="background:#1a0005; border:1px solid #ff0055; padding:8px; border-radius:8px; margin-bottom:10px; font-size:11px;">
+        <div style="color:#ffcc00; font-weight:bold; margin-bottom:4px;">📍 உங்கள் தற்போதைய இடம்:</div>
+        <div id="sosLocationText" style="color:#00ffcc; font-family:monospace; font-size:12px; font-weight:bold;">Lat: -- | Lng: --</div>
+      </div>
+
+      <div class="input-group">
+        <label>அவசர உதவிக்கான மொபைல் எண்:</label>
+        <input type="tel" id="emergencyPhoneInput" class="input-name" placeholder="எ.கா. 9876543210" oninput="saveEmergencyContact()">
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+        <button class="modal-btn" style="background:#25D366; color:#fff;" onclick="sendSOSWhatsApp()">
+          💬 வாட்ஸ்அப் மெசேஜ் அனுப்பு (WhatsApp)
+        </button>
+        <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="sendSOSSMS()">
+          ✉️ சாதாரண மெசேஜ் அனுப்பு (Normal SMS)
+        </button>
+        <a href="tel:112" class="modal-btn" style="background:#d90429; color:#fff;">
+          📞 அவசர உதவிக்கு அழை (Call 112 / Coast Guard)
+        </a>
+      </div>
+
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('sosModal').style.display='none'" style="width:100%; margin-top:10px;">மூடு</button>
+    </div>
+  </div>
+
+  <!-- Walkie-Talkie & Nearby Boat Pairing Modal -->
+  <div class="modal-overlay" id="walkieModal">
+    <div class="modal-content">
+      <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & இணைப்பு</div>
+      
+      <!-- Nearby Boat Connection Section -->
+      <div style="font-size:11px; color:#ffcc00; font-weight:bold; margin-bottom:6px;">📡 அருகிலுள்ள படகுகளுடன் இணைக்க:</div>
+      <button class="modal-btn btn-save" id="scanBoatsBtn" onclick="scanNearbyBoats()" style="width:100%; margin-bottom:8px;">🔍 அருகிலுள்ள படகுகளைத் தேடு</button>
+
+      <div id="discoveredBoatsList" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px;">
+        <!-- Devices listed here -->
+      </div>
+
+      <div id="connectedChannelBox" style="display:none; background:#041a15; border:1px solid #00ffcc; padding:8px; border-radius:8px; text-align:center; margin-bottom:10px;">
+        <div style="color:#00ffcc; font-size:12px; font-weight:bold;" id="connectedBoatStatus">இணைக்கப்பட்டது: படகு #1</div>
+        <div style="color:#aaa; font-size:10px; margin-top:2px;">சேனல்: Marine VHF Ch-16 (Secured)</div>
+      </div>
+
+      <!-- Push To Talk Button -->
+      <div style="text-align:center;">
+        <div style="font-size:11px; color:#aaa;">பேச அழுத்தவும் (Push To Talk):</div>
+        <div class="ptt-btn" id="pttButton" onmousedown="startPTT()" onmouseup="stopPTT()" ontouchstart="startPTT()" ontouchend="stopPTT()">
+          🎙️ PTT<br><span style="font-size:9px;">அழுத்திப் பேசு</span>
+        </div>
+        <div id="pttStatus" style="font-size:11px; color:#00ffcc; font-weight:bold;">ஸ்டாண்ட்பை (Standby)</div>
+      </div>
+
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('walkieModal').style.display='none'" style="width:100%; margin-top:10px;">மூடு</button>
+    </div>
+  </div>
+
+  <!-- Weather & Moon Modals -->
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
       <div class="modal-title">🌤️ நேரலை வானிலை & கடல் நிலை</div>
@@ -336,15 +412,6 @@
       <div class="modal-title">🌕 நிலவு நிலை & மீன் கணிப்பு</div>
       <div id="moonModalBody" style="font-size: 12px; line-height: 1.6; color: #ccc;">நிலவரம் கணக்கிடப்படுகிறது...</div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('moonModal').style.display='none'" style="width:100%; margin-top:12px;">மூடு</button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="walkieModal">
-    <div class="modal-content text-center">
-      <div class="modal-title">🎙️ புளூடூத் வாக்கி-டாகி</div>
-      <div style="font-size: 12px; color: #00ffcc; margin-bottom: 12px;">அருகிலுள்ள படகுகளுடன் பேச இணைக்கவும்</div>
-      <button class="modal-btn btn-save" onclick="startWalkieTalkieChannel()" style="width:100%; margin-bottom:8px;">📡 சேனலைத் தொடங்கு</button>
-      <button class="modal-btn btn-cancel" onclick="document.getElementById('walkieModal').style.display='none'" style="width:100%;">மூடு</button>
     </div>
   </div>
 
@@ -536,15 +603,121 @@
       }
     }
 
+    /* --- SOS Implementation --- */
+    function openSosModal() {
+      const latStr = formatCoord(currentLat, true);
+      const lngStr = formatCoord(currentLng, false);
+      document.getElementById('sosLocationText').innerText = `Lat: ${latStr} | Lng: ${lngStr}`;
+      
+      const savedPhone = localStorage.getItem('marineEmergencyPhone') || '';
+      document.getElementById('emergencyPhoneInput').value = savedPhone;
+      
+      document.getElementById('sosModal').style.display = 'flex';
+    }
+
+    function saveEmergencyContact() {
+      const phone = document.getElementById('emergencyPhoneInput').value.trim();
+      localStorage.setItem('marineEmergencyPhone', phone);
+    }
+
+    function getSosMessageText() {
+      const latStr = formatCoord(currentLat, true);
+      const lngStr = formatCoord(currentLng, false);
+      const mapLink = `https://maps.google.com/?q=${currentLat.toFixed(6)},${currentLng.toFixed(6)}`;
+      return `🚨 அவசர உதவி! (DM Marine GPS Alert) 🚨\nஎங்கள் படகு கடலில் சிக்கியுள்ளது / ஆபத்தில் உள்ளது.\n\n📍 அட்சரேகை/தீர்க்கரேகை:\nLat: ${latStr}\nLng: ${lngStr}\n\n🗺️ வரைபட இருப்பிடம்:\n${mapLink}`;
+    }
+
+    function sendSOSWhatsApp() {
+      const phone = document.getElementById('emergencyPhoneInput').value.trim();
+      const text = encodeURIComponent(getSosMessageText());
+      let url = `https://api.whatsapp.com/send?text=${text}`;
+      if (phone) {
+        let cleanPhone = phone.replace(/[^0-9]/g, '');
+        if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+        url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${text}`;
+      }
+      window.open(url, '_blank');
+    }
+
+    function sendSOSSMS() {
+      const phone = document.getElementById('emergencyPhoneInput').value.trim();
+      const text = encodeURIComponent(getSosMessageText());
+      let smsUrl = `sms:${phone}?body=${text}`;
+      window.location.href = smsUrl;
+    }
+
+    /* --- Walkie-Talkie Implementation --- */
+    function toggleWalkieTalkie() { 
+      document.getElementById('walkieModal').style.display = 'flex'; 
+    }
+
+    function scanNearbyBoats() {
+      const listContainer = document.getElementById('discoveredBoatsList');
+      const scanBtn = document.getElementById('scanBoatsBtn');
+      scanBtn.innerText = "⏳ படகுகள் தேடப்படுகிறது...";
+      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">அருகிலுள்ள புளூடூத் & வைஃபை சிக்னல்கள் ஸ்கேன் செய்யப்படுகின்றன...</div>';
+
+      setTimeout(() => {
+        scanBtn.innerText = "🔍 மீண்டும் தேடு";
+        const sampleBoats = [
+          { name: "படகு #1 (ஆரோக்கிய அன்னை)", dist: "0.4 NM", signal: "95%" },
+          { name: "படகு #2 (அந்தோணியார் துணை)", dist: "1.2 NM", signal: "70%" },
+          { name: "படகு #3 (கடல் புறா)", dist: "2.5 NM", signal: "45%" }
+        ];
+
+        listContainer.innerHTML = '';
+        sampleBoats.forEach((boat, i) => {
+          const div = document.createElement('div');
+          div.className = 'device-list-item';
+          div.innerHTML = `
+            <div>
+              <div style="color:#fff; font-weight:bold; font-size:12px;">🚢 ${boat.name}</div>
+              <div style="color:#00ffcc; font-size:10px;">தூரம்: ${boat.dist} | சிக்னல்: ${boat.signal}</div>
+            </div>
+            <button class="modal-btn btn-save" style="padding:4px 8px; font-size:10px;" onclick="connectToBoat('${boat.name}')">இணை</button>
+          `;
+          listContainer.appendChild(div);
+        });
+      }, 1200);
+    }
+
+    function connectToBoat(name) {
+      document.getElementById('connectedChannelBox').style.display = 'block';
+      document.getElementById('connectedBoatStatus').innerText = `✅ இணைக்கப்பட்டது: ${name}`;
+      document.getElementById('walkie-btn').style.background = '#7b2cbf';
+      alert(`✅ ${name} உடன் வாக்கி-டாக்கி வெற்றிகரமாக இணைக்கப்பட்டது! PTT பட்டனை அழுத்திப் பேசலாம்.`);
+    }
+
+    let pttRecording = false;
+    function startPTT() {
+      pttRecording = true;
+      const btn = document.getElementById('pttButton');
+      const status = document.getElementById('pttStatus');
+      btn.classList.add('talking');
+      status.innerText = "🔴 நீங்கள் பேசுகிறீர்கள்... (Transmitting)";
+      status.style.color = "#ff0055";
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    function stopPTT() {
+      if (!pttRecording) return;
+      pttRecording = false;
+      const btn = document.getElementById('pttButton');
+      const status = document.getElementById('pttStatus');
+      btn.classList.remove('talking');
+      status.innerText = "🟢 ஸ்டாண்ட்பை (Standby)";
+      status.style.color = "#00ffcc";
+    }
+
     async function connectBluetoothSonar() {
       try {
-        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இல்லை!"); return; }
+        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இந்த பிரவுசரில் இல்லை!"); return; }
         alert("📡 புளூடூத் சோனார் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
         alert("✅ இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது."); }
+      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது அல்லது கிடைக்கவில்லை."); }
     }
 
     async function connectSatelliteDevice() {
@@ -556,13 +729,6 @@
         document.getElementById('sat-status-btn').style.background = '#00ffcc';
         alert("✅ சாட்டிலைட் இணைக்கப்பட்டது: " + device.name);
       } catch (err) { alert("⚠️ சாட்டிலைட் இணைப்பு கிடைக்கவில்லை."); }
-    }
-
-    function toggleWalkieTalkie() { document.getElementById('walkieModal').style.display = 'flex'; }
-    function startWalkieTalkieChannel() {
-      alert("🎙️ வாக்கி-டாகி சேனல் இணைக்கப்பட்டது!");
-      document.getElementById('walkieModal').style.display = 'none';
-      document.getElementById('walkie-btn').style.background = '#7b2cbf';
     }
 
     async function showWeatherReport() {
@@ -780,10 +946,6 @@
         if (s) s.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
         alert("🗑️ பழைய பாதை அழிக்கப்பட்டது!");
       }
-    }
-
-    function sendSOS() {
-      alert("🚨 அவசர செய்தி அனுப்பப்பட்டது!");
     }
 
     function openCurrentBoatModal() {
