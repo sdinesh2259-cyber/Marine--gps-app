@@ -205,16 +205,24 @@
     .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-    /* Custom Custom Pin & Labels */
-    .custom-spot-marker { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
+    /* Clean Marker Layout: Red Pin at bottom, Number & Tamil Label on top */
+    .custom-spot-marker {
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      cursor: pointer; pointer-events: auto; position: relative; width: 60px; height: 75px;
+    }
+    .spot-pin-icon { width: 28px; height: 36px; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.9)); margin-top: auto; }
+    .spot-header-tag {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 4px; white-space: nowrap; pointer-events: none;
+    }
     .spot-num-badge {
-      position: absolute; top: -20px; right: -24px; background: #000; color: #00ffcc;
-      font-size: 18px; font-weight: 900; padding: 2px 8px; border-radius: 10px; border: 3px solid #ffcc00;
-      font-family: monospace; box-shadow: 0 4px 10px rgba(0,0,0,0.9); z-index: 10;
+      background: #000000; color: #00ffcc; font-size: 16px; font-weight: 900;
+      padding: 2px 7px; border-radius: 8px; border: 2.5px solid #ffcc00;
+      font-family: monospace; box-shadow: 0 2px 6px rgba(0,0,0,0.9);
     }
     .spot-tamil-tag {
-      background: rgba(0, 0, 0, 0.9); color: #ffcc00; font-size: 12px; font-weight: bold;
-      padding: 2px 8px; border-radius: 6px; border: 1.5px solid #00ffcc; white-space: nowrap; margin-top: 4px;
+      background: rgba(0, 0, 0, 0.9); color: #ffcc00; font-size: 11px; font-weight: bold;
+      padding: 2px 6px; border-radius: 5px; border: 1.5px solid #00ffcc;
       box-shadow: 0 2px 6px rgba(0,0,0,0.9);
     }
     .maplibregl-marker { touch-action: none; }
@@ -802,22 +810,25 @@
     }
 
     function getSpotSvgIcon(type, indexNum) {
-      let iconSvg = '<svg width="28" height="36" viewBox="0 0 24 32"><path fill="#d90429" stroke="#fff" stroke-width="2" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 20 12 20s12-12.8 12-20c0-6.6-5.4-12-12-12zm0 16a4 4 0 110-8 4 4 0 010 8z"/></svg>';
-      if (type === 'Reef') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#ffcc00" stroke="#000" stroke-width="1.5" d="M2 18h20l-2-10h-16zM4 14l3-6h10l3 6z"/></svg>';
-      else if (type === 'Island') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#2a9d8f" stroke="#000" stroke-width="1.5" d="M12 2C8 8 4 14 2 18h20c-2-4-6-10-10-16z"/></svg>';
-      else if (type === 'Crab') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#e63946" stroke="#000" stroke-width="1.5" d="M6 8l3 3M18 8l-3 3M7 13h10a3 3 0 013 3v2H4v-2a3 3 0 013-3z"/></svg>';
-      else if (type === 'Fish') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#00ffcc" stroke="#000" stroke-width="1.5" d="M2 12c4-3 10-6 20-2-4 4-10 1-20 2z"/></svg>';
-      else if (type === 'Net') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#f77f00" stroke="#000" stroke-width="1.5" d="M3 3h18v18H3z"/></svg>';
-      else if (type === 'Conch') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#ffd166" stroke="#000" stroke-width="1.5" d="M4 12c0-4 4-8 10-8s8 4 8 8-4 8-8 8H4z"/></svg>';
-      else if (type === 'Ray') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#118ab2" stroke="#000" stroke-width="1.5" d="M12 2l10 10-10 10L2 12z"/></svg>';
-      else if (type === 'Squid') iconSvg = '<svg width="32" height="32" viewBox="0 0 24 24"><path fill="#ef476f" stroke="#000" stroke-width="1.5" d="M8 4h8v10a4 4 0 01-8 0V4z"/></svg>';
+      // Clean SVG Icons for each spot type
+      let iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 32"><path fill="#d90429" stroke="#fff" stroke-width="1.5" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 20 12 20s12-12.8 12-20c0-6.6-5.4-12-12-12zm0 16a4 4 0 110-8 4 4 0 010 8z"/></svg>';
+      if (type === 'Reef') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#ffcc00" stroke="#000" stroke-width="1.5" d="M2 18h20l-2-10h-16zM4 14l3-6h10l3 6z"/></svg>';
+      else if (type === 'Island') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#2a9d8f" stroke="#000" stroke-width="1.5" d="M12 2C8 8 4 14 2 18h20c-2-4-6-10-10-16z"/></svg>';
+      else if (type === 'Crab') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#e63946" stroke="#000" stroke-width="1.5" d="M6 8l3 3M18 8l-3 3M7 13h10a3 3 0 013 3v2H4v-2a3 3 0 013-3z"/></svg>';
+      else if (type === 'Fish') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#00ffcc" stroke="#000" stroke-width="1.5" d="M2 12c4-3 10-6 20-2-4 4-10 1-20 2z"/></svg>';
+      else if (type === 'Net') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#f77f00" stroke="#000" stroke-width="1.5" d="M3 3h18v18H3z"/></svg>';
+      else if (type === 'Conch') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#ffd166" stroke="#000" stroke-width="1.5" d="M4 12c0-4 4-8 10-8s8 4 8 8-4 8-8 8H4z"/></svg>';
+      else if (type === 'Ray') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#118ab2" stroke="#000" stroke-width="1.5" d="M12 2l10 10-10 10L2 12z"/></svg>';
+      else if (type === 'Squid') iconSvg = '<svg class="spot-pin-icon" viewBox="0 0 24 24"><path fill="#ef476f" stroke="#000" stroke-width="1.5" d="M8 4h8v10a4 4 0 01-8 0V4z"/></svg>';
 
       let typeTamilName = getSpotTypeTamil(type);
 
       return `<div class="custom-spot-marker">
+                <div class="spot-header-tag">
+                  <div class="spot-num-badge">${indexNum}</div>
+                  <div class="spot-tamil-tag">${typeTamilName}</div>
+                </div>
                 ${iconSvg}
-                <div class="spot-num-badge">${indexNum}</div>
-                <div class="spot-tamil-tag">${typeTamilName}</div>
               </div>`;
     }
 
