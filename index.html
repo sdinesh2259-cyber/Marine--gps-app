@@ -205,7 +205,7 @@
     .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-    /* Red Dot Marker with Top Header */
+    /* Single Exact Red Dot Marker with Top Header */
     .custom-spot-marker {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto; position: relative;
@@ -372,12 +372,11 @@
     <div class="modal-content">
       <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & இணைப்பு</div>
       
-      <!-- Nearby Boat Connection Section -->
       <div style="font-size:11px; color:#ffcc00; font-weight:bold; margin-bottom:6px;">📡 அருகிலுள்ள படகுகளுடன் இணைக்க:</div>
       <button class="modal-btn btn-save" id="scanBoatsBtn" onclick="scanNearbyBoats()" style="width:100%; margin-bottom:8px;">🔍 அருகிலுள்ள படகுகளைத் தேடு</button>
 
       <div id="discoveredBoatsList" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px;">
-        <!-- Devices listed here -->
+        <!-- Dynamic boat list -->
       </div>
 
       <div id="connectedChannelBox" style="display:none; background:#041a15; border:1px solid #00ffcc; padding:8px; border-radius:8px; text-align:center; margin-bottom:10px;">
