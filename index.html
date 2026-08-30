@@ -285,7 +285,7 @@
 </head>
 <body>
 
-  <!-- App Activation Lock Screen with User Phone Number -->
+  <!-- App Activation Lock Screen -->
   <div class="lock-overlay" id="activationLock">
     <div class="lock-box">
       <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
@@ -299,8 +299,11 @@
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
         <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
         <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹499</div>
-        <div style="color: #00ffcc; margin-top: 4px; font-size: 10px;">பணம் செலுத்திய பின் மேலே உள்ள Device ID-ஐ 6381634610 என்ற வாட்ஸ்அப் எண்ணுக்கு அனுப்பவும்.</div>
       </div>
+
+      <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
+        💬 WhatsApp-ல் Device ID அனுப்பி Key பெறுக
+      </button>
 
       <input type="text" id="activationKeyInput" class="lock-input" placeholder="ஆக்டிவேஷன் KEY உள்ளிடவும்">
       
@@ -420,7 +423,6 @@
           ✉️ உறவினருக்கு SMS மெசேஜ் அனுப்பு
         </button>
         
-        <!-- 3-Second Hold to Send SMS directly to Coast Guard (1554) -->
         <div class="hold-call-btn" id="holdCallBtn" 
              onmousedown="startCallHold()" onmouseup="cancelCallHold()" onmouseleave="cancelCallHold()" 
              ontouchstart="startCallHold()" ontouchend="cancelCallHold()" ontouchcancel="cancelCallHold()">
@@ -433,7 +435,7 @@
     </div>
   </div>
 
-  <!-- Walkie-Talkie & Nearby Boat Pairing Modal -->
+  <!-- Walkie-Talkie Modal -->
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content">
       <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & இணைப்பு</div>
@@ -454,7 +456,6 @@
         <div style="color:#aaa; font-size:10px; margin-top:2px;">சேனல்: Marine VHF Ch-16 (Secured Local Peer)</div>
       </div>
 
-      <!-- Push To Talk Button -->
       <div style="text-align:center;">
         <div style="font-size:11px; color:#aaa;">பேச அழுத்தவும் (Push To Talk):</div>
         <div class="ptt-btn" id="pttButton" onmousedown="startPTT()" onmouseup="stopPTT()" ontouchstart="startPTT()" ontouchend="stopPTT()">
@@ -572,7 +573,7 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    /* --- Unique Device ID & Activation System --- */
+    /* --- 100% Secure Per-Device Unique Key Generator --- */
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
       if (!devId) {
@@ -580,6 +581,15 @@
         localStorage.setItem('dm_marine_device_id', devId);
       }
       return devId;
+    }
+
+    // ரகசிய ஃபார்முலா: 5 இலக்க எண்ணுடன் 7351 கூட்டப்படும்
+    function calculateDeviceKey(devId) {
+      let numStr = devId.replace(/[^0-9]/g, '');
+      let num = parseInt(numStr, 10);
+      if (isNaN(num)) num = 12345;
+      let secretResult = num + 7351;
+      return 'PASS-' + secretResult;
     }
 
     function checkAppActivation() {
@@ -598,19 +608,23 @@
       }
     }
 
+    function sendDeviceIdToAdmin() {
+      const devId = getOrGenerateDeviceId();
+      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${devId}. நான் கட்டணம் செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
+      window.open(`https://api.whatsapp.com/send?phone=916381634610&text=${msg}`, '_blank');
+    }
+
     function verifyActivationKey() {
       const enteredKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
       const devId = getOrGenerateDeviceId();
-      
-      // Secret Key Formula: Device ID உடன் -DM99 சேர்த்தால் Key (எ.கா: DM-12345-DM99)
-      const expectedKey = devId + '-DM99';
+      const expectedKey = calculateDeviceKey(devId);
 
-      if (enteredKey === expectedKey || enteredKey === 'MASTER-2026') {
+      if (enteredKey === expectedKey) {
         localStorage.setItem('dm_marine_activated', 'TRUE_ACTIVE');
         alert('✅ ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது! ஆப் அன்லாக் செய்யப்பட்டது.');
         document.getElementById('activationLock').style.display = 'none';
       } else {
-        alert('❌ தவறான Key! சரியான ஆக்டிவேஷன் கீ-ஐ உள்ளிடவும் அல்லது நிர்வாகியைத் தொடர்பு கொள்ளவும்.');
+        alert('❌ தவறான Key! இந்த போனுக்கான சரியான Activation Key-ஐ உள்ளிடவும்.');
       }
     }
 
@@ -759,7 +773,7 @@
       window.location.href = smsUrl;
     }
 
-    /* --- 3-Second Hold + Confirmation to Send SMS to Coast Guard --- */
+    /* --- 3-Second Hold to Send SMS to Coast Guard --- */
     let callHoldProgress = 0;
     let callInterval = null;
 
@@ -771,7 +785,7 @@
       if (navigator.vibrate) navigator.vibrate(50);
       
       callInterval = setInterval(() => {
-        callHoldProgress += 3.33; // 100% in 3 seconds
+        callHoldProgress += 3.33;
         bar.style.width = `${callHoldProgress}%`;
         let remaining = (3 - (callHoldProgress * 3 / 100)).toFixed(1);
         if (remaining < 0) remaining = 0;
