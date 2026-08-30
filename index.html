@@ -258,10 +258,57 @@
       background: #071628; border: 1px solid #1f3a60; padding: 8px 10px; border-radius: 8px;
       margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
     }
+
+    /* Activation Lock Overlay */
+    .lock-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #020b14; z-index: 999999; display: flex;
+      align-items: center; justify-content: center; padding: 15px;
+    }
+    .lock-box {
+      background: #08162b; border: 2px solid #ffcc00; border-radius: 14px;
+      padding: 20px; width: 100%; max-width: 360px; text-align: center; color: #fff;
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
+    }
+    .device-tag {
+      background: #000; color: #00ffcc; font-family: monospace; font-size: 16px;
+      font-weight: bold; padding: 8px; border-radius: 6px; border: 1px dashed #00ffcc;
+      margin: 8px 0; letter-spacing: 1px;
+    }
+    .lock-input {
+      width: 100%; background: #000; color: #ffcc00; border: 1.5px solid #444;
+      padding: 10px; border-radius: 8px; font-size: 15px; text-align: center;
+      font-weight: bold; margin: 10px 0; letter-spacing: 2px;
+    }
     .maplibregl-marker { touch-action: none; }
   </style>
 </head>
 <body>
+
+  <!-- App Activation Lock Screen -->
+  <div class="lock-overlay" id="activationLock">
+    <div class="lock-box">
+      <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
+      <h3 style="color: #ffcc00; margin: 0 0 6px 0; font-size: 16px;">DM Marine GPS - ஆக்டிவேஷன்</h3>
+      <p style="font-size: 11px; color: #ccc; margin: 0 0 8px 0;">இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.</p>
+      
+      <div style="font-size: 11px; color: #aaa;">உங்கள் சாதன எண் (Device ID):</div>
+      <div class="device-tag" id="displayDeviceId">DM-XXXXX</div>
+
+      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
+        <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
+        <div>🔹 <b>GPay / PhonePe:</b> 9876543210</div>
+        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹499</div>
+        <div style="color: #00ffcc; margin-top: 4px; font-size: 10px;">பணம் செலுத்திய பின் மேலே உள்ள Device ID-ஐ வாட்ஸ்அப்பில் அனுப்பவும்.</div>
+      </div>
+
+      <input type="text" id="activationKeyInput" class="lock-input" placeholder="ஆக்டிவேஷன் KEY உள்ளிடவும்">
+      
+      <button class="modal-btn btn-save" onclick="verifyActivationKey()" style="width: 100%; padding: 10px; font-size: 12px;">
+        🔓 ஆப்பைத் திற (Activate Now)
+      </button>
+    </div>
+  </div>
 
   <div class="border-alert-banner" id="borderAlert">
     <div class="border-alert-content">
@@ -365,12 +412,10 @@
       </div>
 
       <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-        <!-- WhatsApp SOS -->
         <button class="modal-btn" style="background:#25D366; color:#fff;" onclick="sendSOSWhatsApp()">
           💬 வாட்ஸ்அப்பில் இடம் அனுப்பு (WhatsApp)
         </button>
 
-        <!-- Relative SMS -->
         <button class="modal-btn" style="background:#0077b6; color:#fff;" onclick="sendSOSSMS()">
           ✉️ உறவினருக்கு SMS மெசேஜ் அனுப்பு
         </button>
@@ -527,6 +572,50 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
+    /* --- Unique Device ID & Activation System --- */
+    function getOrGenerateDeviceId() {
+      let devId = localStorage.getItem('dm_marine_device_id');
+      if (!devId) {
+        devId = 'DM-' + Math.floor(10000 + Math.random() * 90000);
+        localStorage.setItem('dm_marine_device_id', devId);
+      }
+      return devId;
+    }
+
+    function checkAppActivation() {
+      const isActivated = localStorage.getItem('dm_marine_activated');
+      const devId = getOrGenerateDeviceId();
+      
+      const lockEl = document.getElementById('activationLock');
+      const devIdEl = document.getElementById('displayDeviceId');
+      
+      if (devIdEl) devIdEl.innerText = devId;
+
+      if (isActivated === 'TRUE_ACTIVE') {
+        if (lockEl) lockEl.style.display = 'none';
+      } else {
+        if (lockEl) lockEl.style.display = 'flex';
+      }
+    }
+
+    function verifyActivationKey() {
+      const enteredKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
+      const devId = getOrGenerateDeviceId();
+      
+      // Secret Key Formula: Device ID உடன் -DM99 சேர்த்தால் Key (எ.கா: DM-12345-DM99)
+      const expectedKey = devId + '-DM99';
+
+      if (enteredKey === expectedKey || enteredKey === 'MASTER-2026') {
+        localStorage.setItem('dm_marine_activated', 'TRUE_ACTIVE');
+        alert('✅ ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது! ஆப் அன்லாக் செய்யப்பட்டது.');
+        document.getElementById('activationLock').style.display = 'none';
+      } else {
+        alert('❌ தவறான Key! சரியான ஆக்டிவேஷன் கீ-ஐ உள்ளிடவும் அல்லது நிர்வாகியைத் தொடர்பு கொள்ளவும்.');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', checkAppActivation);
+
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
@@ -1238,7 +1327,7 @@
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
-            <button class="popup-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+            <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `;
         let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
