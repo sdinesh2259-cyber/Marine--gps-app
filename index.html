@@ -212,7 +212,6 @@
       font-size: 20px; font-weight: 900; padding: 3px 10px; border-radius: 12px; border: 3px solid #ffcc00;
       font-family: monospace; box-shadow: 0 4px 12px rgba(0,0,0,0.95); z-index: 10;
     }
-    .pure-red-pin { width: 32px; height: 42px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.9)); }
     .maplibregl-marker { touch-action: none; }
   </style>
 </head>
@@ -344,9 +343,9 @@
       </div>
       <div class="input-group"><label>பெயர்:</label><input type="text" id="modalSpotName" class="input-name"></div>
       <div class="input-group">
-        <label>ஐகான் தேர்வு:</label>
+        <label>வகை / தமிழ் பெயர்:</label>
         <select id="modalSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
+          <option value="Pin">📍 பின் (Pin)</option>
           <option value="Reef">🪨 பார் / பாறை (Reef)</option>
           <option value="Island">🌴 தீவு (Island)</option>
           <option value="Crab">🦀 நண்டு (Crab)</option>
@@ -389,9 +388,9 @@
       </div>
       <div class="input-group"><label>பெயர் / விபரம்:</label><input type="text" id="inputSpotName" class="input-name" placeholder="எ.கா. நல்ல பாறை / மீன் பார்"></div>
       <div class="input-group">
-        <label>ஐகான் தேர்வு:</label>
+        <label>வகை / தமிழ் பெயர்:</label>
         <select id="inputSpotType" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold;">
-          <option value="Pin">📍 3D சிவப்பு பின் (Pin)</option>
+          <option value="Pin">📍 பின் (Pin)</option>
           <option value="Reef">🪨 பார் / பாறை (Reef)</option>
           <option value="Island">🌴 தீவு (Island)</option>
           <option value="Crab">🦀 நண்டு (Crab)</option>
@@ -782,6 +781,21 @@
     function closeSpotModal() { document.getElementById('spotModal').style.display = 'none'; }
     function closeCoordModal() { document.getElementById('coordModal').style.display = 'none'; }
 
+    function getSpotTypeTamil(type) {
+      const names = {
+        'Pin': '📍 பின் (Pin)',
+        'Reef': '🪨 பார் / பாறை (Reef)',
+        'Island': '🌴 தீவு (Island)',
+        'Crab': '🦀 நண்டு (Crab)',
+        'Fish': '🐟 மீன் (Fish)',
+        'Net': '🕸️ வலை (Net)',
+        'Conch': '🐚 சங்கு (Conch)',
+        'Ray': '🪼 திருக்கை (Ray)',
+        'Squid': '🦑 கணவா (Squid)'
+      };
+      return names[type] || '📍 பின் (Pin)';
+    }
+
     function getSpotSvgIcon(type, indexNum) {
       let iconSvg = '<svg class="pure-red-pin" viewBox="0 0 24 32"><path fill="#d90429" stroke="#fff" stroke-width="1.5" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 20 12 20s12-12.8 12-20c0-6.6-5.4-12-12-12zm0 16a4 4 0 110-8 4 4 0 010 8z"/></svg>';
       if (type === 'Reef') iconSvg = '<svg width="34" height="42" viewBox="0 0 24 24"><path fill="#ffcc00" stroke="#000" stroke-width="1.5" d="M2 18h20l-2-10h-16zM4 14l3-6h10l3 6z"/></svg>';
@@ -876,6 +890,7 @@
           let numSeq = item.seq || (index + 1);
           let latNaut = item.latNautical || formatCoord(item.lat, true);
           let lngNaut = item.lngNautical || formatCoord(item.lng, false);
+          let typeTamil = getSpotTypeTamil(item.type);
           
           let iconSvg = '<svg width="24" height="30" viewBox="0 0 24 32"><path fill="#d90429" stroke="#fff" stroke-width="1.5" d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 20 12 20s12-12.8 12-20c0-6.6-5.4-12-12-12zm0 16a4 4 0 110-8 4 4 0 010 8z"/></svg>';
           if (item.type === 'Reef') iconSvg = '<svg width="24" height="30" viewBox="0 0 24 24"><path fill="#ffcc00" stroke="#000" stroke-width="1.5" d="M2 18h20l-2-10h-16zM4 14l3-6h10l3 6z"/></svg>';
@@ -894,7 +909,7 @@
               <div class="list-item-badge">${numSeq}</div>
               <div>${iconSvg}</div>
               <div class="spot-info">
-                <div>📍 ${item.name}</div>
+                <div>📍 [பதிவு #${numSeq}] ${item.name} (${typeTamil})</div>
                 <div style="color:#ffcc00;">${item.time || ''}</div>
                 <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
               </div>
@@ -916,7 +931,7 @@
       const exportData = {
         number: `பதிவு #${seqNo}`,
         name: spotObj.name,
-        type: spotObj.type,
+        type: getSpotTypeTamil(spotObj.type),
         time: spotObj.time,
         Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
         Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
@@ -943,7 +958,7 @@
       let cleanList = saved.map((item, index) => ({
         number: `பதிவு #${item.seq || (index + 1)}`,
         name: item.name,
-        type: item.type,
+        type: getSpotTypeTamil(item.type),
         time: item.time,
         Latitude: item.latNautical || formatCoord(item.lat, true),
         Longitude: item.lngNautical || formatCoord(item.lng, false)
@@ -972,11 +987,13 @@
 
         let latNaut = item.latNautical || formatCoord(item.lat, true);
         let lngNaut = item.lngNautical || formatCoord(item.lng, false);
+        let typeTamil = getSpotTypeTamil(item.type);
 
         let popupHtml = `
           <div class="popup-box">
             <b>📍 [பதிவு #${numSeq}] ${item.name}</b>
-            <div style="font-size:10px; color:#ffcc00;">${item.time || ''}</div>
+            <div style="font-size:11px; color:#ffcc00; font-weight:bold;">${typeTamil}</div>
+            <div style="font-size:10px; color:#888;">${item.time || ''}</div>
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
@@ -1012,7 +1029,6 @@
         saved.forEach((s, idx) => { s.seq = idx + 1; });
         localStorage.setItem('marineReefs', JSON.stringify(saved));
         loadSavedReefs();
-        // Removed openSpotsListModal() completely so list modal won't trigger on delete
       }
     }
 
