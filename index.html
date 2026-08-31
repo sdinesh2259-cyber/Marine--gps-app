@@ -34,23 +34,25 @@
       z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
       pointer-events: auto !important;
     }
-    .dash-main { display: flex; align-items: center; justify-content: space-between; }
+    .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
     .coord-section { flex: 1; text-align: left; }
     .title-bar { font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 2px; }
     
+    .coord-row-with-layer { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
     .coord-container-step { display: flex; flex-direction: column; gap: 2px; }
     .coord-val { font-size: 12px; font-weight: bold; color: #00ffcc; font-family: monospace; white-space: nowrap; }
     
     .dashboard-right { display: flex; align-items: center; gap: 8px; }
 
+    /* Extra Zoomable Compass (2.2x Scale) */
     .compass-container {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: #111; padding: 4px 8px; border-radius: 8px; border: 1px solid #444; cursor: pointer;
-      pointer-events: auto !important;
+      pointer-events: auto !important; transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .compass-container.zoomed {
-      transform: scale(1.6); transform-origin: top right; z-index: 10000;
-      background: #000; border: 2px solid #00ffcc; box-shadow: 0 6px 20px rgba(0,0,0,0.9);
+      transform: scale(2.2); transform-origin: top right; z-index: 10000;
+      background: #051422; border: 2px solid #00ffcc; box-shadow: 0 8px 30px rgba(0,255,204,0.6);
     }
     .compass-dial {
       width: 38px; height: 38px; border-radius: 50%; border: 2px solid #ffcc00;
@@ -98,29 +100,30 @@
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
-    .status-bar {
-      font-size: 11px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
-      display: flex; justify-content: space-between; align-items: center; position: relative;
-    }
-    
-    /* Central Single Map Layer Master Button */
+    /* Relocated Top Map Layer Button */
     .map-controls-trigger-btn {
-      background: #021a30; border: 1px solid #00ffcc; color: #00ffcc;
-      padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: bold;
+      background: #021a30; border: 1.5px solid #00ffcc; color: #00ffcc;
+      padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;
       cursor: pointer; display: flex; align-items: center; gap: 3px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.8);
     }
 
     .map-controls-dropdown {
-      display: none; position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+      display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 140px;
+      min-width: 145px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
       background: #09203a; border: 1px solid #00ffcc; color: #fff;
-      padding: 5px 8px; border-radius: 5px; font-size: 10.5px; font-weight: bold;
+      padding: 6px 8px; border-radius: 5px; font-size: 10.5px; font-weight: bold;
       cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .status-bar {
+      font-size: 11px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
+      display: flex; justify-content: space-between; align-items: center;
     }
 
     .nav-bar {
@@ -372,9 +375,30 @@
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">🛰️ DM Marine GPS Live (Satellite Direct)</div>
-        <div class="coord-container-step">
-          <div class="coord-val" id="lat-coord">Lat: 8° 49.406' N</div>
-          <div class="coord-val" id="lng-coord">Lng: 78° 8.971' E</div>
+        <div class="coord-row-with-layer">
+          <div class="coord-container-step">
+            <div class="coord-val" id="lat-coord">Lat: 8° 49.406' N</div>
+            <div class="coord-val" id="lng-coord">Lng: 78° 8.971' E</div>
+          </div>
+          <!-- Relocated to the exact requested spot -->
+          <div style="position: relative;">
+            <button class="map-controls-trigger-btn" onclick="toggleMapControlsMenu(event)">
+              🗺️ மேப் லேயர் ▾
+            </button>
+            <div class="map-controls-dropdown" id="mapControlsMenu">
+              <button class="map-menu-item-btn" onclick="resetMapBearing(); closeMapControls();">
+                <span>🧭 வடக்கு திருப்பு (N)</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
+                <span>🛰️ மேப் வகை</span>
+                <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
+                <span>🏝️ தீவு & போயா</span>
+                <span id="islandStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -414,27 +438,7 @@
 
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
-      
-      <!-- Central Map Settings Menu -->
-      <div style="position: relative;">
-        <button class="map-controls-trigger-btn" onclick="toggleMapControlsMenu(event)">
-          🗺️ மேப் லேயர் ▾
-        </button>
-        <div class="map-controls-dropdown" id="mapControlsMenu">
-          <button class="map-menu-item-btn" onclick="resetMapBearing(); closeMapControls();">
-            <span>🧭 வடக்கு திருப்பு (N)</span>
-          </button>
-          <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
-            <span>🛰️ மேப் வகை</span>
-            <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
-          </button>
-          <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
-            <span>🏝️ தீவு & போயா</span>
-            <span id="islandStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
-          </button>
-        </div>
-      </div>
-
+      <span id="auto-save-status-text" style="color: #ffcc00; font-size: 10.5px; font-weight: bold;">⏱️ ஆட்டோ: OFF</span>
       <span id="norm-time">நேரம்: --:--:--</span>
     </div>
 
@@ -757,15 +761,18 @@
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
       const btn = document.getElementById('auto-save-btn');
+      const text = document.getElementById('auto-save-status-text');
       
       if (autoSpotSaveEnabled) {
         btn.classList.add('tool-auto-active');
+        if (text) { text.innerText = "⏱️ ஆட்டோ: ON"; text.style.color = "#00ffcc"; }
         stationaryStartTime = Date.now();
         stationaryAnchorLat = currentLat;
         stationaryAnchorLng = currentLng;
         alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக சத்தமின்றி பதிவாகும்.");
       } else {
         btn.classList.remove('tool-auto-active');
+        if (text) { text.innerText = "⏱️ ஆட்டோ: OFF"; text.style.color = "#ffcc00"; }
         stationaryStartTime = null;
         alert("⏸️ தானியங்கி பார் சேமிப்பு நிறுத்தப்பட்டது (OFF).");
       }
@@ -958,11 +965,10 @@
     function renderPermanentMarineEntities() {
       if (!map) return;
 
-      // Remove existing permanent markers
       permanentEntityMarkers.forEach(m => m.remove());
       permanentEntityMarkers = [];
 
-      if (!showIslandsAndBuoys) return; // If turned OFF, do not render
+      if (!showIslandsAndBuoys) return;
 
       // Permanent Islands (Micro Dot)
       PERMANENT_ISLANDS.forEach(isl => {
