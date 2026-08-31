@@ -112,7 +112,7 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 145px;
+      min-width: 165px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
@@ -380,7 +380,7 @@
             <div class="coord-val" id="lat-coord">Lat: 8° 49.406' N</div>
             <div class="coord-val" id="lng-coord">Lng: 78° 8.971' E</div>
           </div>
-          <!-- Relocated Map Controls Menu Button -->
+          <!-- Relocated Map Controls Menu Button with Sonar Auto-Reef Switch -->
           <div style="position: relative;">
             <button class="map-controls-trigger-btn" onclick="toggleMapControlsMenu(event)">
               🗺️ மேப் லேயர் ▾
@@ -396,6 +396,10 @@
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
                 <span>🏝️ தீவு & போயா</span>
                 <span id="islandStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuSonarReefToggleBtn" onclick="toggleSonarReefAutoSave();">
+                <span>🪨 சோனார் ஆட்டோ பார்</span>
+                <span id="sonarReefStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
             </div>
           </div>
@@ -420,7 +424,7 @@
         <div class="marine-tools-panel" id="toolsPanel">
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
-            <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="ஆட்டோ பார் சேமிப்பு">⏱️</div>
+            <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="15 நிமி ஆட்டோ பதிவு">⏱️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
@@ -671,6 +675,7 @@
 
     let permanentEntityMarkers = [];
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
+    let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
 
     /* --- 100% Secure Per-Device Unique Key Generator --- */
     function getOrGenerateDeviceId() {
@@ -765,6 +770,7 @@
     let lastAutoReefSavedLocation = null;
 
     function handleSonarReefDetection(depthPaavam, depthMeters, bottomType) {
+      if (!autoSonarReefSaveEnabled) return;
       if (!bottomType.includes('Reef') && !bottomType.includes('பாறை')) return;
 
       // Ensure we don't save duplicate spots in under 30 meters distance
@@ -813,6 +819,19 @@
       document.getElementById('spotAlertText').innerText = `🪨 சோனார் பாறை கண்டறியப்பட்டது! [${depthPaavam} பாவம் - ஆட்டோ பதிவு]`;
       banner.style.display = 'block';
       setTimeout(() => { banner.style.display = 'none'; }, 4000);
+    }
+
+    function toggleSonarReefAutoSave() {
+      autoSonarReefSaveEnabled = !autoSonarReefSaveEnabled;
+      localStorage.setItem('dm_auto_sonar_reef', autoSonarReefSaveEnabled ? 'true' : 'false');
+      updateMapMenuBadges();
+      closeMapControls();
+
+      if (autoSonarReefSaveEnabled) {
+        alert("🪨 சோனார் ஆட்டோ பாறை பதிவு இயக்கப்பட்டது (ON)!\nபடகு ஓடும்போது பாறைகள் கண்டறியப்பட்டால் தானாகவே ஆழத்துடன் பதிவாகும்.");
+      } else {
+        alert("⏸️ சோனார் ஆட்டோ பாறை பதிவு நிறுத்தப்பட்டது (OFF).");
+      }
     }
 
     function toggleAutoSpotSave() {
@@ -988,6 +1007,7 @@
     function updateMapMenuBadges() {
       const typeBadge = document.getElementById('mapTypeBadge');
       const islBadge = document.getElementById('islandStatusBadge');
+      const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       
       if (typeBadge) {
         typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
@@ -995,6 +1015,10 @@
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
         islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
+      }
+      if (sonarReefBadge) {
+        sonarReefBadge.innerText = autoSonarReefSaveEnabled ? "ON" : "OFF";
+        sonarReefBadge.style.color = autoSonarReefSaveEnabled ? "#00ffcc" : "#ff0055";
       }
     }
 
@@ -1739,7 +1763,7 @@
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
-            <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+            <button class="popup-del-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `;
         if (map) {
