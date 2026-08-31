@@ -231,20 +231,20 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* --- Clean Dot Only (No Box/Label by Default) --- */
-    .clean-dot-wrapper {
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    /* --- Micro Clean Dot (Tiny Potu Dot Style - 7px) --- */
+    .micro-dot-wrapper {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto !important;
     }
-    .clean-island-dot {
-      width: 14px; height: 14px; background: #000000;
-      border: 2.5px solid #ffffff; border-radius: 50%;
-      box-shadow: 0 0 6px #000000, 0 0 10px rgba(255, 255, 255, 0.8);
+    .micro-island-dot {
+      width: 7px; height: 7px; background: #000000;
+      border: 1.5px solid #00ffcc; border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,255,204,0.9), 0 0 6px #000;
     }
-    .clean-buoy-dot {
-      width: 14px; height: 14px; background: #ff007f;
-      border: 2.5px solid #ffffff; border-radius: 50%;
-      box-shadow: 0 0 8px #ff007f, 0 0 12px rgba(255, 0, 127, 0.9);
+    .micro-buoy-dot {
+      width: 7px; height: 7px; background: #ff007f;
+      border: 1.5px solid #ffffff; border-radius: 50%;
+      box-shadow: 0 0 5px #ff007f, 0 0 8px rgba(255, 0, 127, 0.9);
     }
 
     .maplibregl-popup-content {
@@ -870,15 +870,15 @@
       });
     }
 
-    /* --- Render ONLY Dots without labels (Tap to open Popup) --- */
+    /* --- Render Tiny/Micro Dots (7px) with Tap Popup --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
 
-      // Permanent Islands (Black Dot with White Border)
+      // Permanent Islands (Micro Dot)
       PERMANENT_ISLANDS.forEach(isl => {
         const el = document.createElement('div');
-        el.className = 'clean-dot-wrapper';
-        el.innerHTML = `<div class="clean-island-dot"></div>`;
+        el.className = 'micro-dot-wrapper';
+        el.innerHTML = `<div class="micro-island-dot"></div>`;
         
         const popupHtml = `
           <div style="text-align:center; padding: 2px;">
@@ -886,7 +886,7 @@
             <div style="font-size:10px; color:#ffcc00;">நிரந்தர கடல் தீவு</div>
           </div>
         `;
-        const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
         new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -895,11 +895,11 @@
           .addTo(map);
       });
 
-      // Permanent Launch Buoys (Pink Dot with White Border)
+      // Permanent Launch Buoys (Micro Dot)
       PERMANENT_BUOYS.forEach(buoy => {
         const el = document.createElement('div');
-        el.className = 'clean-dot-wrapper';
-        el.innerHTML = `<div class="clean-buoy-dot"></div>`;
+        el.className = 'micro-dot-wrapper';
+        el.innerHTML = `<div class="micro-buoy-dot"></div>`;
         
         const popupHtml = `
           <div style="text-align:center; padding: 2px;">
@@ -907,7 +907,7 @@
             <div style="font-size:10px; color:#00ffcc;">துறைமுக வழிகாட்டி மிதப்பு போயா</div>
           </div>
         `;
-        const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
         new maplibregl.Marker({ element: el, anchor: 'center' })
