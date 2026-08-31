@@ -821,7 +821,7 @@
       loadSavedReefs();
     }
 
-    /* --- Fully Offline-Resilient Map Engine --- */
+    /* --- Bulletproof Offline-Safe Map Engine --- */
     let map;
     try {
       map = new maplibregl.Map({
@@ -852,7 +852,7 @@
         pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
       });
     } catch(e) {
-      console.warn("Offline fallback.");
+      console.warn("Map offline safeguard active.");
     }
 
     let lastTapTime = 0;
@@ -878,10 +878,12 @@
       map.on('contextmenu', (e) => { handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng); });
       map.on('dragstart', () => { followBoat = false; });
       map.on('load', () => {
-        map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
-        map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
-        map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-        map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+        try {
+          map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
+          map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
+          map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
+          map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+        } catch(err) {}
         
         renderPermanentMarineEntities();
         loadSavedReefs();
@@ -916,15 +918,17 @@
 
     function toggleMapLayer() {
       if (!map) return;
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm';
-      } else {
-        map.setLayoutProperty('osm-layer', 'visibility', 'none');
-        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite';
-      }
+      try {
+        if (currentLayerType === 'satellite') {
+          map.setLayoutProperty('satellite-layer', 'visibility', 'none');
+          map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+          currentLayerType = 'osm';
+        } else {
+          map.setLayoutProperty('osm-layer', 'visibility', 'none');
+          map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+          currentLayerType = 'satellite';
+        }
+      } catch(e) {}
       updateMapMenuBadges();
       closeMapControls();
     }
@@ -1337,9 +1341,11 @@
       if (confirm("பாதை முழுவதையும் அழிக்கவா?")) {
         boatTrackCoords = [];
         localStorage.removeItem('marineTrackHistory');
-        if (map && map.getSource('trackSource')) {
-          map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
-        }
+        try {
+          if (map && map.getSource('trackSource')) {
+            map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+          }
+        } catch(e) {}
         alert("🗑️ அழிக்கப்பட்டது!");
       }
     }
@@ -1409,7 +1415,7 @@
         }
       } else {
         let seqNo = saved.length + 1;
-        newSpot = { id: Date.now(), seq: seqNo, lat: lat, lng: lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
+        newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -1559,12 +1565,14 @@
           </div>
         `;
         if (map) {
-          let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
-          let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-            .setLngLat([item.lng, item.lat])
-            .setPopup(popup)
-            .addTo(map);
-          activeMarkers.push(marker);
+          try {
+            let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
+            let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+              .setLngLat([item.lng, item.lat])
+              .setPopup(popup)
+              .addTo(map);
+            activeMarkers.push(marker);
+          } catch(e) {}
         }
       });
     }
@@ -1607,17 +1615,21 @@
       targetTarget = null;
       document.getElementById('nav-info').style.display = 'none';
       if (map && map.getSource('navSource')) {
-        map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+        try {
+          map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+        } catch(e) {}
       }
     }
 
     function updateNavigationLine(tLat, tLng) {
       if (map && map.getSource('navSource')) {
-        map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[currentLng, currentLat], [tLng, tLat]] } });
+        try {
+          map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[currentLng, currentLat], [tLng, tLat]] } });
+        } catch(e) {}
       }
     }
 
-    /* --- Fully Resilient Offline GPS Watcher (Zero Net Dependency) --- */
+    /* --- Independent Offline GPS & UI Engine --- */
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -1639,15 +1651,21 @@
         if (needle) needle.style.transform = `rotate(${heading}deg)`;
         if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${heading}deg)`;
 
-        if (boatMarker) boatMarker.setLngLat([lng, lat]);
-        if (map && followBoat) map.easeTo({ center: [lng, lat], duration: 300 });
+        if (boatMarker) {
+          try { boatMarker.setLngLat([lng, lat]); } catch(e) {}
+        }
+        if (map && followBoat) {
+          try { map.easeTo({ center: [lng, lat], duration: 300 }); } catch(e) {}
+        }
 
         if (trackRecording) {
           boatTrackCoords.push([lng, lat]);
           if (boatTrackCoords.length > 1000) boatTrackCoords.shift();
           localStorage.setItem('marineTrackHistory', JSON.stringify(boatTrackCoords));
           if (map && map.getSource('trackSource')) {
-            map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
+            try {
+              map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
+            } catch(e) {}
           }
         }
 
@@ -1663,7 +1681,7 @@
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
         }
       }, (err) => {
-        console.warn("GPS Standby active.");
+        console.warn("GPS Active.");
       }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
@@ -1681,6 +1699,7 @@
     ];
 
     function drawSonar() {
+      if (!canvas || !ctx) return;
       canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
