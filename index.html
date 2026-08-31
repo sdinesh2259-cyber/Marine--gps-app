@@ -44,7 +44,6 @@
     
     .dashboard-right { display: flex; align-items: center; gap: 8px; }
 
-    /* Extra Zoomable Compass (2.2x Scale) */
     .compass-container {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: #111; padding: 4px 8px; border-radius: 8px; border: 1px solid #444; cursor: pointer;
@@ -245,7 +244,6 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* --- Micro Clean Dot (Tiny Potu Dot Style - 7px) --- */
     .micro-dot-wrapper {
       width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto !important;
@@ -639,7 +637,6 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    /* --- 100% Exact Satellite-Calibrated Island Coordinates --- */
     const PERMANENT_ISLANDS = [
       { name: "வான் தீவு (Van Island)", lat: 8.8358, lng: 78.2120 },
       { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8683, lng: 78.2325 },
@@ -659,7 +656,6 @@
       { name: "பாம்பன் தீவு (Pamban Island)", lat: 9.2817, lng: 79.3050 }
     ];
 
-    /* --- Exact Navigation Channel & Harbour Buoy Coordinates --- */
     const PERMANENT_BUOYS = [
       { name: "மிதப்பு போயா #1 (தூத்துக்குடி Fairway Buoy)", lat: 8.7510, lng: 78.2450 },
       { name: "மிதப்பு போயா #2 (Outer Starboard Buoy)", lat: 8.7580, lng: 78.2280 },
@@ -677,7 +673,6 @@
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
     let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
 
-    /* --- 100% Secure Per-Device Unique Key Generator --- */
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
       if (!devId) {
@@ -691,23 +686,22 @@
       let numStr = devId.replace(/[^0-9]/g, '');
       let num = parseInt(numStr, 10);
       if (isNaN(num)) num = 12345;
-      let secretResult = num + 7351;
-      return 'PASS-' + secretResult;
+      return 'PASS-' + (num + 7351);
     }
 
     function checkAppActivation() {
       const isActivated = localStorage.getItem('dm_marine_activated');
       const devId = getOrGenerateDeviceId();
-      
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
       
       if (devIdEl) devIdEl.innerText = devId;
-
-      if (isActivated === 'TRUE_ACTIVE') {
-        if (lockEl) lockEl.style.display = 'none';
-      } else {
-        if (lockEl) lockEl.style.display = 'flex';
+      if (lockEl) {
+        if (isActivated === 'TRUE_ACTIVE') {
+          lockEl.style.display = 'none';
+        } else {
+          lockEl.style.display = 'flex';
+        }
       }
     }
 
@@ -724,10 +718,10 @@
 
       if (enteredKey === expectedKey) {
         localStorage.setItem('dm_marine_activated', 'TRUE_ACTIVE');
-        alert('✅ ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது! ஆப் அன்லாக் செய்யப்பட்டது.');
+        alert('✅ ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
         document.getElementById('activationLock').style.display = 'none';
       } else {
-        alert('❌ தவறான Key! இந்த போனுக்கான சரியான Activation Key-ஐ உள்ளிடவும்.');
+        alert('❌ தவறான Key!');
       }
     }
 
@@ -757,119 +751,40 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    /* --- 15-Minute Stationary Spot Saver Variables --- */
     let autoSpotSaveEnabled = false;
     let stationaryStartTime = null;
     let stationaryAnchorLat = null;
     let stationaryAnchorLng = null;
     let lastAutoSavedLocation = null;
     let suppressedAutoSpotIds = new Set();
-
-    /* --- Live Sonar Hardware & Auto Reef Detection Engine --- */
-    let sonarConnected = false;
     let lastAutoReefSavedLocation = null;
-
-    function handleSonarReefDetection(depthPaavam, depthMeters, bottomType) {
-      if (!autoSonarReefSaveEnabled) return;
-      if (!bottomType.includes('Reef') && !bottomType.includes('பாறை')) return;
-
-      // Ensure we don't save duplicate spots in under 30 meters distance
-      if (lastAutoReefSavedLocation) {
-        let distM = parseFloat(calcDistanceNM(currentLat, currentLng, lastAutoReefSavedLocation.lat, lastAutoReefSavedLocation.lng)) * 1852;
-        if (distM < 35) return;
-      }
-
-      triggerAutoSaveReefFromSonar(depthPaavam, depthMeters);
-      lastAutoReefSavedLocation = { lat: currentLat, lng: currentLng };
-    }
-
-    function triggerAutoSaveReefFromSonar(depthPaavam, depthMeters) {
-      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let seqNo = saved.length + 1;
-      let dLat = Math.floor(currentLat);
-      let minLat = ((currentLat - dLat) * 60.0).toFixed(3);
-      let dLng = Math.floor(currentLng);
-      let minLng = ((currentLng - dLng) * 60.0).toFixed(3);
-      let latNaut = `${dLat}° ${minLat}' N`;
-      let lngNaut = `${dLng}° ${minLng}' E`;
-      let timeStr = new Date().toLocaleTimeString();
-
-      let newSpot = {
-        id: Date.now(),
-        seq: seqNo,
-        lat: currentLat,
-        lng: currentLng,
-        name: `ஆட்டோ பாறை #${seqNo} (${depthPaavam} பாவம்)`,
-        type: 'Reef',
-        time: timeStr,
-        latNautical: latNaut,
-        lngNautical: lngNaut,
-        depth: `${depthPaavam} பாவம் (${depthMeters} M)`,
-        isAutoReef: true
-      };
-
-      saved.push(newSpot);
-      localStorage.setItem('marineReefs', JSON.stringify(saved));
-      
-      exportSingleSpotFile(newSpot);
-      loadSavedReefs();
-      playSpotBeep();
-
-      const banner = document.getElementById('spotAlertBanner');
-      document.getElementById('spotAlertText').innerText = `🪨 சோனார் பாறை கண்டறியப்பட்டது! [${depthPaavam} பாவம் - ஆட்டோ பதிவு]`;
-      banner.style.display = 'block';
-      setTimeout(() => { banner.style.display = 'none'; }, 4000);
-    }
-
-    function toggleSonarReefAutoSave() {
-      autoSonarReefSaveEnabled = !autoSonarReefSaveEnabled;
-      localStorage.setItem('dm_auto_sonar_reef', autoSonarReefSaveEnabled ? 'true' : 'false');
-      updateMapMenuBadges();
-      closeMapControls();
-
-      if (autoSonarReefSaveEnabled) {
-        alert("🪨 சோனார் ஆட்டோ பாறை பதிவு இயக்கப்பட்டது (ON)!\nபடகு ஓடும்போது பாறைகள் கண்டறியப்பட்டால் தானாகவே ஆழத்துடன் பதிவாகும்.");
-      } else {
-        alert("⏸️ சோனார் ஆட்டோ பாறை பதிவு நிறுத்தப்பட்டது (OFF).");
-      }
-    }
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
       const btn = document.getElementById('auto-save-btn');
       const text = document.getElementById('auto-save-status-text');
-      
       if (autoSpotSaveEnabled) {
         btn.classList.add('tool-auto-active');
         if (text) { text.innerText = "⏱️ ஆட்டோ: ON"; text.style.color = "#00ffcc"; }
         stationaryStartTime = Date.now();
         stationaryAnchorLat = currentLat;
         stationaryAnchorLng = currentLng;
-        alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக சத்தமின்றி பதிவாகும்.");
       } else {
         btn.classList.remove('tool-auto-active');
         if (text) { text.innerText = "⏱️ ஆட்டோ: OFF"; text.style.color = "#ffcc00"; }
         stationaryStartTime = null;
-        alert("⏸️ தானியங்கி பார் சேமிப்பு நிறுத்தப்பட்டது (OFF).");
       }
     }
 
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) return;
-
       if (stationaryAnchorLat === null || stationaryAnchorLng === null) {
-        stationaryAnchorLat = lat;
-        stationaryAnchorLng = lng;
-        stationaryStartTime = Date.now();
-        return;
+        stationaryAnchorLat = lat; stationaryAnchorLng = lng; stationaryStartTime = Date.now(); return;
       }
-
       let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
-
       if (distMeters <= 35 && speed < 1.0) {
         if (!stationaryStartTime) stationaryStartTime = Date.now();
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
-
         if (elapsedMinutes >= 15) {
           if (!lastAutoSavedLocation || parseFloat(calcDistanceNM(lat, lng, lastAutoSavedLocation.lat, lastAutoSavedLocation.lng)) * 1852 > 40) {
             triggerAutoSaveSpot(lat, lng);
@@ -878,9 +793,7 @@
           stationaryStartTime = Date.now();
         }
       } else {
-        stationaryAnchorLat = lat;
-        stationaryAnchorLng = lng;
-        stationaryStartTime = Date.now();
+        stationaryAnchorLat = lat; stationaryAnchorLng = lng; stationaryStartTime = Date.now();
       }
     }
 
@@ -897,28 +810,18 @@
 
       let newId = Date.now();
       let newSpot = {
-        id: newId,
-        seq: seqNo,
-        lat: lat,
-        lng: lng,
-        name: `ஆட்டோ பதிவு #${seqNo}`,
-        type: 'Pin',
-        time: timeStr,
-        latNautical: latNaut,
-        lngNautical: lngNaut,
-        isAutoSaved: true
+        id: newId, seq: seqNo, lat: lat, lng: lng,
+        name: `ஆட்டோ பதிவு #${seqNo}`, type: 'Pin', time: timeStr,
+        latNautical: latNaut, lngNautical: lngNaut, isAutoSaved: true
       };
-
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      
       suppressedAutoSpotIds.add(newId);
-
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
     }
 
-    /* --- Crisp Blue Marine Map + Satellite Switcher --- */
+    /* --- Fully Offline-Resilient Map Engine --- */
     let map;
     try {
       map = new maplibregl.Map({
@@ -930,34 +833,26 @@
             'satellite-tiles': { 
               type: 'raster', 
               tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], 
-              tileSize: 256, 
-              maxzoom: 19 
+              tileSize: 256, maxzoom: 19, attribution: '' 
             },
             'osm-marine-tiles': { 
               type: 'raster', 
-              tiles: [
-                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-              ], 
-              tileSize: 256, 
-              maxzoom: 19 
+              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], 
+              tileSize: 256, maxzoom: 19, attribution: '' 
             }
           },
           layers: [
-            { id: 'background', type: 'background', paint: { 'background-color': '#aad3df' } },
+            { id: 'background', type: 'background', paint: { 'background-color': '#001a2e' } },
             { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
             { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
           ]
         },
         center: [currentLng, currentLat],
-        zoom: 14,
-        pitch: 45,
-        bearing: 0,
-        pitchWithRotate: true,
-        dragRotate: true,
-        touchZoomRotate: true
+        zoom: 14, pitch: 45, bearing: 0,
+        pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
       });
     } catch(e) {
-      console.warn("Map offline fallback active.");
+      console.warn("Offline fallback.");
     }
 
     let lastTapTime = 0;
@@ -993,7 +888,6 @@
       });
     }
 
-    /* --- Single Unified Map Layer Menu Controls --- */
     function toggleMapControlsMenu(event) {
       event.stopPropagation();
       document.getElementById('mapControlsMenu').classList.toggle('show');
@@ -1009,9 +903,7 @@
       const islBadge = document.getElementById('islandStatusBadge');
       const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       
-      if (typeBadge) {
-        typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
-      }
+      if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
         islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
@@ -1043,68 +935,43 @@
       updateMapMenuBadges();
       renderPermanentMarineEntities();
       closeMapControls();
+    }
 
-      if (showIslandsAndBuoys) {
-        alert("🏝️ தீவுகள் & போயாக்கள் காட்டப்படுகின்றன (ON)!");
-      } else {
-        alert("🙈 தீவுகள் & போயாக்கள் மறைக்கப்பட்டன (OFF)!");
-      }
+    function toggleSonarReefAutoSave() {
+      autoSonarReefSaveEnabled = !autoSonarReefSaveEnabled;
+      localStorage.setItem('dm_auto_sonar_reef', autoSonarReefSaveEnabled ? 'true' : 'false');
+      updateMapMenuBadges();
+      closeMapControls();
     }
 
     function resetMapBearing() { 
       if (map) map.easeTo({ bearing: 0, pitch: 45, duration: 500 }); 
     }
 
-    /* --- Render Micro Dots (7px) on Exact Satellite Landmass with Tap Popup --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
-
       permanentEntityMarkers.forEach(m => m.remove());
       permanentEntityMarkers = [];
 
       if (!showIslandsAndBuoys) return;
 
-      // Exact Island Coordinates
       PERMANENT_ISLANDS.forEach(isl => {
         const el = document.createElement('div');
         el.className = 'micro-dot-wrapper';
         el.innerHTML = `<div class="micro-island-dot"></div>`;
-        
-        const popupHtml = `
-          <div style="text-align:center; padding: 2px;">
-            <div style="font-size:13px; font-weight:bold; color:#00ffcc; margin-bottom:2px;">🌴 ${isl.name}</div>
-            <div style="font-size:10px; color:#ffcc00;">நிரந்தர கடல் தீவு</div>
-          </div>
-        `;
-        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
-          .setHTML(popupHtml);
-
-        const m = new maplibregl.Marker({ element: el, anchor: 'center' })
-          .setLngLat([isl.lng, isl.lat])
-          .setPopup(popup)
-          .addTo(map);
+        const popupHtml = `<div style="text-align:center; padding: 2px;"><div style="font-size:13px; font-weight:bold; color:#00ffcc; margin-bottom:2px;">🌴 ${isl.name}</div><div style="font-size:10px; color:#ffcc00;">நிரந்தர கடல் தீவு</div></div>`;
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true }).setHTML(popupHtml);
+        const m = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([isl.lng, isl.lat]).setPopup(popup).addTo(map);
         permanentEntityMarkers.push(m);
       });
 
-      // Exact Channel Buoy Coordinates
       PERMANENT_BUOYS.forEach(buoy => {
         const el = document.createElement('div');
         el.className = 'micro-dot-wrapper';
         el.innerHTML = `<div class="micro-buoy-dot"></div>`;
-        
-        const popupHtml = `
-          <div style="text-align:center; padding: 2px;">
-            <div style="font-size:13px; font-weight:bold; color:#ff66cc; margin-bottom:2px;">🏮 ${buoy.name}</div>
-            <div style="font-size:10px; color:#00ffcc;">துறைமுக வழிகாட்டி மிதப்பு போயா</div>
-          </div>
-        `;
-        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
-          .setHTML(popupHtml);
-
-        const m = new maplibregl.Marker({ element: el, anchor: 'center' })
-          .setLngLat([buoy.lng, buoy.lat])
-          .setPopup(popup)
-          .addTo(map);
+        const popupHtml = `<div style="text-align:center; padding: 2px;"><div style="font-size:13px; font-weight:bold; color:#ff66cc; margin-bottom:2px;">🏮 ${buoy.name}</div><div style="font-size:10px; color:#00ffcc;">துறைமுக வழிகாட்டி மிதப்பு போயா</div></div>`;
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true }).setHTML(popupHtml);
+        const m = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([buoy.lng, buoy.lat]).setPopup(popup).addTo(map);
         permanentEntityMarkers.push(m);
       });
     }
@@ -1199,12 +1066,10 @@
           callInterval = null;
           bar.style.width = '100%';
           text.innerText = "உறுதிப்படுத்தவும்...";
-          
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-          
           setTimeout(() => {
             cancelCallHold();
-            let confirmSms = confirm("🚨 அவசர உதவி: கடலோர காவல்படைக்கு (Coast Guard 1554) உங்கள் ஜிபிஎஸ் அட்சரேகை/தீர்க்கரேகை விவரங்களுடன் SMS அனுப்பவா?");
+            let confirmSms = confirm("🚨 அவசர உதவி: Coast Guard (1554) SMS அனுப்பவா?");
             if (confirmSms) {
               const text = encodeURIComponent(getSosMessageText());
               window.location.href = `sms:1554?body=${text}`;
@@ -1215,25 +1080,20 @@
     }
 
     function cancelCallHold() {
-      if (callInterval) {
-        clearInterval(callInterval);
-        callInterval = null;
-      }
+      if (callInterval) { clearInterval(callInterval); callInterval = null; }
       const bar = document.getElementById('holdProgressBar');
       const text = document.getElementById('holdBtnText');
       if (bar) bar.style.width = '0%';
       if (text) text.innerText = "✉️ Coast Guard (1554) SMS (3 விநாடி அழுத்திப் பிடிக்கவும்)";
     }
 
-    function toggleWalkieTalkie() { 
-      document.getElementById('walkieModal').style.display = 'flex'; 
-    }
+    function toggleWalkieTalkie() { document.getElementById('walkieModal').style.display = 'flex'; }
 
     function scanNearbyBoats() {
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
       scanBtn.innerText = "⏳ படகுகள் தேடப்படுகிறது...";
-      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">அருகிலுள்ள புளூடூத் & வைஃபை சிக்னல்கள் ஸ்கேன் செய்யப்படுகின்றன...</div>';
+      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ஸ்கேன் செய்யப்படுகிறது...</div>';
 
       setTimeout(() => {
         scanBtn.innerText = "🔍 மீண்டும் தேடு";
@@ -1247,13 +1107,7 @@
         sampleBoats.forEach((boat) => {
           const div = document.createElement('div');
           div.className = 'device-list-item';
-          div.innerHTML = `
-            <div>
-              <div style="color:#fff; font-weight:bold; font-size:12px;">🚢 ${boat.name}</div>
-              <div style="color:#00ffcc; font-size:10px;">தூரம்: ${boat.dist} | சிக்னல்: ${boat.signal}</div>
-            </div>
-            <button class="modal-btn btn-save" style="padding:4px 8px; font-size:10px;" onclick="connectToBoat('${boat.name}')">இணை</button>
-          `;
+          div.innerHTML = `<div><div style="color:#fff; font-weight:bold; font-size:12px;">🚢 ${boat.name}</div><div style="color:#00ffcc; font-size:10px;">தூரம்: ${boat.dist}</div></div><button class="modal-btn btn-save" style="padding:4px 8px; font-size:10px;" onclick="connectToBoat('${boat.name}')">இணை</button>`;
           listContainer.appendChild(div);
         });
       }, 1200);
@@ -1263,7 +1117,7 @@
       document.getElementById('connectedChannelBox').style.display = 'block';
       document.getElementById('connectedBoatStatus').innerText = `✅ இணைக்கப்பட்டது: ${name}`;
       document.getElementById('walkie-btn').style.background = '#7b2cbf';
-      alert(`✅ ${name} உடன் வாக்கி-டாக்கி வெற்றிகரமாக இணைக்கப்பட்டது! PTT பட்டனை அழுத்திப் பேசலாம்.`);
+      alert(`✅ ${name} உடன் இணைக்கப்பட்டது!`);
     }
 
     let pttRecording = false;
@@ -1272,7 +1126,7 @@
       const btn = document.getElementById('pttButton');
       const status = document.getElementById('pttStatus');
       btn.classList.add('talking');
-      status.innerText = "🔴 நீங்கள் பேசுகிறீர்கள்... (Transmitting)";
+      status.innerText = "🔴 நீங்கள் பேசுகிறீர்கள்...";
       status.style.color = "#ff0055";
       if (navigator.vibrate) navigator.vibrate(50);
     }
@@ -1289,52 +1143,37 @@
 
     async function connectBluetoothSonar() {
       try {
-        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இந்த பிரவுசரில் இல்லை!"); return; }
-        alert("📡 புளூடூத் சோனார் தேடுகிறது...");
+        if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இல்லை!"); return; }
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
         sonarConnected = true;
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
-        alert("✅ சோனார் சாதனம் இணைக்கப்பட்டது: " + device.name + "\nஇனி படகு ஓடும்போது பாறைகள் கண்டறியப்பட்டால் தானாகவே ஆழத்துடன் பதிவாகும்!");
-      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது அல்லது கிடைக்கவில்லை."); }
+        alert("✅ சோனார் இணைக்கப்பட்டது: " + device.name);
+      } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது."); }
     }
 
     async function connectSatelliteDevice() {
       try {
         if (!navigator.bluetooth) return;
-        alert("🛰️ சாட்டிலைட் சாதனம் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
         await device.gatt.connect();
         document.getElementById('sat-status-btn').style.background = '#00ffcc';
         alert("✅ சாட்டிலைட் இணைக்கப்பட்டது: " + device.name);
-      } catch (err) { alert("⚠️ சாட்டிலைட் இணைப்பு கிடைக்கவில்லை."); }
+      } catch (err) { alert("⚠️ இணைப்பு கிடைக்கவில்லை."); }
     }
 
     async function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
-      document.getElementById('weatherModalBody').innerHTML = `⏳ இன்றைய நேரலை வானிலை பெறப்படுகிறது...`;
+      document.getElementById('weatherModalBody').innerHTML = `⏳ வானிலை பெறப்படுகிறது...`;
       modal.style.display = 'flex';
-
       try {
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`);
         const data = await res.json();
         const cur = data.current;
         let waveHeight = (cur.wind_speed_10m * 0.08).toFixed(1);
-        document.getElementById('weatherModalBody').innerHTML = `
-          <p><b>📅 தேதி:</b> ${new Date().toLocaleDateString()}</p>
-          <p><b>🌡️ வெப்பநிலை:</b> ${cur.temperature_2m}°C</p>
-          <p><b>💨 காற்றின் வேகம்:</b> ${cur.wind_speed_10m} கி.மீ / மணி</p>
-          <p><b>🌊 அலை உயரம் (மதிப்பீடு):</b> ${waveHeight} மீட்டர்</p>
-          <p><b>🌧️ மழை அளவு:</b> ${cur.precipitation} மி.மீ</p>
-          <p style="color: #00ffcc; margin-top: 8px;">✅ நேரலைத் தரவுகள் புதுப்பிக்கப்பட்டன!</p>
-        `;
+        document.getElementById('weatherModalBody').innerHTML = `<p><b>🌡️ வெப்பநிலை:</b> ${cur.temperature_2m}°C</p><p><b>💨 காற்றின் வேகம்:</b> ${cur.wind_speed_10m} கி.மீ / மணி</p><p><b>🌊 அலை உயரம்:</b> ${waveHeight} மீட்டர்</p>`;
       } catch (err) {
-        document.getElementById('weatherModalBody').innerHTML = `
-          <p><b>🌤️ கடல் நிலை:</b> மிதமான அலை</p>
-          <p><b>💨 காற்றின் வேகம்:</b> 12 கி.மீ / மணி</p>
-          <p><b>🌊 அலை உயரம்:</b> 1.0 மீட்டர்</p>
-          <p style="color: #ffcc00;">⚠️ ஆஃப்லைன் மோட்: நெட் இல்லாததால் வழக்கமான கணக்கீடு காட்டப்படுகிறது.</p>
-        `;
+        document.getElementById('weatherModalBody').innerHTML = `<p><b>🌤️ கடல் நிலை:</b> மிதமான அலை</p><p><b>💨 காற்று:</b> 12 கி.மீ / மணி</p>`;
       }
     }
 
@@ -1343,25 +1182,8 @@
       const now = new Date();
       const knownNewMoon = new Date('2026-01-19');
       const diffDays = (now - knownNewMoon) / (1000 * 60 * 60 * 24);
-      const cycle = 29.53;
-      const moonAge = diffDays % cycle;
-      
-      let phaseName = "வளர்பிறை (Waxing)";
-      let fishActivity = "மிகச் சிறந்த மீன் பிடி நேரம்! 🐟🔥";
-      if (moonAge > 13 && moonAge < 16) {
-        phaseName = "🌕 பௌர்ணமி (Full Moon)";
-        fishActivity = "பௌர்ணமி நாள் - மீன்கள் அதிகம் மேற்பரப்பில் இருக்கும்!";
-      } else if (moonAge < 2 || moonAge > 28) {
-        phaseName = "🌑 அமாவாசை (New Moon)";
-        fishActivity = "அமாவாசை நாள் - ஆழ்கடலில் மீன் வேட்டை சிறக்கும்!";
-      }
-
-      document.getElementById('moonModalBody').innerHTML = `
-        <p><b>📅 தேதி:</b> ${now.toLocaleDateString()}</p>
-        <p><b>🌕 சந்திர நிலை:</b> ${phaseName} (வயது: ${Math.round(moonAge)} நாட்கள்)</p>
-        <p><b>🐟 மீன் செயல்பாடு:</b> ${fishActivity}</p>
-        <p><b>⏰ சிறந்த நேரம்:</b> காலை 05:30 - 08:30 மற்றும் மாலை 05:00 - 07:30</p>
-      `;
+      const moonAge = diffDays % 29.53;
+      document.getElementById('moonModalBody').innerHTML = `<p><b>🌕 சந்திர வயது:</b> ${Math.round(moonAge)} நாட்கள்</p><p><b>🐟 மீன் வேட்டை:</b> மிகச் சிறந்தது!</p>`;
       modal.style.display = 'flex';
     }
 
@@ -1470,16 +1292,10 @@
 
       for (let item of saved) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
-        
-        if (distMeters > 60 && suppressedAutoSpotIds.has(item.id)) {
-          suppressedAutoSpotIds.delete(item.id);
-        }
+        if (distMeters > 60 && suppressedAutoSpotIds.has(item.id)) { suppressedAutoSpotIds.delete(item.id); }
 
         if (distMeters <= 100) {
-          if (suppressedAutoSpotIds.has(item.id)) {
-            continue;
-          }
-
+          if (suppressedAutoSpotIds.has(item.id)) continue;
           if (spotAlertMutedForId !== item.id) {
             foundNearSpot = true;
             let depthDetail = item.depth ? ` [${item.depth}]` : '';
@@ -1514,17 +1330,17 @@
       trackRecording = !trackRecording;
       const btn = document.getElementById('track-btn');
       if (trackRecording) { btn.style.background = "rgba(251, 133, 0, 0.9)"; alert("🛤️ வழித்தடப் பதிவு இயக்கப்பட்டது!"); } 
-      else { btn.style.background = "#555"; alert("⏸️ வழித்தடப் பதிவு தற்காலிகமாக நிறுத்தப்பட்டது."); }
+      else { btn.style.background = "#555"; alert("⏸️ தற்காலிகமாக நிறுத்தப்பட்டது."); }
     }
 
     function clearTrackHistory() {
-      if (confirm("படகின் பழைய பாதை முழுவதையும் அழிக்கவா?")) {
+      if (confirm("பாதை முழுவதையும் அழிக்கவா?")) {
         boatTrackCoords = [];
         localStorage.removeItem('marineTrackHistory');
         if (map && map.getSource('trackSource')) {
           map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
         }
-        alert("🗑️ பழைய பாதை அழிக்கப்பட்டது!");
+        alert("🗑️ அழிக்கப்பட்டது!");
       }
     }
 
@@ -1548,15 +1364,8 @@
 
     function getSpotTypeTamil(type) {
       const names = {
-        'Pin': 'பின்',
-        'Reef': 'பாறை',
-        'Island': 'தீவு',
-        'Crab': 'நண்டு',
-        'Fish': 'மீன்',
-        'Net': 'வலை',
-        'Conch': 'சங்கு',
-        'Ray': 'திருக்கை',
-        'Squid': 'கணவா'
+        'Pin': 'பின்', 'Reef': 'பாறை', 'Island': 'தீவு', 'Crab': 'நண்டு',
+        'Fish': 'மீன்', 'Net': 'வலை', 'Conch': 'சங்கு', 'Ray': 'திருக்கை', 'Squid': 'கணவா'
       };
       return names[type] || 'பின்';
     }
@@ -1600,19 +1409,15 @@
         }
       } else {
         let seqNo = saved.length + 1;
-        newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
+        newSpot = { id: Date.now(), seq: seqNo, lat: lat, lng: lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      
-      if (newSpot) {
-        exportSingleSpotFile(newSpot);
-        playSpotBeep();
-      }
+      if (newSpot) { exportSingleSpotFile(newSpot); playSpotBeep(); }
 
       closeSpotModal();
       loadSavedReefs();
-      alert("📍 '" + name + "' தனி ஃபைலாகவும் பட்டியலிலும் பதிந்துவிட்டது!");
+      alert("📍 '" + name + "' சேமிக்கப்பட்டது!");
     }
 
     function saveCoordAsPinDirect() {
@@ -1640,21 +1445,19 @@
 
       exportSingleSpotFile(newSpot);
       playSpotBeep();
-
       closeCoordModal();
       loadSavedReefs();
-      alert("📍 '" + name + "' தனி ஃபைலாகவும் பட்டியலிலும் பதிந்துவிட்டது!");
+      alert("📍 '" + name + "' சேமிக்கப்பட்டது!");
     }
 
     function openSpotsListModal() {
       const container = document.getElementById('spotsContainer');
       container.innerHTML = '';
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      
-      document.getElementById('listModalTitle').innerText = `📁 DM Marine GPS பதிவுகள் (#${saved.length})`;
+      document.getElementById('listModalTitle').innerText = `📁 பதிவுகள் (#${saved.length})`;
 
       if(saved.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:20px;">சேமிக்கப்பட்ட பார்கள் எதுவும் இல்லை!</div>';
+        container.innerHTML = '<div style="text-align:center; color:#888; font-size:12px; padding:20px;">பதிவுகள் எதுவும் இல்லை!</div>';
       } else {
         saved.forEach((item, index) => {
           let numSeq = item.seq || (index + 1);
@@ -1691,11 +1494,8 @@
       let seqNo = spotObj.seq || 1;
       let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
       const exportData = {
-        number: `பதிவு #${seqNo}`,
-        name: spotObj.name,
-        type: getSpotTypeTamil(spotObj.type),
-        depth: spotObj.depth || 'N/A',
-        time: spotObj.time,
+        number: `பதிவு #${seqNo}`, name: spotObj.name, type: getSpotTypeTamil(spotObj.type),
+        depth: spotObj.depth || 'N/A', time: spotObj.time,
         Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
         Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
       };
@@ -1710,20 +1510,14 @@
     function exportSingleSpotById(id) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let item = saved.find(s => s.id == id);
-      if (item) {
-        exportSingleSpotFile(item);
-        alert("📥 இந்த ஒரு புள்ளியின் ஃபைல் மட்டும் டவுன்லோட் செய்யப்பட்டது!");
-      }
+      if (item) { exportSingleSpotFile(item); alert("📥 டவுன்லோட் செய்யப்பட்டது!"); }
     }
 
     function exportAllPhoneMemoryFiles() {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let cleanList = saved.map((item, index) => ({
-        number: `பதிவு #${item.seq || (index + 1)}`,
-        name: item.name,
-        type: getSpotTypeTamil(item.type),
-        depth: item.depth || 'N/A',
-        time: item.time,
+        number: `பதிவு #${item.seq || (index + 1)}`, name: item.name, type: getSpotTypeTamil(item.type),
+        depth: item.depth || 'N/A', time: item.time,
         Latitude: item.latNautical || formatCoord(item.lat, true),
         Longitude: item.lngNautical || formatCoord(item.lng, false)
       }));
@@ -1733,12 +1527,10 @@
       a.href = URL.createObjectURL(blob);
       a.download = `DM_Marine_GPS_All_Spots.json`;
       a.click();
-      alert("📥 அனைத்து பார்களின் தொகுப்பு ஃபைலும் டவுன்லோட் ஆனது!");
+      alert("📥 அத்தனையும் டவுன்லோட் ஆனது!");
     }
 
-    function exportData() {
-      exportAllPhoneMemoryFiles();
-    }
+    function exportData() { exportAllPhoneMemoryFiles(); }
 
     function loadSavedReefs() {
       activeMarkers.forEach(m => m.remove());
@@ -1761,9 +1553,9 @@
             ${depthStr}
             <div style="font-size:10px; color:#888;">${item.time || ''}</div>
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
-            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
-            <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட் செய்</button>
-            <button class="popup-del-btn popup-del-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 செல்</button>
+            <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட்</button>
+            <button class="popup-del-btn popup-btn" onclick="deleteSpot(${item.id})">🗑️ நீக்கு</button>
           </div>
         `;
         if (map) {
@@ -1785,7 +1577,7 @@
       let dLng = Math.floor(item.lng);
       document.getElementById('modalLatDeg').innerText = `${dLat}°`;
       document.getElementById('modalLngDeg').innerText = `${dLng}°`;
-      document.getElementById('modalTitle').innerText = "✏️ இடத்தை எடிட் செய்";
+      document.getElementById('modalTitle').innerText = "✏️ எடிட் செய்";
       document.getElementById('editSpotId').value = item.id;
       document.getElementById('modalLatMin').value = ((item.lat - dLat) * 60).toFixed(3);
       document.getElementById('modalLngMin').value = ((item.lng - dLng) * 60).toFixed(3);
@@ -1795,7 +1587,7 @@
     }
 
     function deleteSpot(id) {
-      if (confirm("இந்த இடத்தை நீக்க விரும்புகிறீர்களா?")) {
+      if (confirm("நீக்கவா?")) {
         let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
         saved = saved.filter(item => item.id != id);
         saved.forEach((s, idx) => { s.seq = idx + 1; });
@@ -1808,7 +1600,7 @@
       targetTarget = { lat, lng };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
-      alert("🚀 இலக்குக்கு வழிகாட்டுகிறது!");
+      alert("🚀 வழிகாட்டுகிறது!");
     }
 
     function stopNavigation() {
@@ -1825,7 +1617,7 @@
       }
     }
 
-    /* --- Direct Satellite Hardware GPS Watcher --- */
+    /* --- Fully Resilient Offline GPS Watcher (Zero Net Dependency) --- */
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -1871,7 +1663,7 @@
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
         }
       }, (err) => {
-        console.warn("GPS Satellite Search Active...");
+        console.warn("GPS Standby active.");
       }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
     }
 
