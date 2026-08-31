@@ -231,39 +231,38 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* --- Permanent Clean Touch-Only Dot Styling --- */
-    .perm-interactive-marker {
-      padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-      touch-action: manipulation;
+    /* --- Clean Dot Only (No Box/Label by Default) --- */
+    .clean-dot-wrapper {
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; pointer-events: auto !important;
     }
-    .perm-dot-island {
+    .clean-island-dot {
       width: 14px; height: 14px; background: #000000;
-      border: 2.5px solid #00ffcc; border-radius: 50%;
-      box-shadow: 0 0 8px rgba(0,255,204,0.9), 0 0 12px #000;
+      border: 2.5px solid #ffffff; border-radius: 50%;
+      box-shadow: 0 0 6px #000000, 0 0 10px rgba(255, 255, 255, 0.8);
     }
-    .perm-dot-buoy {
+    .clean-buoy-dot {
       width: 14px; height: 14px; background: #ff007f;
       border: 2.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 8px #ff007f, 0 0 12px rgba(255, 0, 127, 0.9);
     }
 
     .maplibregl-popup-content {
-      background: rgba(4, 15, 30, 0.96) !important;
+      background: rgba(5, 15, 30, 0.98) !important;
       color: #fff !important;
       border: 1.5px solid #00ffcc !important;
       border-radius: 8px !important;
-      padding: 8px 12px !important;
+      padding: 10px 14px !important;
       box-shadow: 0 4px 15px rgba(0,0,0,0.9) !important;
     }
     .maplibregl-popup-close-button {
       color: #ff0055 !important;
       font-size: 18px !important;
       font-weight: bold !important;
-      padding: 2px 6px !important;
+      padding: 3px 6px !important;
       right: 2px !important;
       top: 2px !important;
     }
-    .maplibregl-popup-close-button:hover { background: transparent !important; color: #ff3377 !important; }
 
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
@@ -871,20 +870,20 @@
       });
     }
 
-    /* --- Permanent Island & Buoy Markers (Tap to reveal name with Close button) --- */
+    /* --- Render ONLY Dots without labels (Tap to open Popup) --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
 
-      // Render Permanent Islands
+      // Permanent Islands (Black Dot with White Border)
       PERMANENT_ISLANDS.forEach(isl => {
         const el = document.createElement('div');
-        el.className = 'perm-interactive-marker';
-        el.innerHTML = `<div class="perm-dot-island"></div>`;
+        el.className = 'clean-dot-wrapper';
+        el.innerHTML = `<div class="clean-island-dot"></div>`;
         
         const popupHtml = `
           <div style="text-align:center; padding: 2px;">
-            <div style="font-size:12px; font-weight:bold; color:#00ffcc; margin-bottom:2px;">🌴 ${isl.name}</div>
-            <div style="font-size:10px; color:#aaa;">நிரந்தர கடல் தீவு</div>
+            <div style="font-size:13px; font-weight:bold; color:#00ffcc; margin-bottom:2px;">🌴 ${isl.name}</div>
+            <div style="font-size:10px; color:#ffcc00;">நிரந்தர கடல் தீவு</div>
           </div>
         `;
         const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
@@ -896,16 +895,16 @@
           .addTo(map);
       });
 
-      // Render Permanent Launch Fairway Buoys
+      // Permanent Launch Buoys (Pink Dot with White Border)
       PERMANENT_BUOYS.forEach(buoy => {
         const el = document.createElement('div');
-        el.className = 'perm-interactive-marker';
-        el.innerHTML = `<div class="perm-dot-buoy"></div>`;
+        el.className = 'clean-dot-wrapper';
+        el.innerHTML = `<div class="clean-buoy-dot"></div>`;
         
         const popupHtml = `
           <div style="text-align:center; padding: 2px;">
-            <div style="font-size:12px; font-weight:bold; color:#ff66cc; margin-bottom:2px;">🏮 ${buoy.name}</div>
-            <div style="font-size:10px; color:#aaa;">துறைமுக வழிகாட்டி போயா</div>
+            <div style="font-size:13px; font-weight:bold; color:#ff66cc; margin-bottom:2px;">🏮 ${buoy.name}</div>
+            <div style="font-size:10px; color:#00ffcc;">துறைமுக வழிகாட்டி மிதப்பு போயா</div>
           </div>
         `;
         const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
