@@ -94,6 +94,7 @@
     .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
+    .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
     .status-bar {
       font-size: 11px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px; display: flex; justify-content: space-between;
@@ -205,7 +206,6 @@
     .single-download-btn { background: #0077b6; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
     .del-spot-btn { background: #d90429; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
-    /* Single Exact Red Dot Marker with Top Header */
     .custom-spot-marker {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto; position: relative;
@@ -231,7 +231,6 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* 3-Second Hold Coast Guard SMS Button */
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
       color: #fff; padding: 11px 8px; border-radius: 8px; font-size: 12px; font-weight: bold;
@@ -243,7 +242,6 @@
     }
     .hold-btn-text { position: relative; z-index: 2; pointer-events: none; }
 
-    /* PTT Walkie-Talkie Styles */
     .ptt-btn {
       width: 110px; height: 110px; border-radius: 50%; background: #d90429; color: white;
       font-size: 13px; font-weight: bold; border: 4px solid #ffcc00; box-shadow: 0 0 15px rgba(217,4,41,0.8);
@@ -259,7 +257,6 @@
       margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
     }
 
-    /* Activation Lock Overlay */
     .lock-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #020b14; z-index: 999999; display: flex;
@@ -355,6 +352,7 @@
         <div class="marine-tools-panel" id="toolsPanel">
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
+            <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="ஆட்டோ பார் சேமிப்பு">⏱️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
@@ -372,6 +370,7 @@
 
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
+      <span id="auto-save-status-text" style="color: #ffcc00; font-size: 10px;">⏱️ ஆட்டோ: OFF</span>
       <span id="norm-time">நேரம்: --:--:--</span>
     </div>
     <div class="nav-bar" id="nav-info">
@@ -583,7 +582,6 @@
       return devId;
     }
 
-    // ரகசிய ஃபார்முலா: 5 இலக்க எண்ணுடன் 7351 கூட்டப்படும்
     function calculateDeviceKey(devId) {
       let numStr = devId.replace(/[^0-9]/g, '');
       let num = parseInt(numStr, 10);
@@ -650,6 +648,100 @@
     let currentViewMode = 0;
     let currentLayerType = 'satellite';
     let activeMarkers = [];
+
+    /* --- 15-Minute Auto Spot Saver Variables --- */
+    let autoSpotSaveEnabled = false;
+    let stationaryStartTime = null;
+    let stationaryAnchorLat = null;
+    let stationaryAnchorLng = null;
+    let lastAutoSavedLocation = null;
+
+    function toggleAutoSpotSave() {
+      autoSpotSaveEnabled = !autoSpotSaveEnabled;
+      const btn = document.getElementById('auto-save-btn');
+      const text = document.getElementById('auto-save-status-text');
+      
+      if (autoSpotSaveEnabled) {
+        btn.classList.add('tool-auto-active');
+        text.innerText = "⏱️ ஆட்டோ: ON";
+        text.style.color = "#00ffcc";
+        stationaryStartTime = Date.now();
+        stationaryAnchorLat = currentLat;
+        stationaryAnchorLng = currentLng;
+        alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக பதிவாகும்.");
+      } else {
+        btn.classList.remove('tool-auto-active');
+        text.innerText = "⏱️ ஆட்டோ: OFF";
+        text.style.color = "#ffcc00";
+        stationaryStartTime = null;
+        alert("⏸️ தானியங்கி பார் சேமிப்பு நிறுத்தப்பட்டது (OFF).");
+      }
+    }
+
+    function checkAndHandleAutoSpotSave(lat, lng, speed) {
+      if (!autoSpotSaveEnabled) return;
+
+      // படகு ஒரே இடத்தில் இருக்கிறதா என சரிபார்க்க (தூரம் < 30 மீட்டர் மற்றும் வேகம் < 1.0 நாட்)
+      if (stationaryAnchorLat === null || stationaryAnchorLng === null) {
+        stationaryAnchorLat = lat;
+        stationaryAnchorLng = lng;
+        stationaryStartTime = Date.now();
+        return;
+      }
+
+      let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
+
+      if (distMeters <= 35 && speed < 1.0) {
+        if (!stationaryStartTime) stationaryStartTime = Date.now();
+        let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
+
+        // 15 நிமிடங்கள் நிறைவடைந்தால் ஆட்டோ சேமிப்பு
+        if (elapsedMinutes >= 15) {
+          // ஏற்கெனவே இந்த இடத்தைச் சேமிக்கவில்லை எனில் சேமிக்கவும்
+          if (!lastAutoSavedLocation || parseFloat(calcDistanceNM(lat, lng, lastAutoSavedLocation.lat, lastAutoSavedLocation.lng)) * 1852 > 40) {
+            triggerAutoSaveSpot(lat, lng);
+            lastAutoSavedLocation = { lat, lng };
+          }
+          stationaryStartTime = Date.now(); // ரீசெட்
+        }
+      } else {
+        // படகு நகர்ந்துவிட்டால் டைமரை புதிதாகத் தொடங்கவும்
+        stationaryAnchorLat = lat;
+        stationaryAnchorLng = lng;
+        stationaryStartTime = Date.now();
+      }
+    }
+
+    function triggerAutoSaveSpot(lat, lng) {
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let seqNo = saved.length + 1;
+      let minLat = (lat - Math.floor(lat)) * 60.0;
+      let minLng = (lng - Math.floor(lng)) * 60.0;
+      let latNaut = `${Math.floor(lat)}° ${minLat.toFixed(3)}' N`;
+      let lngNaut = `${Math.floor(lng)}° ${minLng.toFixed(3)}' E`;
+      let timeStr = new Date().toLocaleTimeString();
+
+      let newSpot = {
+        id: Date.now(),
+        seq: seqNo,
+        lat: lat,
+        lng: lng,
+        name: `ஆட்டோ பதிவு #${seqNo}`,
+        type: 'Pin',
+        time: timeStr,
+        latNautical: latNaut,
+        lngNautical: lngNaut
+      };
+
+      saved.push(newSpot);
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      exportSingleSpotFile(newSpot);
+      loadSavedReefs();
+
+      if (navigator.vibrate) navigator.vibrate([100, 80, 100, 80, 200]);
+      playSpotBeep();
+      alert(`⏱️ படகு 15 நிமிடம் நின்றதால் தானாகப் பதிவானது!\n📍 பதிவு #${seqNo}\nLat: ${latNaut}\nLng: ${lngNaut}`);
+    }
 
     const map = new maplibregl.Map({
       container: 'map',
@@ -1429,6 +1521,7 @@
 
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
+        checkAndHandleAutoSpotSave(lat, lng, speed);
 
         if (targetTarget) {
           let dist = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
