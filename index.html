@@ -94,6 +94,7 @@
     .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
+    .tool-island-toggle { border-color: #52b788; background: rgba(45, 106, 79, 0.9); }
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
     .status-bar {
@@ -386,6 +387,7 @@
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
             <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="ஆட்டோ பார் சேமிப்பு">⏱️</div>
+            <div class="tool-btn tool-island-toggle" id="island-toggle-btn" onclick="toggleIslandsVisibility()" title="தீவு & போயா ON/OFF">🏝️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
@@ -633,6 +635,9 @@
       { name: "மிதப்பு போயா #10 (Kanyakumari Marine Buoy)", lat: 8.0710, lng: 77.5580 }
     ];
 
+    let permanentEntityMarkers = [];
+    let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
+
     /* --- 100% Secure Per-Device Unique Key Generator --- */
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
@@ -687,7 +692,10 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', checkAppActivation);
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAppActivation();
+      updateIslandToggleBtnUI();
+    });
 
     let currentLat = 8.8238;
     let currentLng = 78.1567;
@@ -870,9 +878,41 @@
       });
     }
 
-    /* --- Render Tiny/Micro Dots (7px) with Tap Popup --- */
+    /* --- Toggle Islands & Buoys ON/OFF Functionality --- */
+    function updateIslandToggleBtnUI() {
+      const btn = document.getElementById('island-toggle-btn');
+      if (!btn) return;
+      if (showIslandsAndBuoys) {
+        btn.classList.add('tool-auto-active');
+        btn.title = "தீவு & போயா: ON";
+      } else {
+        btn.classList.remove('tool-auto-active');
+        btn.title = "தீவு & போயா: OFF";
+      }
+    }
+
+    function toggleIslandsVisibility() {
+      showIslandsAndBuoys = !showIslandsAndBuoys;
+      localStorage.setItem('dm_show_islands', showIslandsAndBuoys ? 'true' : 'false');
+      updateIslandToggleBtnUI();
+      renderPermanentMarineEntities();
+
+      if (showIslandsAndBuoys) {
+        alert("🏝️ தீவுகள் & போயாக்கள் மேப்பில் காட்டப்படுகின்றன (ON)!");
+      } else {
+        alert("🙈 தீவுகள் & போயாக்கள் மேப்பில் மறைக்கப்பட்டன (OFF)!");
+      }
+    }
+
+    /* --- Render Micro Dots (7px) with Tap Popup (Controlled by Toggle) --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
+
+      // Remove existing permanent markers
+      permanentEntityMarkers.forEach(m => m.remove());
+      permanentEntityMarkers = [];
+
+      if (!showIslandsAndBuoys) return; // If turned OFF, do not render
 
       // Permanent Islands (Micro Dot)
       PERMANENT_ISLANDS.forEach(isl => {
@@ -889,10 +929,11 @@
         const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
-        new maplibregl.Marker({ element: el, anchor: 'center' })
+        const m = new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([isl.lng, isl.lat])
           .setPopup(popup)
           .addTo(map);
+        permanentEntityMarkers.push(m);
       });
 
       // Permanent Launch Buoys (Micro Dot)
@@ -910,10 +951,11 @@
         const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
-        new maplibregl.Marker({ element: el, anchor: 'center' })
+        const m = new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([buoy.lng, buoy.lat])
           .setPopup(popup)
           .addTo(map);
+        permanentEntityMarkers.push(m);
       });
     }
 
