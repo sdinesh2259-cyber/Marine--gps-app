@@ -99,8 +99,30 @@
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
     .status-bar {
-      font-size: 11px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px; display: flex; justify-content: space-between;
+      font-size: 11px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
+      display: flex; justify-content: space-between; align-items: center; position: relative;
     }
+    
+    /* Central Single Map Layer Master Button */
+    .map-controls-trigger-btn {
+      background: #021a30; border: 1px solid #00ffcc; color: #00ffcc;
+      padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: bold;
+      cursor: pointer; display: flex; align-items: center; gap: 3px;
+    }
+
+    .map-controls-dropdown {
+      display: none; position: absolute; top: 26px; left: 50%; transform: translateX(-50%);
+      background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
+      padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
+      min-width: 140px;
+    }
+    .map-controls-dropdown.show { display: flex; }
+    .map-menu-item-btn {
+      background: #09203a; border: 1px solid #00ffcc; color: #fff;
+      padding: 5px 8px; border-radius: 5px; font-size: 10.5px; font-weight: bold;
+      cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;
+    }
+
     .nav-bar {
       display: none; background: #e63946; color: white; font-size: 11px; font-weight: bold;
       padding: 4px 8px; border-radius: 6px; margin-top: 4px; text-align: center; justify-content: space-between; align-items: center;
@@ -123,27 +145,6 @@
     .spot-alert-banner {
       position: absolute; top: 105px; left: 10px; right: 10px; background: #2a9d8f; color: white;
       font-weight: bold; font-size: 12px; padding: 6px 10px; border-radius: 8px; z-index: 10000; display: none; border: 2px solid #ffcc00;
-    }
-
-    .rotate-reset-btn {
-      position: absolute; top: 110px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #00ffcc;
-      color: #00ffcc; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: bold; cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-      pointer-events: auto !important;
-    }
-    .layer-toggle-btn {
-      position: absolute; top: 154px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #ffcc00;
-      color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
-      display: flex; align-items: center; gap: 3px;
-      pointer-events: auto !important;
-    }
-
-    /* Screen Direct Island & Buoy Toggle Button */
-    .island-screen-toggle-btn {
-      position: absolute; top: 188px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #00ffcc;
-      color: #00ffcc; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
-      display: flex; align-items: center; gap: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-      pointer-events: auto !important;
     }
 
     .sonar-panel {
@@ -413,9 +414,30 @@
 
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
-      <span id="auto-save-status-text" style="color: #ffcc00; font-size: 10px;">⏱️ ஆட்டோ: OFF</span>
+      
+      <!-- Central Map Settings Menu -->
+      <div style="position: relative;">
+        <button class="map-controls-trigger-btn" onclick="toggleMapControlsMenu(event)">
+          🗺️ மேப் லேயர் ▾
+        </button>
+        <div class="map-controls-dropdown" id="mapControlsMenu">
+          <button class="map-menu-item-btn" onclick="resetMapBearing(); closeMapControls();">
+            <span>🧭 வடக்கு திருப்பு (N)</span>
+          </button>
+          <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
+            <span>🛰️ மேப் வகை</span>
+            <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
+          </button>
+          <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
+            <span>🏝️ தீவு & போயா</span>
+            <span id="islandStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+          </button>
+        </div>
+      </div>
+
       <span id="norm-time">நேரம்: --:--:--</span>
     </div>
+
     <div class="nav-bar" id="nav-info">
       <span>🚀 தூரம்: <span id="target-dist">0.0 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
       <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
@@ -423,9 +445,6 @@
   </div>
 
   <div id="map"></div>
-  <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()">🧭 N</button>
-  <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
-  <button class="island-screen-toggle-btn" id="island-toggle-btn" onclick="toggleIslandsVisibility()">🏝️ தீவு: ON</button>
 
   <div class="sonar-panel">
     <div class="sonar-info">
@@ -703,7 +722,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       checkAppActivation();
-      updateIslandToggleBtnUI();
+      updateMapMenuBadges();
     });
 
     let currentLat = 8.8238;
@@ -738,20 +757,15 @@
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
       const btn = document.getElementById('auto-save-btn');
-      const text = document.getElementById('auto-save-status-text');
       
       if (autoSpotSaveEnabled) {
         btn.classList.add('tool-auto-active');
-        text.innerText = "⏱️ ஆட்டோ: ON";
-        text.style.color = "#00ffcc";
         stationaryStartTime = Date.now();
         stationaryAnchorLat = currentLat;
         stationaryAnchorLng = currentLng;
         alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக சத்தமின்றி பதிவாகும்.");
       } else {
         btn.classList.remove('tool-auto-active');
-        text.innerText = "⏱️ ஆட்டோ: OFF";
-        text.style.color = "#ffcc00";
         stationaryStartTime = null;
         alert("⏸️ தானியங்கி பார் சேமிப்பு நிறுத்தப்பட்டது (OFF).");
       }
@@ -871,10 +885,6 @@
       map.on('touchmove', () => { touchMoved = true; if (touchTimer) clearTimeout(touchTimer); });
       map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
       map.on('contextmenu', (e) => { handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng); });
-      map.on('rotate', () => {
-        const b = map.getBearing();
-        document.getElementById('resetNorthBtn').style.transform = `rotate(${-b}deg)`;
-      });
       map.on('dragstart', () => { followBoat = false; });
       map.on('load', () => {
         map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
@@ -887,32 +897,61 @@
       });
     }
 
-    /* --- Direct Screen Toggle Island & Buoy Visibility --- */
-    function updateIslandToggleBtnUI() {
-      const btn = document.getElementById('island-toggle-btn');
-      if (!btn) return;
-      if (showIslandsAndBuoys) {
-        btn.innerText = "🏝️ தீவு: ON";
-        btn.style.borderColor = "#00ffcc";
-        btn.style.color = "#00ffcc";
-      } else {
-        btn.innerText = "🙈 தீவு: OFF";
-        btn.style.borderColor = "#888";
-        btn.style.color = "#aaa";
+    /* --- Single Unified Map Layer Menu Controls --- */
+    function toggleMapControlsMenu(event) {
+      event.stopPropagation();
+      document.getElementById('mapControlsMenu').classList.toggle('show');
+    }
+
+    function closeMapControls() {
+      const menu = document.getElementById('mapControlsMenu');
+      if (menu) menu.classList.remove('show');
+    }
+
+    function updateMapMenuBadges() {
+      const typeBadge = document.getElementById('mapTypeBadge');
+      const islBadge = document.getElementById('islandStatusBadge');
+      
+      if (typeBadge) {
+        typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "வரைபடம்";
       }
+      if (islBadge) {
+        islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
+        islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
+      }
+    }
+
+    function toggleMapLayer() {
+      if (!map) return;
+      if (currentLayerType === 'satellite') {
+        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
+        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
+        currentLayerType = 'osm';
+      } else {
+        map.setLayoutProperty('osm-layer', 'visibility', 'none');
+        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
+        currentLayerType = 'satellite';
+      }
+      updateMapMenuBadges();
+      closeMapControls();
     }
 
     function toggleIslandsVisibility() {
       showIslandsAndBuoys = !showIslandsAndBuoys;
       localStorage.setItem('dm_show_islands', showIslandsAndBuoys ? 'true' : 'false');
-      updateIslandToggleBtnUI();
+      updateMapMenuBadges();
       renderPermanentMarineEntities();
+      closeMapControls();
 
       if (showIslandsAndBuoys) {
         alert("🏝️ தீவுகள் & போயாக்கள் காட்டப்படுகின்றன (ON)!");
       } else {
         alert("🙈 தீவுகள் & போயாக்கள் மறைக்கப்பட்டன (OFF)!");
       }
+    }
+
+    function resetMapBearing() { 
+      if (map) map.easeTo({ bearing: 0, pitch: 45, duration: 500 }); 
     }
 
     /* --- Render Micro Dots (7px) with Tap Popup (Controlled by Toggle) --- */
@@ -997,20 +1036,6 @@
       document.getElementById('inputLngMin').value = ((currentLng - dLng) * 60).toFixed(3);
       document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
       document.getElementById('coordModal').style.display = 'flex';
-    }
-
-    function toggleMapLayer() {
-      if (!map) return;
-      const btn = document.getElementById('layerToggleBtn');
-      if (currentLayerType === 'satellite') {
-        map.setLayoutProperty('satellite-layer', 'visibility', 'none');
-        map.setLayoutProperty('osm-layer', 'visibility', 'visible');
-        currentLayerType = 'osm'; btn.innerHTML = '🗺️ வரைபடம்'; btn.style.borderColor = '#00ffcc';
-      } else {
-        map.setLayoutProperty('osm-layer', 'visibility', 'none');
-        map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
-        currentLayerType = 'satellite'; btn.innerHTML = '🛰️ சாட்டிலைட்'; btn.style.borderColor = '#ffcc00';
-      }
     }
 
     function openSosModal() {
@@ -1250,10 +1275,6 @@
         .setLngLat([currentLng, currentLat]).addTo(map);
     }
 
-    function resetMapBearing() { 
-      if (map) map.easeTo({ bearing: 0, pitch: 45, duration: 500 }); 
-    }
-
     function formatCoord(val, isLat) {
       const abs = Math.abs(val);
       const deg = Math.floor(abs);
@@ -1287,6 +1308,7 @@
     document.addEventListener('click', function(e) {
       if (!document.getElementById('compassBox').contains(e.target)) document.getElementById('compassBox').classList.remove('zoomed');
       if (!document.getElementById('toolsPanel').contains(e.target)) document.getElementById('toolsPanel').classList.remove('open');
+      closeMapControls();
     });
 
     function cycleViewModes() {
