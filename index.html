@@ -231,29 +231,39 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* --- Permanent Island & Buoy Custom Markers --- */
-    .perm-marker-container {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      pointer-events: none !important; position: relative;
+    /* --- Compact Clean Touch Dot System --- */
+    .perm-interactive-marker {
+      padding: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
     }
-    .perm-label-tag {
-      white-space: nowrap; font-size: 10px; font-weight: bold; padding: 2px 6px;
-      border-radius: 4px; margin-bottom: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.9);
-      letter-spacing: 0.5px;
-    }
-    .perm-island-tag { background: rgba(0, 0, 0, 0.9); color: #00ffcc; border: 1px solid #555; }
-    .perm-buoy-tag { background: rgba(20, 0, 15, 0.92); color: #ff66cc; border: 1px solid #ff007f; }
-
     .perm-dot-island {
-      width: 12px; height: 12px; background: #000000;
-      border: 2px solid #ffffff; border-radius: 50%;
-      box-shadow: 0 0 6px #000, 0 0 10px rgba(255,255,255,0.8);
+      width: 13px; height: 13px; background: #000000;
+      border: 2.5px solid #00ffcc; border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0,255,204,0.8), 0 0 12px #000;
     }
     .perm-dot-buoy {
-      width: 12px; height: 12px; background: #ff007f;
-      border: 2px solid #ffffff; border-radius: 50%;
+      width: 13px; height: 13px; background: #ff007f;
+      border: 2.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 8px #ff007f, 0 0 12px rgba(255, 0, 127, 0.9);
     }
+
+    .maplibregl-popup-content {
+      background: rgba(4, 15, 30, 0.96) !important;
+      color: #fff !important;
+      border: 1.5px solid #00ffcc !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.9) !important;
+    }
+    .maplibregl-popup-close-button {
+      color: #ff0055 !important;
+      font-size: 16px !important;
+      font-weight: bold !important;
+      padding: 2px 6px !important;
+      right: 2px !important;
+      top: 2px !important;
+    }
+    .maplibregl-popup-close-button:hover { background: transparent !important; color: #ff3377 !important; }
 
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
@@ -707,7 +717,7 @@
     let stationaryAnchorLat = null;
     let stationaryAnchorLng = null;
     let lastAutoSavedLocation = null;
-    let suppressedAutoSpotIds = new Set(); // Stores IDs of auto-saved spots until boat moves away
+    let suppressedAutoSpotIds = new Set();
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
@@ -789,7 +799,6 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // Mute alarm for this auto-saved spot until boat leaves the zone
       suppressedAutoSpotIds.add(newId);
 
       exportSingleSpotFile(newSpot);
@@ -862,33 +871,49 @@
       });
     }
 
-    /* --- Render Permanent Island & Buoy Markers (Undeletable) --- */
+    /* --- Render Permanent Island & Buoy Markers (Tap to reveal name with Close button) --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
 
       // Render Permanent Islands
       PERMANENT_ISLANDS.forEach(isl => {
         const el = document.createElement('div');
-        el.className = 'perm-marker-container';
-        el.innerHTML = `
-          <div class="perm-label-tag perm-island-tag">${isl.name}</div>
-          <div class="perm-dot-island"></div>
+        el.className = 'perm-interactive-marker';
+        el.innerHTML = `<div class="perm-dot-island"></div>`;
+        
+        const popupHtml = `
+          <div style="text-align:center; padding: 2px;">
+            <div style="font-size:12px; font-weight:bold; color:#00ffcc; margin-bottom:2px;">🌴 ${isl.name}</div>
+            <div style="font-size:10px; color:#aaa;">நிரந்தர கடல் தீவு</div>
+          </div>
         `;
-        new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
+          .setHTML(popupHtml);
+
+        new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([isl.lng, isl.lat])
+          .setPopup(popup)
           .addTo(map);
       });
 
       // Render Permanent Launch Fairway Buoys
       PERMANENT_BUOYS.forEach(buoy => {
         const el = document.createElement('div');
-        el.className = 'perm-marker-container';
-        el.innerHTML = `
-          <div class="perm-label-tag perm-buoy-tag">${buoy.name}</div>
-          <div class="perm-dot-buoy"></div>
+        el.className = 'perm-interactive-marker';
+        el.innerHTML = `<div class="perm-dot-buoy"></div>`;
+        
+        const popupHtml = `
+          <div style="text-align:center; padding: 2px;">
+            <div style="font-size:12px; font-weight:bold; color:#ff66cc; margin-bottom:2px;">🏮 ${buoy.name}</div>
+            <div style="font-size:10px; color:#aaa;">துறைமுக வழிகாட்டி போயா</div>
+          </div>
         `;
-        new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
+          .setHTML(popupHtml);
+
+        new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([buoy.lng, buoy.lat])
+          .setPopup(popup)
           .addTo(map);
       });
     }
@@ -1271,13 +1296,11 @@
       for (let item of saved) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
         
-        // If boat moved away (> 60m), release the auto-save suppression
         if (distMeters > 60 && suppressedAutoSpotIds.has(item.id)) {
           suppressedAutoSpotIds.delete(item.id);
         }
 
         if (distMeters <= 100) {
-          // If this is currently suppressed right after auto-save, do not trigger sound
           if (suppressedAutoSpotIds.has(item.id)) {
             continue;
           }
