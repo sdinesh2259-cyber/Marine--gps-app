@@ -641,13 +641,14 @@
       { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8683, lng: 78.2325 },
       { name: "காரைச்சல்லி தீவு (Karaichalli)", lat: 8.9515, lng: 78.2580 },
       { name: "விலங்குசல்லி தீவு (Vilanguchalli)", lat: 8.9333, lng: 78.2715 },
+      { name: "முயல் தீவு (ஹரே தீவு / Hare Island - தூத்துக்குடி)", lat: 8.7845, lng: 78.1960 },
       { name: "உப்புத்தண்ணி தீவு (Upputhanni)", lat: 9.0917, lng: 78.4975 },
       { name: "புலுவினிசல்லி தீவு (Puluvinichalli)", lat: 9.1022, lng: 78.5360 },
       { name: "நல்லதண்ணி தீவு (Nallathanni)", lat: 9.1008, lng: 78.5717 },
       { name: "ஆனைப்பார் தீவு (Anaipar)", lat: 9.1517, lng: 78.6922 },
       { name: "வாலை தீவு (Valai Island)", lat: 9.1833, lng: 78.7350 },
       { name: "முள்ளி தீவு (Mulli Island)", lat: 9.1911, lng: 78.7617 },
-      { name: "முயல் தீவு (Hare Island / முயல்)", lat: 9.2017, lng: 79.0811 },
+      { name: "ராமேஸ்வரம் முயல் தீவு (Rmd Hare Island)", lat: 9.2017, lng: 79.0811 },
       { name: "மணலி தீவு (Manali Island)", lat: 9.2158, lng: 79.1245 },
       { name: "குருசடை தீவு (Kurusadai)", lat: 9.2458, lng: 79.2133 },
       { name: "சிங்கில் தீவு (Singil Island)", lat: 9.2550, lng: 79.2392 },
@@ -659,7 +660,7 @@
       { name: "மிதப்பு போயா #1 (தூத்துக்குடி Fairway Buoy)", lat: 8.7510, lng: 78.2450 },
       { name: "மிதப்பு போயா #2 (Outer Starboard Buoy)", lat: 8.7580, lng: 78.2280 },
       { name: "மிதப்பு போயா #3 (Main Channel Port Buoy)", lat: 8.7630, lng: 78.2120 },
-      { name: "மிதப்பு போயா #4 (முயல் தீவு சேனல் போயா / Hare Island Entrance)", lat: 8.7755, lng: 78.1985 },
+      { name: "மிதப்பு போயா #4 (முயல் தீவு முகத்துவார போயா)", lat: 8.7755, lng: 78.1985 },
       { name: "மிதப்பு போயா #5 (Harbour Approach Buoy)", lat: 8.7800, lng: 78.1810 },
       { name: "மிதப்பு போயா #6 (Inner Basin Buoy)", lat: 8.7490, lng: 78.1950 },
       { name: "மிதப்பு போயா #7 (மணப்பாடு ஆழ்கடல் போயா)", lat: 8.3750, lng: 78.0750 },
@@ -751,13 +752,68 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    /* --- 15-Minute Auto Spot Saver Variables (Muted On Save) --- */
+    /* --- 15-Minute Stationary Spot Saver Variables --- */
     let autoSpotSaveEnabled = false;
     let stationaryStartTime = null;
     let stationaryAnchorLat = null;
     let stationaryAnchorLng = null;
     let lastAutoSavedLocation = null;
     let suppressedAutoSpotIds = new Set();
+
+    /* --- Live Sonar Hardware & Auto Reef Detection Engine --- */
+    let sonarConnected = false;
+    let lastAutoReefSavedLocation = null;
+
+    function handleSonarReefDetection(depthPaavam, depthMeters, bottomType) {
+      if (!bottomType.includes('Reef') && !bottomType.includes('பாறை')) return;
+
+      // Ensure we don't save duplicate spots in under 30 meters distance
+      if (lastAutoReefSavedLocation) {
+        let distM = parseFloat(calcDistanceNM(currentLat, currentLng, lastAutoReefSavedLocation.lat, lastAutoReefSavedLocation.lng)) * 1852;
+        if (distM < 35) return;
+      }
+
+      triggerAutoSaveReefFromSonar(depthPaavam, depthMeters);
+      lastAutoReefSavedLocation = { lat: currentLat, lng: currentLng };
+    }
+
+    function triggerAutoSaveReefFromSonar(depthPaavam, depthMeters) {
+      let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      let seqNo = saved.length + 1;
+      let dLat = Math.floor(currentLat);
+      let minLat = ((currentLat - dLat) * 60.0).toFixed(3);
+      let dLng = Math.floor(currentLng);
+      let minLng = ((currentLng - dLng) * 60.0).toFixed(3);
+      let latNaut = `${dLat}° ${minLat}' N`;
+      let lngNaut = `${dLng}° ${minLng}' E`;
+      let timeStr = new Date().toLocaleTimeString();
+
+      let newSpot = {
+        id: Date.now(),
+        seq: seqNo,
+        lat: currentLat,
+        lng: currentLng,
+        name: `ஆட்டோ பாறை #${seqNo} (${depthPaavam} பாவம்)`,
+        type: 'Reef',
+        time: timeStr,
+        latNautical: latNaut,
+        lngNautical: lngNaut,
+        depth: `${depthPaavam} பாவம் (${depthMeters} M)`,
+        isAutoReef: true
+      };
+
+      saved.push(newSpot);
+      localStorage.setItem('marineReefs', JSON.stringify(saved));
+      
+      exportSingleSpotFile(newSpot);
+      loadSavedReefs();
+      playSpotBeep();
+
+      const banner = document.getElementById('spotAlertBanner');
+      document.getElementById('spotAlertText').innerText = `🪨 சோனார் பாறை கண்டறியப்பட்டது! [${depthPaavam} பாவம் - ஆட்டோ பதிவு]`;
+      banner.style.display = 'block';
+      setTimeout(() => { banner.style.display = 'none'; }, 4000);
+    }
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
@@ -843,7 +899,7 @@
       loadSavedReefs();
     }
 
-    /* --- Clean High-Resolution Coastline Map Engine --- */
+    /* --- Crisp Blue Marine Map + Satellite Switcher --- */
     let map;
     try {
       map = new maplibregl.Map({
@@ -1213,8 +1269,9 @@
         alert("📡 புளூடூத் சோனார் தேடுகிறது...");
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
+        sonarConnected = true;
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
-        alert("✅ இணைக்கப்பட்டது: " + device.name);
+        alert("✅ சோனார் சாதனம் இணைக்கப்பட்டது: " + device.name + "\nஇனி படகு ஓடும்போது பாறைகள் கண்டறியப்பட்டால் தானாகவே ஆழத்துடன் பதிவாகும்!");
       } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது அல்லது கிடைக்கவில்லை."); }
     }
 
@@ -1401,7 +1458,8 @@
 
           if (spotAlertMutedForId !== item.id) {
             foundNearSpot = true;
-            spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
+            let depthDetail = item.depth ? ` [${item.depth}]` : '';
+            spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name}${depthDetail} (${Math.round(distMeters)} மீ)`;
             break;
           }
         }
@@ -1579,6 +1637,7 @@
           let latNaut = item.latNautical || formatCoord(item.lat, true);
           let lngNaut = item.lngNautical || formatCoord(item.lng, false);
           let typeTamil = getSpotTypeTamil(item.type);
+          let depthInfo = item.depth ? ` | 🌊 ஆழம்: ${item.depth}` : '';
 
           const div = document.createElement('div');
           div.className = 'spot-item';
@@ -1588,7 +1647,7 @@
               <div class="marine-exact-dot"></div>
               <div class="spot-info">
                 <div>📍 [பதிவு #${numSeq}] ${item.name} (${typeTamil})</div>
-                <div style="color:#ffcc00;">${item.time || ''}</div>
+                <div style="color:#ffcc00;">${item.time || ''}${depthInfo}</div>
                 <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
               </div>
             </div>
@@ -1611,6 +1670,7 @@
         number: `பதிவு #${seqNo}`,
         name: spotObj.name,
         type: getSpotTypeTamil(spotObj.type),
+        depth: spotObj.depth || 'N/A',
         time: spotObj.time,
         Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
         Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
@@ -1638,6 +1698,7 @@
         number: `பதிவு #${item.seq || (index + 1)}`,
         name: item.name,
         type: getSpotTypeTamil(item.type),
+        depth: item.depth || 'N/A',
         time: item.time,
         Latitude: item.latNautical || formatCoord(item.lat, true),
         Longitude: item.lngNautical || formatCoord(item.lng, false)
@@ -1667,11 +1728,13 @@
         let latNaut = item.latNautical || formatCoord(item.lat, true);
         let lngNaut = item.lngNautical || formatCoord(item.lng, false);
         let typeTamil = getSpotTypeTamil(item.type);
+        let depthStr = item.depth ? `<div style="font-size:10px; color:#00ffcc;">🌊 ஆழம்: ${item.depth}</div>` : '';
 
         let popupHtml = `
           <div class="popup-box">
             <b>📍 [பதிவு #${numSeq}] ${item.name}</b>
             <div style="font-size:11px; color:#ffcc00; font-weight:bold;">${typeTamil}</div>
+            ${depthStr}
             <div style="font-size:10px; color:#888;">${item.time || ''}</div>
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 இந்த இடத்திற்கு செல்</button>
