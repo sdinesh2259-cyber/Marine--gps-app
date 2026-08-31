@@ -842,7 +842,7 @@
       loadSavedReefs();
     }
 
-    /* --- High Brightness Crisp Google Maps Style Integration with Super Sharp HD Text --- */
+    /* --- Crisp Blue Marine Map + Satellite Switcher --- */
     let map;
     try {
       map = new maplibregl.Map({
@@ -857,21 +857,19 @@
               tileSize: 256, 
               maxzoom: 19 
             },
-            'bright-osm-tiles': { 
+            'osm-marine-tiles': { 
               type: 'raster', 
               tiles: [
-                'https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png',
-                'https://c.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png'
+                'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
               ], 
               tileSize: 256, 
               maxzoom: 19 
             }
           },
           layers: [
-            { id: 'background', type: 'background', paint: { 'background-color': '#e8ecef' } },
+            { id: 'background', type: 'background', paint: { 'background-color': '#aad3df' } },
             { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-            { id: 'osm-layer', type: 'raster', source: 'bright-osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.15, 'raster-brightness-min': 0.05 } }
+            { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
           ]
         },
         center: [currentLng, currentLat],
