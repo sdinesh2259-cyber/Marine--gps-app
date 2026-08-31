@@ -98,6 +98,7 @@
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
     .tool-diary { border-color: #ffcc00; background: rgba(255, 204, 0, 0.9); color: #000; font-weight: bold; }
+    .tool-trap { border-color: #00ffcc; background: rgba(0, 255, 204, 0.9); color: #000; font-weight: bold; }
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
     .map-controls-trigger-btn {
@@ -237,6 +238,12 @@
       padding: 2px 6px; border-radius: 5px; border: 1.5px solid #00ffcc;
       box-shadow: 0 2px 6px rgba(0,0,0,0.9);
     }
+
+    .trap-marker-dot {
+      width: 16px; height: 16px; background: #00ffcc;
+      border: 2.5px solid #000000; border-radius: 50%;
+      box-shadow: 0 0 10px #00ffcc;
+    }
     
     .marine-exact-dot {
       width: 14px; height: 14px; background: #ff0044;
@@ -364,7 +371,7 @@
 
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
-      <span id="spotAlertText">📍 பார் அருகில் உள்ளது!</span>
+      <span id="spotAlertText">📍 பார் அல்லது கூண்டு அருகில் உள்ளது!</span>
       <button class="mute-btn" onclick="muteSpotAlert()">🔇 அலாரம் நிறுத்து</button>
     </div>
   </div>
@@ -422,6 +429,7 @@
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
             <div class="tool-btn tool-diary" onclick="openDiaryModal()" title="மீனவர் டைரி">📖</div>
+            <div class="tool-btn tool-trap" onclick="openTrapManagerModal()" title="கூண்டுகள் மேலாண்மை (100 Traps)">🕸️</div>
             <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="15 நிமி ஆட்டோ பதிவு">⏱️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
@@ -466,6 +474,27 @@
       </div>
     </div>
     <canvas id="sonarCanvas"></canvas>
+  </div>
+
+  <!-- Trap Manager Modal (100 Traps Master Toggle & List) -->
+  <div class="modal-overlay" id="trapManagerModal">
+    <div class="modal-content">
+      <div class="modal-title">🕸️ கூண்டுகள் மேலாண்மை (100 Traps)</div>
+      <div style="background:#051422; border:1px solid #00ffcc; padding:10px; border-radius:8px; margin-bottom:12px; text-align:center;">
+        <div style="font-size:12px; color:#ffcc00; font-weight:bold; margin-bottom:6px;">மாஸ்டர் ஆன் / ஆஃப் சுவிட்ச்:</div>
+        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; color:#00ffcc; font-weight:bold; font-size:13px;">
+          <input type="checkbox" id="masterTrapToggleCheckbox" onchange="toggleMasterTrapsDisplay(this)" style="width:18px; height:18px; accent-color:#00ffcc;">
+          <span>அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON/OFF)</span>
+        </label>
+      </div>
+      <div class="input-group">
+        <label>புதிய கூண்டு சேர்க்க (Current Location):</label>
+        <button class="modal-btn btn-save" onclick="addNewTrapAtCurrentLocation()">📍 தற்போதைய இடத்தில் கூண்டு வை (#<span id="nextTrapSeqNum">1</span>)</button>
+      </div>
+      <div style="font-size: 11px; color: #ffcc00; margin: 8px 0 4px 0;">பதிவு செய்யப்பட்ட கூண்டுகள் பட்டியல்:</div>
+      <div id="trapsListContainer" style="max-height: 160px; overflow-y: auto; margin-bottom: 10px;"></div>
+      <button class="modal-btn btn-cancel" onclick="document.getElementById('trapManagerModal').style.display='none'" style="width:100%;">மூடு</button>
+    </div>
   </div>
 
   <!-- Diary Modal -->
@@ -689,6 +718,126 @@
     let permanentEntityMarkers = [];
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
     let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
+
+    /* --- Traps Manager & Master Toggle (Up to 100 Traps) --- */
+    let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
+    let activeTrapMarkers = [];
+
+    function openTrapManagerModal() {
+      document.getElementById('masterTrapToggleCheckbox').checked = showAllTrapsOnMapFlag;
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
+      loadTrapsListUI();
+      document.getElementById('trapManagerModal').style.display = 'flex';
+    }
+
+    function toggleMasterTrapsDisplay(checkbox) {
+      showAllTrapsOnMapFlag = checkbox.checked;
+      localStorage.setItem('dm_show_traps_master', showAllTrapsOnMapFlag ? 'true' : 'false');
+      renderAllTrapsOnMap();
+      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளும் மேப்பில் காட்டப்படுகின்றன!" : "🕸️ கூண்டுகள் மேப்பிலிருந்து மறைக்கப்பட்டன.");
+    }
+
+    function addNewTrapAtCurrentLocation() {
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      if (traps.length >= 100) { alert("அதிகபட்சம் 100 கூண்டுகள் மட்டுமே சேர்க்க முடியும்!"); return; }
+      let seq = traps.length + 1;
+      let dLat = Math.floor(currentLat);
+      let minLat = (currentLat - dLat) * 60.0;
+      let dLng = Math.floor(currentLng);
+      let minLng = (currentLng - dLng) * 60.0;
+
+      let newTrap = {
+        id: Date.now(),
+        seq: seq,
+        name: `கூண்டு #${seq}`,
+        lat: currentLat,
+        lng: currentLng,
+        latNautical: `${dLat}° ${minLat.toFixed(3)}' N`,
+        lngNautical: `${dLng}° ${minLng.toFixed(3)}' E`,
+        time: new Date().toLocaleTimeString()
+      };
+      traps.push(newTrap);
+      localStorage.setItem('marineTrapsList', JSON.stringify(traps));
+      document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
+      loadTrapsListUI();
+      renderAllTrapsOnMap();
+      playSpotBeep();
+      alert(`🕸️ கூண்டு #${seq} தற்போதைய இடத்தில் சேமிக்கப்பட்டது!`);
+    }
+
+    function loadTrapsListUI() {
+      const container = document.getElementById('trapsListContainer');
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      if (traps.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#888; font-size:11px; padding:10px;">கூண்டுகள் எதுவும் இல்லை!</div>';
+        return;
+      }
+      container.innerHTML = '';
+      traps.forEach(t => {
+        let div = document.createElement('div');
+        div.className = 'spot-item';
+        div.innerHTML = `
+          <div class="spot-left-group">
+            <div class="list-item-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
+            <div class="spot-info">
+              <div>🕸️ ${t.name}</div>
+              <div style="color:#00ffcc; font-family:monospace; font-size:10px;">${t.latNautical} | ${t.lngNautical}</div>
+            </div>
+          </div>
+          <button class="del-spot-btn" onclick="deleteTrapItem(${t.id})">நீக்கு</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteTrapItem(id) {
+      if (confirm("இந்த கூண்டை நீக்கவா?")) {
+        let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+        traps = traps.filter(t => t.id != id);
+        traps.forEach((t, i) => { t.seq = i + 1; });
+        localStorage.setItem('marineTrapsList', JSON.stringify(traps));
+        loadTrapsListUI();
+        renderAllTrapsOnMap();
+      }
+    }
+
+    function renderAllTrapsOnMap() {
+      if (!map) return;
+      activeTrapMarkers.forEach(m => m.remove());
+      activeTrapMarkers = [];
+
+      if (!showAllTrapsOnMapFlag) return;
+
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      traps.forEach(t => {
+        let el = document.createElement('div');
+        el.className = 'custom-spot-marker';
+        el.innerHTML = `
+          <div class="spot-header-tag">
+            <div class="spot-num-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
+            <div class="spot-tamil-tag" style="border-color:#00ffcc; color:#00ffcc;">கூண்டு</div>
+          </div>
+          <div class="trap-marker-dot"></div>
+        `;
+
+        let popupHtml = `
+          <div class="popup-box">
+            <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
+            <div style="font-size:10px; color:#888;">${t.time}</div>
+            <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல் (0.0 அலாரம்)</button>
+            <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
+          </div>
+        `;
+        let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
+        let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([t.lng, t.lat])
+          .setPopup(popup)
+          .addTo(map);
+        activeTrapMarkers.push(marker);
+      });
+    }
 
     /* --- Fuel & Mileage Calculator Global Variables --- */
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
@@ -981,6 +1130,7 @@
         
         renderPermanentMarineEntities();
         loadSavedReefs();
+        renderAllTrapsOnMap();
       });
     }
 
@@ -1348,7 +1498,7 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         osc.connect(gain); gain.connect(audioCtx.destination);
         osc.start(); osc.stop(audioCtx.currentTime + 0.3);
       } catch(e) {}
@@ -1359,10 +1509,10 @@
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
       } catch(e) {}
     }
 
@@ -1383,33 +1533,49 @@
       if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
     }
 
+    /* --- Precise 0.0 Meter / 0 Distance Alarm for Spots and Traps --- */
+    let zeroAlarmMutedForId = null;
+
     function checkSpotProximity(lat, lng) {
-      const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
-      let foundNearSpot = false;
-      let spotNameStr = "";
+      const savedSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
+      const savedTraps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      
+      let allTargets = [];
+      savedSpots.forEach(s => allTargets.push({ name: `பார்: ${s.name}`, lat: s.lat, lng: s.lng, id: 'spot_' + s.id }));
+      if (showAllTrapsOnMapFlag) {
+        savedTraps.forEach(t => allTargets.push({ name: `கூண்டு #${t.seq}`, lat: t.lat, lng: t.lng, id: 'trap_' + t.id }));
+      }
 
-      for (let item of saved) {
+      let foundZeroSpot = false;
+      let alertMsgStr = "";
+
+      for (let item of allTargets) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
-        if (distMeters > 60 && suppressedAutoSpotIds.has(item.id)) { suppressedAutoSpotIds.delete(item.id); }
+        
+        if (distMeters > 15 && zeroAlarmMutedForId === item.id) {
+          zeroAlarmMutedForId = null;
+        }
 
-        if (distMeters <= 100) {
-          if (suppressedAutoSpotIds.has(item.id)) continue;
-          if (spotAlertMutedForId !== item.id) {
-            foundNearSpot = true;
-            let depthDetail = item.depth ? ` [${item.depth}]` : '';
-            spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name}${depthDetail} (${Math.round(distMeters)} மீ)`;
-            break;
-          }
+        if (distMeters <= 3.0) {
+          if (zeroAlarmMutedForId === item.id) continue;
+          foundZeroSpot = true;
+          alertMsgStr = `🚨 0.0 மீட்டர்! ${item.name} சரியாக இந்த இடத்தின் கீழே உள்ளது! (${distMeters.toFixed(1)} மீ)`;
+          break;
         }
       }
 
       const banner = document.getElementById('spotAlertBanner');
-      if (foundNearSpot) {
-        document.getElementById('spotAlertText').innerText = spotNameStr;
+      if (foundZeroSpot) {
+        document.getElementById('spotAlertText').innerText = alertMsgStr;
         banner.style.display = 'block';
-        if (!spotBeepInterval) { playSpotBeep(); spotBeepInterval = setInterval(playSpotBeep, 1500); }
-      } else {
-        if (!spotBeepInterval) { banner.style.display = 'none'; }
+        if (!spotBeepInterval) {
+          playSpotBeep();
+          if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          spotBeepInterval = setInterval(() => {
+            playSpotBeep();
+            if(navigator.vibrate) navigator.vibrate(200);
+          }, 800);
+        }
       }
     }
 
