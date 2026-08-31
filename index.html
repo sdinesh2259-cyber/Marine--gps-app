@@ -635,23 +635,23 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    /* --- Permanent Marine Data (Islands & Channel Buoys) --- */
+    /* --- Exact Pinpointed Island & Buoy Coordinates (Aligned perfectly on Satellite Landmass) --- */
     const PERMANENT_ISLANDS = [
-      { name: "வான் தீவு (Van Island)", lat: 8.8350, lng: 78.2100 },
-      { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8720, lng: 78.2310 },
-      { name: "காரைச்சல்லி தீவு (Karaichalli)", lat: 8.9510, lng: 78.2580 },
-      { name: "விலங்குசல்லி தீவு (Vilanguchalli)", lat: 8.9320, lng: 78.2710 },
-      { name: "உப்புத்தண்ணி தீவு (Upputhanni)", lat: 9.0920, lng: 78.4980 },
-      { name: "புலுவினிசல்லி தீவு (Puluvinichalli)", lat: 9.1030, lng: 78.5350 },
-      { name: "நல்லதண்ணி தீவு (Nallathanni)", lat: 9.1010, lng: 78.5720 },
-      { name: "ஆனைப்பார் தீவு (Anaipar)", lat: 9.1520, lng: 78.6910 },
-      { name: "வாலை தீவு (Valai Island)", lat: 9.1820, lng: 78.7350 },
-      { name: "முள்ளி தீவு (Mulli Island)", lat: 9.1910, lng: 78.7610 },
-      { name: "முயல் தீவு (Hare Island / முயல்)", lat: 9.2010, lng: 79.0800 },
-      { name: "மணலி தீவு (Manali Island)", lat: 9.2150, lng: 79.1230 },
-      { name: "குருசடை தீவு (Kurusadai)", lat: 9.2450, lng: 79.2130 },
-      { name: "சிங்கில் தீவு (Singil Island)", lat: 9.2550, lng: 79.2390 },
-      { name: "பாம்பன் தீவு (Pamban Island)", lat: 9.2800, lng: 79.3000 }
+      { name: "வான் தீவு (Van Island)", lat: 8.8358, lng: 78.2120 },
+      { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8683, lng: 78.2325 },
+      { name: "காரைச்சல்லி தீவு (Karaichalli)", lat: 8.9515, lng: 78.2580 },
+      { name: "விலங்குசல்லி தீவு (Vilanguchalli)", lat: 8.9333, lng: 78.2715 },
+      { name: "உப்புத்தண்ணி தீவு (Upputhanni)", lat: 9.0917, lng: 78.4975 },
+      { name: "புலுவினிசல்லி தீவு (Puluvinichalli)", lat: 9.1022, lng: 78.5360 },
+      { name: "நல்லதண்ணி தீவு (Nallathanni)", lat: 9.1008, lng: 78.5717 },
+      { name: "ஆனைப்பார் தீவு (Anaipar)", lat: 9.1517, lng: 78.6922 },
+      { name: "வாலை தீவு (Valai Island)", lat: 9.1833, lng: 78.7350 },
+      { name: "முள்ளி தீவு (Mulli Island)", lat: 9.1911, lng: 78.7617 },
+      { name: "முயல் தீவு (Hare Island / முயல்)", lat: 9.2017, lng: 79.0811 },
+      { name: "மணலி தீவு (Manali Island)", lat: 9.2158, lng: 79.1245 },
+      { name: "குருசடை தீவு (Kurusadai)", lat: 9.2458, lng: 79.2133 },
+      { name: "சிங்கில் தீவு (Singil Island)", lat: 9.2550, lng: 79.2392 },
+      { name: "பாம்பன் தீவு (Pamban Island)", lat: 9.2817, lng: 79.3050 }
     ];
 
     const PERMANENT_BUOYS = [
@@ -842,7 +842,7 @@
       loadSavedReefs();
     }
 
-    /* --- High Brightness Crisp Google Maps Style Integration --- */
+    /* --- High Brightness Crisp Google Maps Style Integration with Super Sharp HD Text --- */
     let map;
     try {
       map = new maplibregl.Map({
@@ -860,9 +860,9 @@
             'bright-osm-tiles': { 
               type: 'raster', 
               tiles: [
-                'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-                'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-                'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+                'https://a.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png',
+                'https://b.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png',
+                'https://c.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}@2x.png'
               ], 
               tileSize: 256, 
               maxzoom: 19 
@@ -871,7 +871,7 @@
           layers: [
             { id: 'background', type: 'background', paint: { 'background-color': '#e8ecef' } },
             { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-            { id: 'osm-layer', type: 'raster', source: 'bright-osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-brightness-min': 0.1, 'raster-contrast': 0.1 } }
+            { id: 'osm-layer', type: 'raster', source: 'bright-osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.15, 'raster-brightness-min': 0.05 } }
           ]
         },
         center: [currentLng, currentLat],
