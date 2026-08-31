@@ -231,18 +231,18 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* --- Compact Clean Touch Dot System --- */
+    /* --- Permanent Clean Touch-Only Dot Styling --- */
     .perm-interactive-marker {
-      padding: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
       touch-action: manipulation;
     }
     .perm-dot-island {
-      width: 13px; height: 13px; background: #000000;
+      width: 14px; height: 14px; background: #000000;
       border: 2.5px solid #00ffcc; border-radius: 50%;
-      box-shadow: 0 0 8px rgba(0,255,204,0.8), 0 0 12px #000;
+      box-shadow: 0 0 8px rgba(0,255,204,0.9), 0 0 12px #000;
     }
     .perm-dot-buoy {
-      width: 13px; height: 13px; background: #ff007f;
+      width: 14px; height: 14px; background: #ff007f;
       border: 2.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 8px #ff007f, 0 0 12px rgba(255, 0, 127, 0.9);
     }
@@ -257,7 +257,7 @@
     }
     .maplibregl-popup-close-button {
       color: #ff0055 !important;
-      font-size: 16px !important;
+      font-size: 18px !important;
       font-weight: bold !important;
       padding: 2px 6px !important;
       right: 2px !important;
@@ -871,7 +871,7 @@
       });
     }
 
-    /* --- Render Permanent Island & Buoy Markers (Tap to reveal name with Close button) --- */
+    /* --- Permanent Island & Buoy Markers (Tap to reveal name with Close button) --- */
     function renderPermanentMarineEntities() {
       if (!map) return;
 
@@ -887,7 +887,7 @@
             <div style="font-size:10px; color:#aaa;">நிரந்தர கடல் தீவு</div>
           </div>
         `;
-        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
+        const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
         new maplibregl.Marker({ element: el, anchor: 'center' })
@@ -908,7 +908,7 @@
             <div style="font-size:10px; color:#aaa;">துறைமுக வழிகாட்டி போயா</div>
           </div>
         `;
-        const popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true })
+        const popup = new maplibregl.Popup({ offset: 12, closeButton: true, closeOnClick: true })
           .setHTML(popupHtml);
 
         new maplibregl.Marker({ element: el, anchor: 'center' })
