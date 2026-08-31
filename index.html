@@ -79,12 +79,14 @@
     .sub-tools {
       display: none; position: absolute; top: 48px; right: 0; flex-direction: column; gap: 6px;
       align-items: flex-end; background: rgba(0,0,0,0.95); padding: 8px; border-radius: 10px; border: 1px solid #444; z-index: 10000;
+      max-height: 70vh; overflow-y: auto;
     }
     .marine-tools-panel.open .sub-tools { display: flex; }
 
     .tool-btn {
       width: 36px; height: 36px; border-radius: 50%; background: rgba(11, 19, 43, 0.95);
       border: 2px solid #00ffcc; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer;
+      flex-shrink: 0;
     }
     .tool-sonar { border-color: #0077b6; background: rgba(0, 119, 182, 0.9); }
     .tool-sat { border-color: #d90429; background: rgba(217, 4, 41, 0.9); }
@@ -94,7 +96,6 @@
     .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
-    .tool-island-toggle { border-color: #52b788; background: rgba(45, 106, 79, 0.9); }
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
     .status-bar {
@@ -134,6 +135,14 @@
       position: absolute; top: 154px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #ffcc00;
       color: #fff; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
       display: flex; align-items: center; gap: 3px;
+      pointer-events: auto !important;
+    }
+
+    /* Screen Direct Island & Buoy Toggle Button */
+    .island-screen-toggle-btn {
+      position: absolute; top: 188px; left: 12px; background: rgba(0,0,0,0.85); border: 1.5px solid #00ffcc;
+      color: #00ffcc; border-radius: 8px; padding: 4px 6px; font-size: 10px; font-weight: bold; cursor: pointer; z-index: 9999;
+      display: flex; align-items: center; gap: 3px; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
       pointer-events: auto !important;
     }
 
@@ -387,7 +396,6 @@
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
             <div class="tool-btn" id="auto-save-btn" onclick="toggleAutoSpotSave()" title="ஆட்டோ பார் சேமிப்பு">⏱️</div>
-            <div class="tool-btn tool-island-toggle" id="island-toggle-btn" onclick="toggleIslandsVisibility()" title="தீவு & போயா ON/OFF">🏝️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
@@ -417,6 +425,7 @@
   <div id="map"></div>
   <button class="rotate-reset-btn" id="resetNorthBtn" onclick="resetMapBearing()">🧭 N</button>
   <button class="layer-toggle-btn" id="layerToggleBtn" onclick="toggleMapLayer()">🛰️ சாட்டிலைட்</button>
+  <button class="island-screen-toggle-btn" id="island-toggle-btn" onclick="toggleIslandsVisibility()">🏝️ தீவு: ON</button>
 
   <div class="sonar-panel">
     <div class="sonar-info">
@@ -878,16 +887,18 @@
       });
     }
 
-    /* --- Toggle Islands & Buoys ON/OFF Functionality --- */
+    /* --- Direct Screen Toggle Island & Buoy Visibility --- */
     function updateIslandToggleBtnUI() {
       const btn = document.getElementById('island-toggle-btn');
       if (!btn) return;
       if (showIslandsAndBuoys) {
-        btn.classList.add('tool-auto-active');
-        btn.title = "தீவு & போயா: ON";
+        btn.innerText = "🏝️ தீவு: ON";
+        btn.style.borderColor = "#00ffcc";
+        btn.style.color = "#00ffcc";
       } else {
-        btn.classList.remove('tool-auto-active');
-        btn.title = "தீவு & போயா: OFF";
+        btn.innerText = "🙈 தீவு: OFF";
+        btn.style.borderColor = "#888";
+        btn.style.color = "#aaa";
       }
     }
 
@@ -898,9 +909,9 @@
       renderPermanentMarineEntities();
 
       if (showIslandsAndBuoys) {
-        alert("🏝️ தீவுகள் & போயாக்கள் மேப்பில் காட்டப்படுகின்றன (ON)!");
+        alert("🏝️ தீவுகள் & போயாக்கள் காட்டப்படுகின்றன (ON)!");
       } else {
-        alert("🙈 தீவுகள் & போயாக்கள் மேப்பில் மறைக்கப்பட்டன (OFF)!");
+        alert("🙈 தீவுகள் & போயாக்கள் மறைக்கப்பட்டன (OFF)!");
       }
     }
 
