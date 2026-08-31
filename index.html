@@ -100,7 +100,7 @@
     .tool-weather { border-color: #457b9d; background: rgba(69, 123, 157, 0.9); }
     .tool-auto-active { border-color: #00ffcc !important; background: #2a9d8f !important; box-shadow: 0 0 10px #00ffcc; }
 
-    /* Relocated Top Map Layer Button */
+    /* Top Layer Button */
     .map-controls-trigger-btn {
       background: #021a30; border: 1.5px solid #00ffcc; color: #00ffcc;
       padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;
@@ -390,7 +390,7 @@
                 <span>🧭 வடக்கு திருப்பு (N)</span>
               </button>
               <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
-                <span>🛰️ மேப் வகை</span>
+                <span>🗺️ மேப் வகை</span>
                 <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
               </button>
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
@@ -842,21 +842,36 @@
       loadSavedReefs();
     }
 
+    /* --- High Brightness Crisp Google Maps Style Integration --- */
     let map;
     try {
       map = new maplibregl.Map({
         container: 'map',
-        maxZoom: 18.5,
+        maxZoom: 19,
         style: {
           version: 8,
           sources: {
-            'satellite-tiles': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 18 },
-            'osm-tiles': { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
+            'satellite-tiles': { 
+              type: 'raster', 
+              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], 
+              tileSize: 256, 
+              maxzoom: 19 
+            },
+            'bright-osm-tiles': { 
+              type: 'raster', 
+              tiles: [
+                'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+                'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+                'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+              ], 
+              tileSize: 256, 
+              maxzoom: 19 
+            }
           },
           layers: [
-            { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
+            { id: 'background', type: 'background', paint: { 'background-color': '#e8ecef' } },
             { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-            { id: 'osm-layer', type: 'raster', source: 'osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' } }
+            { id: 'osm-layer', type: 'raster', source: 'bright-osm-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-brightness-min': 0.1, 'raster-contrast': 0.1 } }
           ]
         },
         center: [currentLng, currentLat],
@@ -920,7 +935,7 @@
       const islBadge = document.getElementById('islandStatusBadge');
       
       if (typeBadge) {
-        typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "வரைபடம்";
+        typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
       }
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
