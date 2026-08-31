@@ -231,6 +231,30 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
+    /* --- Permanent Island & Buoy Custom Markers --- */
+    .perm-marker-container {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none !important; position: relative;
+    }
+    .perm-label-tag {
+      white-space: nowrap; font-size: 10px; font-weight: bold; padding: 2px 6px;
+      border-radius: 4px; margin-bottom: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.9);
+      letter-spacing: 0.5px;
+    }
+    .perm-island-tag { background: rgba(0, 0, 0, 0.9); color: #00ffcc; border: 1px solid #555; }
+    .perm-buoy-tag { background: rgba(20, 0, 15, 0.92); color: #ff66cc; border: 1px solid #ff007f; }
+
+    .perm-dot-island {
+      width: 12px; height: 12px; background: #000000;
+      border: 2px solid #ffffff; border-radius: 50%;
+      box-shadow: 0 0 6px #000, 0 0 10px rgba(255,255,255,0.8);
+    }
+    .perm-dot-buoy {
+      width: 12px; height: 12px; background: #ff007f;
+      border: 2px solid #ffffff; border-radius: 50%;
+      box-shadow: 0 0 8px #ff007f, 0 0 12px rgba(255, 0, 127, 0.9);
+    }
+
     .hold-call-btn {
       position: relative; overflow: hidden; background: #33000a; border: 2px solid #ff0055;
       color: #fff; padding: 11px 8px; border-radius: 8px; font-size: 12px; font-weight: bold;
@@ -295,7 +319,7 @@
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
         <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹499</div>
+        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹999</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -568,6 +592,38 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
+    /* --- Permanent Marine Data (Islands & Channel Buoys) --- */
+    const PERMANENT_ISLANDS = [
+      { name: "வான் தீவு (Van Island)", lat: 8.8350, lng: 78.2100 },
+      { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8720, lng: 78.2310 },
+      { name: "காரைச்சல்லி தீவு (Karaichalli)", lat: 8.9510, lng: 78.2580 },
+      { name: "விலங்குசல்லி தீவு (Vilanguchalli)", lat: 8.9320, lng: 78.2710 },
+      { name: "உப்புத்தண்ணி தீவு (Upputhanni)", lat: 9.0920, lng: 78.4980 },
+      { name: "புலுவினிசல்லி தீவு (Puluvinichalli)", lat: 9.1030, lng: 78.5350 },
+      { name: "நல்லதண்ணி தீவு (Nallathanni)", lat: 9.1010, lng: 78.5720 },
+      { name: "ஆனைப்பார் தீவு (Anaipar)", lat: 9.1520, lng: 78.6910 },
+      { name: "வாலை தீவு (Valai Island)", lat: 9.1820, lng: 78.7350 },
+      { name: "முள்ளி தீவு (Mulli Island)", lat: 9.1910, lng: 78.7610 },
+      { name: "முயல் தீவு (Hare Island / முயல்)", lat: 9.2010, lng: 79.0800 },
+      { name: "மணலி தீவு (Manali Island)", lat: 9.2150, lng: 79.1230 },
+      { name: "குருசடை தீவு (Kurusadai)", lat: 9.2450, lng: 79.2130 },
+      { name: "சிங்கில் தீவு (Singil Island)", lat: 9.2550, lng: 79.2390 },
+      { name: "பாம்பன் தீவு (Pamban Island)", lat: 9.2800, lng: 79.3000 }
+    ];
+
+    const PERMANENT_BUOYS = [
+      { name: "மிதப்பு போயா #1 (Fairway Buoy)", lat: 8.7510, lng: 78.2450 },
+      { name: "மிதப்பு போயா #2 (Starboard)", lat: 8.7580, lng: 78.2280 },
+      { name: "மிதப்பு போயா #3 (Port Channel)", lat: 8.7630, lng: 78.2120 },
+      { name: "மிதப்பு போயா #4 (Outer Anchorage)", lat: 8.7710, lng: 78.1960 },
+      { name: "மிதப்பு போயா #5 (Harbour Approach)", lat: 8.7800, lng: 78.1810 },
+      { name: "மிதப்பு போயா #6 (Inner Basin Buoy)", lat: 8.7490, lng: 78.1950 },
+      { name: "மிதப்பு போயா #7 (Manapad Deep Buoy)", lat: 8.3750, lng: 78.0750 },
+      { name: "மிதப்பு போயா #8 (Pamban South Buoy)", lat: 9.2610, lng: 79.2150 },
+      { name: "மிதப்பு போயா #9 (Pamban North Buoy)", lat: 9.2920, lng: 79.2280 },
+      { name: "மிதப்பு போயா #10 (Kanyakumari Marine Buoy)", lat: 8.0710, lng: 77.5580 }
+    ];
+
     /* --- 100% Secure Per-Device Unique Key Generator --- */
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
@@ -645,12 +701,13 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    /* --- 15-Minute Auto Spot Saver Variables --- */
+    /* --- 15-Minute Auto Spot Saver Variables (Muted On Save) --- */
     let autoSpotSaveEnabled = false;
     let stationaryStartTime = null;
     let stationaryAnchorLat = null;
     let stationaryAnchorLng = null;
     let lastAutoSavedLocation = null;
+    let suppressedAutoSpotIds = new Set(); // Stores IDs of auto-saved spots until boat moves away
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
@@ -664,7 +721,7 @@
         stationaryStartTime = Date.now();
         stationaryAnchorLat = currentLat;
         stationaryAnchorLng = currentLng;
-        alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக பதிவாகும்.");
+        alert("✅ 15 நிமிட தானியங்கி பார் சேமிப்பு இயக்கப்பட்டது (ON)!\nபடகு ஒரே இடத்தில் 15 நிமிடம் நின்றால் தானாக சத்தமின்றி பதிவாகும்.");
       } else {
         btn.classList.remove('tool-auto-active');
         text.innerText = "⏱️ ஆட்டோ: OFF";
@@ -715,8 +772,9 @@
       let lngNaut = `${degLng}° ${minLng.toFixed(3)}' E`;
       let timeStr = new Date().toLocaleTimeString();
 
+      let newId = Date.now();
       let newSpot = {
-        id: Date.now(),
+        id: newId,
         seq: seqNo,
         lat: lat,
         lng: lng,
@@ -724,17 +782,18 @@
         type: 'Pin',
         time: timeStr,
         latNautical: latNaut,
-        lngNautical: lngNaut
+        lngNautical: lngNaut,
+        isAutoSaved: true
       };
 
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
+      
+      // Mute alarm for this auto-saved spot until boat leaves the zone
+      suppressedAutoSpotIds.add(newId);
+
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
-
-      if (navigator.vibrate) navigator.vibrate([100, 80, 100, 80, 200]);
-      playSpotBeep();
-      alert(`⏱️ படகு 15 நிமிடம் நின்றதால் தானாகப் பதிவானது!\n📍 பதிவு #${seqNo}\nLat: ${latNaut}\nLng: ${lngNaut}`);
     }
 
     let map;
@@ -797,7 +856,40 @@
         map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
         map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
         map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+        
+        renderPermanentMarineEntities();
         loadSavedReefs();
+      });
+    }
+
+    /* --- Render Permanent Island & Buoy Markers (Undeletable) --- */
+    function renderPermanentMarineEntities() {
+      if (!map) return;
+
+      // Render Permanent Islands
+      PERMANENT_ISLANDS.forEach(isl => {
+        const el = document.createElement('div');
+        el.className = 'perm-marker-container';
+        el.innerHTML = `
+          <div class="perm-label-tag perm-island-tag">${isl.name}</div>
+          <div class="perm-dot-island"></div>
+        `;
+        new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([isl.lng, isl.lat])
+          .addTo(map);
+      });
+
+      // Render Permanent Launch Fairway Buoys
+      PERMANENT_BUOYS.forEach(buoy => {
+        const el = document.createElement('div');
+        el.className = 'perm-marker-container';
+        el.innerHTML = `
+          <div class="perm-label-tag perm-buoy-tag">${buoy.name}</div>
+          <div class="perm-dot-buoy"></div>
+        `;
+        new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([buoy.lng, buoy.lat])
+          .addTo(map);
       });
     }
 
@@ -1175,9 +1267,21 @@
       const saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let foundNearSpot = false;
       let spotNameStr = "";
+
       for (let item of saved) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
+        
+        // If boat moved away (> 60m), release the auto-save suppression
+        if (distMeters > 60 && suppressedAutoSpotIds.has(item.id)) {
+          suppressedAutoSpotIds.delete(item.id);
+        }
+
         if (distMeters <= 100) {
+          // If this is currently suppressed right after auto-save, do not trigger sound
+          if (suppressedAutoSpotIds.has(item.id)) {
+            continue;
+          }
+
           if (spotAlertMutedForId !== item.id) {
             foundNearSpot = true;
             spotNameStr = `📍 அருகில் உள்ள பதிவு: ${item.name} (${Math.round(distMeters)} மீ)`;
@@ -1185,6 +1289,7 @@
           }
         }
       }
+
       const banner = document.getElementById('spotAlertBanner');
       if (foundNearSpot) {
         document.getElementById('spotAlertText').innerText = spotNameStr;
@@ -1303,6 +1408,7 @@
       
       if (newSpot) {
         exportSingleSpotFile(newSpot);
+        playSpotBeep();
       }
 
       closeSpotModal();
@@ -1334,6 +1440,7 @@
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
       exportSingleSpotFile(newSpot);
+      playSpotBeep();
 
       closeCoordModal();
       loadSavedReefs();
