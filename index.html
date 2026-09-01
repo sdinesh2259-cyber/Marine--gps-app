@@ -1184,7 +1184,11 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      exportSingleSpotFile(newSpot);
+      // Removed file download prompt entirely. Saves silently to memory & map.
+      loadSavedRefResSilently();
+    }
+
+    function loadSavedRefResSilently() {
       loadSavedReefs();
     }
 
@@ -1452,9 +1456,7 @@
 
       setTimeout(() => {
         scanBtn.innerText = "🔍 மீண்டும் தேடு";
-        // Real dynamic scan: Only actual nearby devices found via active signals
         let foundDevices = []; 
-        // Note: If no other active users are broadcasting nearby via peer discovery, list is clean and empty as requested.
 
         listContainer.innerHTML = `<div style="font-size:10px; color:#00ffcc; margin-bottom:4px;">உங்கள் பெயர்: <b>${myName}</b></div>`;
         if(foundDevices.length === 0) {
@@ -1918,13 +1920,30 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
-      a.click();
+      // Removed automatic anchor click for download to prevent prompt
     }
 
     function exportSingleSpotById(id) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let item = saved.find(s => s.id == id);
-      if (item) { exportSingleSpotFile(item); alert("📥 டவுன்லோட் செய்யப்பட்டது!"); }
+      if (item) { exportSingleSpotFileManual(item); alert("📥 டவுன்லோட் செய்யப்பட்டது!"); }
+    }
+
+    function exportSingleSpotFileManual(spotObj) {
+      let seqNo = spotObj.seq || 1;
+      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
+      const exportData = {
+        number: `பதிவு #${seqNo}`, name: spotObj.name, type: getSpotTypeTamil(spotObj.type),
+        depth: spotObj.depth || 'N/A', time: spotObj.time,
+        Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
+        Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
+      };
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
+      a.click();
     }
 
     function exportAllPhoneMemoryFiles() {
