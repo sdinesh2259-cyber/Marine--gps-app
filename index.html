@@ -155,14 +155,14 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
     }
 
+    /* Placed safely below dashboard and navigation bar to never overlap */
     .border-alert-banner {
-      position: absolute; top: 112px; left: 10px; max-width: 220px; background: #d90429; color: white;
+      position: absolute; top: 125px; left: 10px; max-width: 220px; background: #d90429; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-    /* Relocated spot alert banner to avoid overlapping navigation bar (nav-info) */
     .spot-alert-banner {
       position: absolute; top: 125px; left: 10px; max-width: 220px; background: #2a9d8f; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
@@ -217,7 +217,7 @@
     .input-row { display: flex; align-items: center; gap: 6px; }
     .fixed-deg { background: #222; padding: 6px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; color: #fff; }
     .input-box { flex: 1; background: #000; color: #00ffcc; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 14px; font-family: monospace; font-weight: bold; }
-    .input-name { width: 100%; background: #000; color: #fff; border: 1px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
+    .input-name { width: 100%; background: #000; color: #fff; border: 1.5px solid #444; padding: 6px 8px; border-radius: 6px; font-size: 12px; }
     .modal-btn-row { display: flex; gap: 6px; margin-top: 10px; }
     .modal-btn { flex: 1; padding: 9px 6px; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; }
     .btn-save { background: #2a9d8f; color: #fff; }
@@ -470,6 +470,7 @@
       <span id="norm-time" onclick="toggleTimeZoom(event)" style="font-weight: bold; color: #fff;">--:--:--</span>
     </div>
 
+    <!-- Navigation bar positioned cleanly below banners if active -->
     <div class="nav-bar" id="nav-info">
       <span>🚀 தூரம்: <span id="target-dist">0.0 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
       <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
