@@ -123,6 +123,7 @@
     .status-bar {
       font-size: 10px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
       display: flex; justify-content: space-between; align-items: center;
+      white-space: nowrap; /* Ensures single line display */
     }
 
     .nav-bar {
@@ -137,16 +138,16 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
     }
 
-    /* Placed safely at top-left, compact size so it never covers speed, fuel or menus */
+    /* Moved further down to avoid any overlap */
     .border-alert-banner {
-      position: absolute; top: 115px; left: 10px; max-width: 220px; background: #d90429; color: white;
+      position: absolute; top: 135px; left: 10px; max-width: 220px; background: #d90429; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
     .spot-alert-banner {
-      position: absolute; top: 115px; left: 10px; max-width: 220px; background: #2a9d8f; color: white;
+      position: absolute; top: 135px; left: 10px; max-width: 220px; background: #2a9d8f; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
 
@@ -874,7 +875,7 @@
       if (remaining < 0) remaining = 0;
       const el = document.getElementById('fuel-status');
       if (el) {
-        el.innerText = `⛽ மிச்சம்: ${remaining.toFixed(1)} L`;
+        el.innerText = `⛽ மிச்சம்: ${remaining.toFixed(1)}L`;
       }
     }
 
