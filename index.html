@@ -710,6 +710,16 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
+    // நடப்பு தேதி மற்றும் நேரத்தைப் பெறுவதற்கான பொதுவான சார்பு (Function)
+    function getCurrentFormattedDateTime() {
+      let d = new Date();
+      let day = String(d.getDate()).padStart(2, '0');
+      let month = String(d.getMonth() + 1).padStart(2, '0');
+      let year = d.getFullYear();
+      let timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      return `${day}/${month}/${year} ${timeStr}`;
+    }
+
     const PERMANENT_ISLANDS = [
       { name: "வான் தீவு (Van Island)", lat: 8.8358, lng: 78.2120 },
       { name: "காசுவார் தீவு (Kasuwar)", lat: 8.8683, lng: 78.2325 },
@@ -779,7 +789,7 @@
         lat: currentLat, lng: currentLng,
         latNautical: `${dLat}° ${minLat.toFixed(3)}' N`,
         lngNautical: `${dLng}° ${minLng.toFixed(3)}' E`,
-        time: new Date().toLocaleTimeString()
+        time: getCurrentFormattedDateTime()
       };
       traps.push(newTrap);
       localStorage.setItem('marineTrapsList', JSON.stringify(traps));
@@ -807,6 +817,7 @@
             <div class="list-item-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
             <div class="spot-info">
               <div>🕸️ ${t.name}</div>
+              <div style="color:#ffcc00; font-size:10px;">📅 ${t.time}</div>
               <div style="color:#00ffcc; font-family:monospace; font-size:10px;">${t.latNautical} | ${t.lngNautical}</div>
             </div>
           </div>
@@ -847,7 +858,7 @@
         let popupHtml = `
           <div class="popup-box">
             <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
-            <div style="font-size:10px; color:#888;">${t.time}</div>
+            <div style="font-size:10px; color:#ffcc00;">📅 ${t.time}</div>
             <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
             <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
@@ -907,7 +918,7 @@
       let txt = document.getElementById('diaryInputText').value.trim();
       if (!txt) { alert("குறிப்பு எழுதவும்!"); return; }
       let diaries = JSON.parse(localStorage.getItem('marineDiaries') || '[]');
-      diaries.unshift({ id: Date.now(), time: new Date().toLocaleString(), text: txt });
+      diaries.unshift({ id: Date.now(), time: getCurrentFormattedDateTime(), text: txt });
       localStorage.setItem('marineDiaries', JSON.stringify(diaries));
       document.getElementById('diaryInputText').value = "";
       loadDiaryEntries();
@@ -925,7 +936,7 @@
       diaries.forEach(d => {
         let div = document.createElement('div');
         div.style.cssText = "background:#071628; border:1px solid #1f3a60; padding:6px; border-radius:6px; margin-bottom:5px;";
-        div.innerHTML = `<div style="color:#ffcc00; font-size:9.5px;">${d.time}</div><div style="color:#fff; margin-top:2px;">${d.text}</div>`;
+        div.innerHTML = `<div style="color:#ffcc00; font-size:9.5px;">📅 ${d.time}</div><div style="color:#fff; margin-top:2px;">${d.text}</div>`;
         container.appendChild(div);
       });
     }
@@ -1174,17 +1185,16 @@
       let minLng = (lng - degLng) * 60.0;
       let latNaut = `${degLat}° ${minLat.toFixed(3)}' N`;
       let lngNaut = `${degLng}° ${minLng.toFixed(3)}' E`;
-      let timeStr = new Date().toLocaleTimeString();
+      let dateTimeStr = getCurrentFormattedDateTime();
 
       let newSpot = {
         id: Date.now(), seq: seqNo, lat: lat, lng: lng,
-        name: `ஆட்டோ பதிவு #${seqNo}`, type: 'Pin', time: timeStr,
+        name: `ஆட்டோ பதிவு #${seqNo}`, type: 'Pin', time: dateTimeStr,
         latNautical: latNaut, lngNautical: lngNaut, isAutoSaved: true
       };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // Removed file download prompt entirely. Saves silently to memory & map.
       loadSavedRefResSilently();
     }
 
@@ -1345,7 +1355,7 @@
       document.getElementById('coordModalTitle').innerText = `🧭 புதிய எண் மூலம் பதிவு #${nextNum} சேமி`;
       document.getElementById('inputLatMin').value = ((lat - dLat) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((lng - dLng) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
+      document.getElementById('inputSpotName').value = "பார் " + getCurrentFormattedDateTime();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -1359,7 +1369,7 @@
       document.getElementById('coordModalTitle').innerText = `🧭 புதிய எண் மூலம் பதிவு #${nextNum} சேமி`;
       document.getElementById('inputLatMin').value = ((currentLat - dLat) * 60).toFixed(3);
       document.getElementById('inputLngMin').value = ((currentLng - dLng) * 60).toFixed(3);
-      document.getElementById('inputSpotName').value = "பார் " + new Date().toLocaleTimeString();
+      document.getElementById('inputSpotName').value = "பார் " + getCurrentFormattedDateTime();
       document.getElementById('coordModal').style.display = 'flex';
     }
 
@@ -1768,7 +1778,7 @@
       document.getElementById('editSpotId').value = "";
       document.getElementById('modalLatMin').value = ((currentLat - dLat) * 60).toFixed(3);
       document.getElementById('modalLngMin').value = ((currentLng - dLng) * 60).toFixed(3);
-      document.getElementById('modalSpotName').value = "பார் " + new Date().toLocaleTimeString();
+      document.getElementById('modalSpotName').value = "பார் " + getCurrentFormattedDateTime();
       document.getElementById('spotModal').style.display = 'flex';
     }
 
@@ -1808,7 +1818,7 @@
 
       let lat = dLat + (minLat / 60.0);
       let lng = dLng + (minLng / 60.0);
-      let timeStr = new Date().toLocaleString();
+      let dateTimeStr = getCurrentFormattedDateTime();
       let latNaut = `${dLat}° ${minLat.toFixed(3)}' N`;
       let lngNaut = `${dLng}° ${minLng.toFixed(3)}' E`;
 
@@ -1822,7 +1832,7 @@
         }
       } else {
         let seqNo = saved.length + 1;
-        newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
+        newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: dateTimeStr, latNautical: latNaut, lngNautical: lngNaut };
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
@@ -1839,7 +1849,7 @@
     function saveCoordAsPinDirect() {
       let minLat = parseFloat(document.getElementById('inputLatMin').value);
       let minLng = parseFloat(document.getElementById('inputLngMin').value);
-      let name = document.getElementById('inputSpotName').value.trim() || "புள்ளி " + new Date().toLocaleTimeString();
+      let name = document.getElementById('inputSpotName').value.trim() || "புள்ளி " + getCurrentFormattedDateTime();
       let type = document.getElementById('inputSpotType').value;
 
       if (isNaN(minLat) || isNaN(minLng)) { alert("சரியான எண்களை உள்ளிடவும்!"); return; }
@@ -1849,13 +1859,13 @@
 
       let lat = dLat + (minLat / 60.0);
       let lng = dLng + (minLng / 60.0);
-      let timeStr = new Date().toLocaleString();
+      let dateTimeStr = getCurrentFormattedDateTime();
       let latNaut = `${dLat}° ${minLat.toFixed(3)}' N`;
       let lngNaut = `${dLng}° ${minLng.toFixed(3)}' E`;
 
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
-      let newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: timeStr, latNautical: latNaut, lngNautical: lngNaut };
+      let newSpot = { id: Date.now(), seq: seqNo, lat, lng, name, type, time: dateTimeStr, latNautical: latNaut, lngNautical: lngNaut };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
@@ -1890,7 +1900,7 @@
               <div class="marine-exact-dot"></div>
               <div class="spot-info">
                 <div>📍 [பதிவு #${numSeq}] ${item.name} (${typeTamil})</div>
-                <div style="color:#ffcc00;">${item.time || ''}${depthInfo}</div>
+                <div style="color:#ffcc00;">📅 ${item.time || ''}${depthInfo}</div>
                 <div style="color:#00ffcc; font-family:monospace;">${latNaut} | ${lngNaut}</div>
               </div>
             </div>
@@ -1920,7 +1930,6 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
-      // Removed automatic anchor click for download to prevent prompt
     }
 
     function exportSingleSpotById(id) {
@@ -1984,7 +1993,7 @@
             <b>📍 [பதிவு #${numSeq}] ${item.name}</b>
             <div style="font-size:11px; color:#ffcc00; font-weight:bold;">${typeTamil}</div>
             ${depthStr}
-            <div style="font-size:10px; color:#888;">${item.time || ''}</div>
+            <div style="font-size:10px; color:#888;">📅 ${item.time || ''}</div>
             <div class="popup-coord">${latNaut} | ${lngNaut}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${item.lat}, ${item.lng})">🚀 செல்</button>
             <button class="popup-btn popup-edit-btn" onclick="openEditModal(${item.id})">✏️ எடிட்</button>
