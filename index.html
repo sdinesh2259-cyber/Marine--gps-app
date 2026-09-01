@@ -351,20 +351,21 @@
 </head>
 <body>
 
-  <!-- App Activation Lock Screen (Updated Fee: ₹299) -->
+  <!-- App Activation Lock Screen with 30 Days Expiry & ₹99 Monthly Renewal -->
   <div class="lock-overlay" id="activationLock">
     <div class="lock-box">
       <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
-      <h3 style="color: #ffcc00; margin: 0 0 6px 0; font-size: 16px;">DM Marine GPS - ஆக்டிவேஷன்</h3>
-      <p style="font-size: 11px; color: #ccc; margin: 0 0 8px 0;">இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.</p>
+      <h3 style="color: #ffcc00; margin: 0 0 6px 0; font-size: 16px;" id="lockHeaderTitle">DM Marine GPS - ஆக்டிவேஷன்</h3>
+      <p style="font-size: 11px; color: #ccc; margin: 0 0 8px 0;" id="lockSubtitle">இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.</p>
       
       <div style="font-size: 11px; color: #aaa;">உங்கள் சாதன எண் (Device ID):</div>
       <div class="device-tag" id="displayDeviceId">DM-XXXXX</div>
 
-      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
+      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
         <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹299 (சிறப்புச் சலுகை)</div>
+        <div>🔹 <b>முதல் முறை (30 நாட்கள்):</b> ₹299</div>
+        <div>🔹 <b>மாதாந்திர புதுப்பித்தல் (Renewal):</b> ₹99 / மாதம்</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -374,7 +375,7 @@
       <input type="text" id="activationKeyInput" class="lock-input" placeholder="ஆக்டிவேஷன் KEY உள்ளிடவும்">
       
       <button class="modal-btn btn-save" onclick="verifyActivationKey()" style="width: 100%; padding: 10px; font-size: 12px;">
-        🔓 ஆப்பைத் திற (Activate Now)
+        🔓 ஆப்பைத் திற (30 நாட்கள் ஆக்டிவேட்)
       </button>
     </div>
   </div>
@@ -469,6 +470,7 @@
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: --L</span>
+      <span id="validity-status-label" style="color: #ffcc00; font-weight: bold;" title="வேலிடிட்டி நாட்கள்">⏳ 30 நாட்கள்</span>
       <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ஆட்டோ: OFF</span>
       <span id="norm-time" onclick="toggleTimeZoom(event)" style="font-weight: bold; color: #fff;">--:--:--</span>
     </div>
@@ -1015,6 +1017,7 @@
       }
     }
 
+    // --- 30 Days Expiry & Subscription System ---
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
       if (!devId) {
@@ -1032,24 +1035,37 @@
     }
 
     function checkAppActivation() {
-      const isActivated = localStorage.getItem('dm_marine_activated');
+      const expiryTimestamp = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
       const devId = getOrGenerateDeviceId();
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
+      const validityLabel = document.getElementById('validity-status-label');
+      const lockHeader = document.getElementById('lockHeaderTitle');
+      const lockSub = document.getElementById('lockSubtitle');
       
       if (devIdEl) devIdEl.innerText = devId;
-      if (lockEl) {
-        if (isActivated === 'TRUE_ACTIVE') {
-          lockEl.style.display = 'none';
-        } else {
-          lockEl.style.display = 'flex';
+
+      const now = Date.now();
+      if (expiryTimestamp && expiryTimestamp > now) {
+        let remainingDays = Math.ceil((expiryTimestamp - now) / (1000 * 60 * 60 * 24));
+        if (validityLabel) validityLabel.innerText = `⏳ ${remainingDays} நாட்கள்`;
+        if (lockEl) lockEl.style.display = 'none';
+      } else {
+        // Expired or Not Activated
+        if (lockEl) lockEl.style.display = 'flex';
+        if (validityLabel) validityLabel.innerText = `⏳ 0 நாட்கள் (முடிந்தது)`;
+        if (expiryTimestamp > 0) {
+          if (lockHeader) lockHeader.innerText = "⚠️ வேலிடிட்டி முடிந்துவிட்டது!";
+          if (lockSub) lockSub.innerText = "உங்கள் 30 நாட்கள் முடிந்துவிட்டது. அடுத்த மாதத்திற்கு ₹99 செலுத்தி புதுப்பிக்கவும்.";
         }
       }
     }
 
     function sendDeviceIdToAdmin() {
       const devId = getOrGenerateDeviceId();
-      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${devId}. நான் கட்டணம் (₹299) செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
+      const expiryTimestamp = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
+      let amount = (expiryTimestamp > 0) ? "₹99 மாதாந்திர புதுப்பித்தல்" : "₹299 முதல் முறை 30 நாட்கள்";
+      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${devId}. நான் ${amount} கட்டணம் செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
       window.open(`https://api.whatsapp.com/send?phone=916381634610&text=${msg}`, '_blank');
     }
 
@@ -1059,9 +1075,13 @@
       const expectedKey = calculateDeviceKey(devId);
 
       if (enteredKey === expectedKey) {
-        localStorage.setItem('dm_marine_activated', 'TRUE_ACTIVE');
-        alert('✅ ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
+        // 30 Days Validity (30 * 24 * 60 * 60 * 1000)
+        let thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+        let newExpiry = Date.now() + thirtyDaysMs;
+        localStorage.setItem('dm_marine_expiry', newExpiry.toString());
+        alert('✅ 30 நாட்களுக்கு ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
         document.getElementById('activationLock').style.display = 'none';
+        checkAppActivation();
       } else {
         alert('❌ தவறான Key!');
       }
@@ -2198,6 +2218,7 @@
       let d = new Date();
       document.getElementById('norm-time').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
       updateAutoStatusLabelUI();
+      checkAppActivation(); // Periodically verify 30-day validity
     }, 1000);
 
     const canvas = document.getElementById('sonarCanvas');
