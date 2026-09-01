@@ -446,17 +446,17 @@
           <div class="main-menu-btn" onclick="toggleToolsMenu(event)">⚙️</div>
           <div class="sub-tools">
             <div class="tool-btn tool-diary" onclick="openDiaryModal()" title="மீனவர் டைரி">📖</div>
-            <div class="tool-btn tool-trap" onclick="openTrapManagerModal()" title="கூண்டுகள் மேலாண்மை (100 Traps)">🕸️</div>
-            <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
-            <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="அலாரம் ஆன்/ஆஃப்">🔔</div>
+            <div class="tool-btn tool-trap" onclick="openTrapManagerModal()" title="கூண்டுகள் மேலாண்மை">🕸️</div>
+            <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()" title="நைட் மோட்">🌙</div>
+            <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="எல்லை அலாரம் ஆன்/ஆஃப்">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()" title="வானிலை ரிப்போர்ட்">🌤️</div>
             <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()" title="வழித்தடம்">🛤️</div>
-            <div class="tool-btn" onclick="clearTrackHistory()" title="அழி">🗑️</div>
+            <div class="tool-btn" onclick="clearTrackHistory()" title="பாதை அழி">🗑️</div>
             <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="நிலவு நிலை">🌕</div>
-            <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()">🆘</div>
-            <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡</div>
-            <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️</div>
-            <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()">🎙️</div>
+            <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()" title="SOS">🆘</div>
+            <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="சோனார்">📡</div>
+            <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()" title="சாட்டிலைட்">🛰️</div>
+            <div class="tool-btn tool-walkie" id="walkie-btn" onclick="toggleWalkieTalkie()" title="வாக்கி-டாக்கி">🎙️</div>
           </div>
         </div>
       </div>
@@ -1637,7 +1637,7 @@
         alert("🔔 எல்லை அலாரம் சைலன்ட் (Mute) செய்யப்பட்டது!");
       } else {
         if (menuBtn) menuBtn.innerText = "🔔";
-        alert("🔔 எல்லை அலாரம் இயக்கப்பட்ட து!");
+        alert("🔔 எல்லை அலாரம் இயக்கப்பட்டது!");
       }
     }
 
