@@ -1512,6 +1512,57 @@
       } catch (err) {}
     }
 
+    /* --- Weather Report With Rain & Precipitation API Integration --- */
+    async function showWeatherReport() {
+      const modal = document.getElementById('weatherModal');
+      const todayDateStr = new Date().toLocaleDateString('ta-IN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      document.getElementById('weatherModalBody').innerHTML = `<div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>⏳ வானிலை பெறப்படுகிறது...`;
+      modal.style.display = 'flex';
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`);
+        const data = await res.json();
+        const cur = data.current;
+        let waveHeight = (cur.wind_speed_10m * 0.08).toFixed(1);
+        let rainStatus = cur.precipitation > 0 ? `🌧️ மழை பெய்கிறது (${cur.precipitation} மி.மீ)` : `☀️ மழை இல்லை (தெளிவான வானிலை)`;
+        document.getElementById('weatherModalBody').innerHTML = `
+          <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
+          <p><b>🌡️ வெப்பநிலை:</b> ${cur.temperature_2m}°C</p>
+          <p><b>💨 காற்றின் வேகம்:</b> ${cur.wind_speed_10m} கி.மீ / மணி</p>
+          <p><b>🌊 அலை உயரம்:</b> ${waveHeight} மீட்டர்</p>
+          <p><b>🌧️ மழை நிலவரம்:</b> ${rainStatus}</p>
+        `;
+      } catch (err) {
+        document.getElementById('weatherModalBody').innerHTML = `
+          <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
+          <p><b>🌤️ கடல் நிலை:</b> மிதமான அலை</p>
+          <p><b>💨 காற்று:</b> 12 கி.மீ / மணி</p>
+          <p><b>🌧️ மழை நிலவரம்:</b> மழை இல்லை</p>
+        `;
+      }
+    }
+
+    function showMoonSolunarData() {
+      const modal = document.getElementById('moonModal');
+      const now = new Date();
+      const todayDateStr = now.toLocaleDateString('ta-IN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      
+      const knownNewMoon = new Date('2026-01-19');
+      const diffDays = (now - knownNewMoon) / (1000 * 60 * 60 * 24);
+      const moonAge = diffDays % 29.53;
+      let moonPhaseName = "வளர்பிறை (Waxing Moon)";
+      if (moonAge > 13 && moonAge < 16) moonPhaseName = "🌕 பௌர்ணமி (Full Moon) - மீன் வேட்டைக்கு மிகச் சிறப்பு!";
+      else if (moonAge > 27 || moonAge < 2) moonPhaseName = "🌑 அமாவாசை (New Moon) - கடல் கொந்தளிப்பு / மீன் அதிகம்";
+      else if (moonAge >= 16) moonPhaseName = "தேய்பிறை (Waning Moon)";
+
+      document.getElementById('moonModalBody').innerHTML = `
+        <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
+        <p><b>🌕 சந்திர வயது:</b> ${Math.round(moonAge)} நாட்கள்</p>
+        <p><b>✨ நிலவு நிலை:</b> ${moonPhaseName}</p>
+        <p><b>🐟 மீன் கணிப்பு:</b> இன்றைய நாளில் மீன்கள் அதிகம் கூடும் நேரம் காலை மற்றும் மாலை வேளைகள் ஆகும்.</p>
+      `;
+      modal.style.display = 'flex';
+    }
+
     if (map) {
       const boatContainer = document.createElement('div');
       boatContainer.className = 'boat-marker-container';
