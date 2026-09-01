@@ -504,7 +504,7 @@
         <div style="font-size:12px; color:#ffcc00; font-weight:bold; margin-bottom:6px;">மாஸ்டர் ஆன் / ஆஃப் சுவிட்ச்:</div>
         <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; color:#00ffcc; font-weight:bold; font-size:13px;">
           <input type="checkbox" id="masterTrapToggleCheckbox" onchange="toggleMasterTrapsDisplay(this)" style="width:18px; height:18px; accent-color:#00ffcc;">
-          <span>அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON/OFF)</span>
+          <span>அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)</span>
         </label>
       </div>
       <div class="input-group">
@@ -1193,7 +1193,6 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // போன் மெமரியில் கோப்பாக உடனே சேமிக்கிறது
       exportSingleSpotFile(newSpot);
       playSpotBeep();
       loadSavedReefs();
@@ -1834,7 +1833,6 @@
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      // போன் மெமரி டவுன்லோட் கோப்பாக உடனே சேமிக்கிறது
       if (newSpot) { 
         exportSingleSpotFile(newSpot); 
         playSpotBeep(); 
@@ -1868,7 +1866,6 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
-      // போன் மெமரி டவுன்லோட் கோப்பாக உடனே சேமிக்கிறது
       exportSingleSpotFile(newSpot);
       playSpotBeep();
       closeCoordModal();
@@ -1916,24 +1913,27 @@
       document.getElementById('spotsListModal').style.display = 'flex';
     }
 
-    // போன் மெமரிக்குள் (Internal Storage/Downloads) தானாக சேமிக்கும் முறை
+    // போன் மெமரிக்குள் நேரடி டவுன்லோட் தூண்டும் திருத்தப்பட்ட சார்பு
     function exportSingleSpotFile(spotObj) {
       let seqNo = spotObj.seq || 1;
-      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
+      let safeName = (spotObj.name || 'Spot').replace(/[:\/\\?%*|"<>]/g, '_');
       const exportData = {
-        number: `பதிவு #${seqNo}`, name: spotObj.name, type: getSpotTypeTamil(spotObj.type),
-        depth: spotObj.depth || 'N/A', time: spotObj.time,
+        number: `பதிவு #${seqNo}`,
+        name: spotObj.name,
+        type: getSpotTypeTamil(spotObj.type),
+        depth: spotObj.depth || 'N/A',
+        time: spotObj.time,
         Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
         Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
       };
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `DM_Marine_GPS_${seqNo}_${safeName}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
     }
 
     function exportSingleSpotById(id) {
@@ -1950,14 +1950,13 @@
         Latitude: item.latNautical || formatCoord(item.lat, true),
         Longitude: item.lngNautical || formatCoord(item.lng, false)
       }));
-      const dataStr = JSON.stringify(cleanList, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanList, null, 2));
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `DM_Marine_GPS_All_Spots.json`;
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `DM_Marine_GPS_All_Spots.json`);
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       alert("📥 அத்தனையும் டவுன்லோட் ஆனது!");
     }
 
