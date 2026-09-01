@@ -351,7 +351,7 @@
 </head>
 <body>
 
-  <!-- App Activation Lock Screen with Dynamic Pricing Box -->
+  <!-- Dynamic Activation Screen -->
   <div class="lock-overlay" id="activationLock">
     <div class="lock-box">
       <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
@@ -363,7 +363,6 @@
 
       <!-- Dynamic Price Detail Box -->
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
-        <!-- Will be dynamically set by JS -->
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -517,7 +516,7 @@
     </div>
   </div>
 
-  <!-- Diary Modal (With Icons, Edit & Delete) -->
+  <!-- Diary Modal -->
   <div class="modal-overlay" id="diaryModal">
     <div class="modal-content">
       <div class="modal-title" id="diaryModalTitle">📖 மீனவர் குறிப்புத் டைரி</div>
@@ -593,7 +592,7 @@
     </div>
   </div>
 
-  <!-- Walkie-Talkie Modal with Custom Name Config -->
+  <!-- Walkie-Talkie Modal -->
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content">
       <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & பெயர் அமைப்பு</div>
@@ -1015,7 +1014,6 @@
       }
     }
 
-    // --- Dynamic Pricing & Expiry Management ---
     function getOrGenerateDeviceId() {
       let devId = localStorage.getItem('dm_marine_device_id');
       if (!devId) {
@@ -1034,6 +1032,7 @@
 
     function checkAppActivation() {
       const expiryTimestamp = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
+      const isAdmin = localStorage.getItem('dm_is_admin') === 'true';
       const devId = getOrGenerateDeviceId();
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
@@ -1045,16 +1044,27 @@
       if (devIdEl) devIdEl.innerText = devId;
 
       const now = Date.now();
+      if (isAdmin) {
+        if (validityLabel) {
+          validityLabel.innerText = "👑 ADMIN LIFETIME";
+          validityLabel.style.color = "#00ffcc";
+        }
+        if (lockEl) lockEl.style.display = 'none';
+        return;
+      }
+
       if (expiryTimestamp && expiryTimestamp > now) {
         let remainingDays = Math.ceil((expiryTimestamp - now) / (1000 * 60 * 60 * 24));
-        if (validityLabel) validityLabel.innerText = `⏳ ${remainingDays} நாட்கள்`;
+        if (validityLabel) {
+          validityLabel.innerText = `⏳ ${remainingDays} நாட்கள்`;
+          validityLabel.style.color = "#ffcc00";
+        }
         if (lockEl) lockEl.style.display = 'none';
       } else {
         if (lockEl) lockEl.style.display = 'flex';
         if (validityLabel) validityLabel.innerText = `⏳ 0 நாட்கள் (முடிந்தது)`;
 
         if (expiryTimestamp > 0) {
-          // 30 நாட்கள் முடிந்த பிறகு Renewal Screen (₹99)
           if (lockHeader) lockHeader.innerText = "⚠️ வேலிடிட்டி முடிந்துவிட்டது!";
           if (lockSub) lockSub.innerText = "உங்கள் 30 நாட்கள் முடிந்துவிட்டது. அடுத்த மாதத்திற்குப் புதுப்பிக்கவும்.";
           if (priceBox) {
@@ -1065,7 +1075,6 @@
             `;
           }
         } else {
-          // முதல் முறை வாங்கும் போது First Time Screen (₹299)
           if (lockHeader) lockHeader.innerText = "DM Marine GPS - ஆக்டிவேஷன்";
           if (lockSub) lockSub.innerText = "இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.";
           if (priceBox) {
@@ -1095,10 +1104,23 @@
       const devId = getOrGenerateDeviceId();
       const expectedKey = calculateDeviceKey(devId);
 
+      // உங்களுக்கான தனிப்பட்ட ரகசிய மாஸ்டர் கீ (DM-BOSS-6381)
+      if (enteredKey === 'DM-BOSS-6381') {
+        let lifetimeMs = 100 * 365 * 24 * 60 * 60 * 1000;
+        localStorage.setItem('dm_marine_expiry', (Date.now() + lifetimeMs).toString());
+        localStorage.setItem('dm_is_admin', 'true');
+        alert('👑 அட்மின் வாழ்நாள் உரிமை (Lifetime Access) இயக்கப்பட்டது!');
+        document.getElementById('activationLock').style.display = 'none';
+        checkAppActivation();
+        return;
+      }
+
+      // வாடிக்கையாளர்களுக்கு 30 நாட்கள் Key
       if (enteredKey === expectedKey) {
         let thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
         let newExpiry = Date.now() + thirtyDaysMs;
         localStorage.setItem('dm_marine_expiry', newExpiry.toString());
+        localStorage.removeItem('dm_is_admin');
         alert('✅ 30 நாட்களுக்கு ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
         document.getElementById('activationLock').style.display = 'none';
         checkAppActivation();
