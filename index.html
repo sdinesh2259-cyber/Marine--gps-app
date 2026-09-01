@@ -112,12 +112,12 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 165px;
+      min-width: 175px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
       background: #09203a; border: 1px solid #00ffcc; color: #fff;
-      padding: 6px 8px; border-radius: 5px; font-size: 10.5px; font-weight: bold;
+      padding: 6px 8px; border-radius: 5px; font-size: 10px; font-weight: bold;
       cursor: pointer; text-align: left; display: flex; align-items: center; justify-content: space-between;
     }
 
@@ -422,6 +422,10 @@
                 <span>🪨 சோனார் ஆட்டோ பார்</span>
                 <span id="sonarReefStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
+              <button class="map-menu-item-btn" id="menuSpotAlarmToggleBtn" onclick="toggleSpotAlarmMaster();">
+                <span>🔔 பார்/கூண்டு அலாரம்</span>
+                <span id="spotAlarmStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
             </div>
           </div>
         </div>
@@ -575,11 +579,18 @@
     </div>
   </div>
 
-  <!-- Walkie-Talkie Modal -->
+  <!-- Walkie-Talkie Modal with Custom Name Config -->
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content">
-      <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & இணைப்பு</div>
-      <button class="modal-btn btn-save" id="scanBoatsBtn" onclick="scanNearbyBoats()" style="width:100%; margin-bottom:8px;">🔍 அருகிலுள்ள படகுகளைத் தேடு</button>
+      <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & பெயர் அமைப்பு</div>
+      <div class="input-group">
+        <label>உங்கள் பெயர் (Boat / Fishermen Name):</label>
+        <div class="input-row">
+          <input type="text" id="myWalkieNameInput" class="input-name" placeholder="எ.கா. முருகன் / தினேஷ்">
+          <button class="modal-btn btn-save" style="width: 80px;" onclick="saveMyWalkieName()">சேமி</button>
+        </div>
+      </div>
+      <button class="modal-btn btn-save" id="scanBoatsBtn" onclick="scanNearbyBoats()" style="width:100%; margin:8px 0;">🔍 அருகிலுள்ள படகுகளைத் தேடு</button>
       <div id="discoveredBoatsList" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px;"></div>
       <div id="connectedChannelBox" style="display:none; background:#041a15; border:1px solid #00ffcc; padding:8px; border-radius:8px; text-align:center; margin-bottom:10px;">
         <div style="color:#00ffcc; font-size:12px; font-weight:bold;" id="connectedBoatStatus">இணைக்கப்பட்டது</div>
@@ -734,6 +745,7 @@
     let permanentEntityMarkers = [];
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
     let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
+    let spotAlarmMasterEnabled = localStorage.getItem('dm_spot_alarm_master') !== 'false';
 
     let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
     let activeTrapMarkers = [];
@@ -974,7 +986,18 @@
       checkAppActivation();
       updateMapMenuBadges();
       updateFuelDisplay();
+      let savedName = localStorage.getItem('marine_walkie_name') || '';
+      if(document.getElementById('myWalkieNameInput')) {
+        document.getElementById('myWalkieNameInput').value = savedName;
+      }
     });
+
+    function saveMyWalkieName() {
+      let nameVal = document.getElementById('myWalkieNameInput').value.trim();
+      if(!nameVal) { alert("தயவுசெய்து உங்கள் பெயரை உள்ளிடவும்!"); return; }
+      localStorage.setItem('marine_walkie_name', nameVal);
+      alert(`✅ வாக்கி-டாக்கி பெயர் '${nameVal}' என சேமிக்கப்பட்டது!`);
+    }
 
     let currentLat = 8.8238;
     let currentLng = 78.1567;
@@ -1018,6 +1041,7 @@
 
     window.addEventListener('load', () => {
       updateAutoStatusLabelUI();
+      updateMapMenuBadges();
       if (autoSpotSaveEnabled) {
         requestWakeLock();
       }
@@ -1064,7 +1088,7 @@
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 5 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (வேகம் 5.1 kts-க்கு மேல் சென்றால் டைமர் ரீசெட் ஆகாது, ஆனால் பதியப்படாது)");
+        alert("⏱️ 5 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
@@ -1074,13 +1098,41 @@
       updateAutoStatusLabelUI();
     }
 
+    function toggleSpotAlarmMaster() {
+      spotAlarmMasterEnabled = !spotAlarmMasterEnabled;
+      localStorage.setItem('dm_spot_alarm_master', spotAlarmMasterEnabled ? 'true' : 'false');
+      updateMapMenuBadges();
+      closeMapControls();
+      alert(spotAlarmMasterEnabled ? "🔔 பார்/கூண்டு அலாரம் இயக்கப்பட்டது (ON)" : "🔕 பார்/கூண்டு அலாரம் ஆஃப் செய்யப்பட்டது");
+    }
+
+    function updateMapMenuBadges() {
+      const typeBadge = document.getElementById('mapTypeBadge');
+      const islBadge = document.getElementById('islandStatusBadge');
+      const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
+      const spotAlarmBadge = document.getElementById('spotAlarmStatusBadge');
+      
+      if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
+      if (islBadge) {
+        islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
+        islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
+      }
+      if (sonarReefBadge) {
+        sonarReefBadge.innerText = autoSonarReefSaveEnabled ? "ON" : "OFF";
+        sonarReefBadge.style.color = autoSonarReefSaveEnabled ? "#00ffcc" : "#ff0055";
+      }
+      if (spotAlarmBadge) {
+        spotAlarmBadge.innerText = spotAlarmMasterEnabled ? "ON" : "OFF";
+        spotAlarmBadge.style.color = spotAlarmMasterEnabled ? "#00ffcc" : "#ff0055";
+      }
+    }
+
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
         return;
       }
 
-      // If speed is 5.1 kts or above, do not accumulate time (boat is actively traveling fast)
       if (speed >= 5.1) {
         updateAutoStatusLabelUI();
         return;
@@ -1100,9 +1152,8 @@
       if (stationaryStartTime && stationaryStartTime > 0) {
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
         
-        // Exactly 5 minutes (or more) at speed < 5.1 kts
         if (elapsedMinutes >= 5) {
-          triggerAutoSaveSpot(lat, lng);
+          triggerSilentAutoSaveSpot(lat, lng);
           
           autoSpotSaveEnabled = false;
           localStorage.setItem('dm_auto_save_active', 'false');
@@ -1114,7 +1165,7 @@
       updateAutoStatusLabelUI();
     }
 
-    function triggerAutoSaveSpot(lat, lng) {
+    function triggerSilentAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
       let degLat = Math.floor(lat);
@@ -1125,7 +1176,6 @@
       let lngNaut = `${degLng}° ${minLng.toFixed(3)}' E`;
       let timeStr = new Date().toLocaleTimeString();
 
-      let newId = Date.now();
       let newSpot = {
         id: Date.now(), seq: seqNo, lat: lat, lng: lng,
         name: `ஆட்டோ பதிவு #${seqNo}`, type: 'Pin', time: timeStr,
@@ -1134,12 +1184,9 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      exitedSpotIds.add('spot_' + newSpot.id);
-
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
-      playSpotBeep();
-      alert(`📍 5 நிமிடம் குறைந்த வேகத்தில் நின்றதால் ஆட்டோ பதிவு #${seqNo} சேமிக்கப்பட்டு ஆட்டோ ஆஃப் ஆனது!`);
+      // SILENT: No sound and no alert popup here!
     }
 
     let map;
@@ -1219,22 +1266,6 @@
     function closeMapControls() {
       const menu = document.getElementById('mapControlsMenu');
       if (menu) menu.classList.remove('show');
-    }
-
-    function updateMapMenuBadges() {
-      const typeBadge = document.getElementById('mapTypeBadge');
-      const islBadge = document.getElementById('islandStatusBadge');
-      const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
-      
-      if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
-      if (islBadge) {
-        islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
-        islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
-      }
-      if (sonarReefBadge) {
-        sonarReefBadge.innerText = autoSonarReefSaveEnabled ? "ON" : "OFF";
-        sonarReefBadge.style.color = autoSonarReefSaveEnabled ? "#00ffcc" : "#ff0055";
-      }
     }
 
     function toggleMapLayer() {
@@ -1416,18 +1447,19 @@
     function scanNearbyBoats() {
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
-      scanBtn.innerText = "⏳ படகுகள் தேடப்படுகிறது...";
-      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ஸ்கேன் செய்யப்படுகிறது...</div>';
+      const myName = localStorage.getItem('marine_walkie_name') || 'என் படகு';
+      scanBtn.innerText = "⏳ அருகிலுள்ள படகுகள் தேடப்படுகிறது...";
+      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் ஸ்கேன் செய்யப்படுகிறது...</div>';
 
       setTimeout(() => {
         scanBtn.innerText = "🔍 மீண்டும் தேடு";
         const sampleBoats = [
-          { name: "படகு #1 (ஆரோக்கிய அன்னை)", dist: "0.4 NM", signal: "95%" },
-          { name: "படகு #2 (அந்தோணியார் துணை)", dist: "1.2 NM", signal: "70%" },
-          { name: "படகு #3 (கடல் புறா)", dist: "2.5 NM", signal: "45%" }
+          { name: "முருகன் (DM Marine)", dist: "0.4 NM", signal: "95%" },
+          { name: "தினேஷ் (Marine GPS)", dist: "1.2 NM", signal: "70%" },
+          { name: "ராஜா படகு", dist: "2.5 NM", signal: "45%" }
         ];
 
-        listContainer.innerHTML = '';
+        listContainer.innerHTML = `<div style="font-size:10px; color:#00ffcc; margin-bottom:4px;">உங்கள் பெயர்: <b>${myName}</b></div>`;
         sampleBoats.forEach((boat) => {
           const div = document.createElement('div');
           div.className = 'device-list-item';
@@ -1638,6 +1670,12 @@
     let exitedSpotIds = new Set();
 
     function checkSpotProximity(lat, lng) {
+      if (!spotAlarmMasterEnabled) {
+        document.getElementById('spotAlertBanner').style.display = 'none';
+        if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
+        return;
+      }
+
       const savedSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       const savedTraps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
       
@@ -1651,15 +1689,18 @@
       let alertMsgStr = "";
 
       for (let item of allTargets) {
-        let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
-        if (!exitedSpotIds.has(item.id)) {
-          if (distMeters > 15.0) exitedSpotIds.add(item.id);
+        let distNM = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng));
+        let distMeters = distNM * 1852;
+
+        if (distNM >= 0.50) {
+          exitedSpotIds.add(item.id);
           continue;
         }
-        if (distMeters > 15.0) continue;
-        if (distMeters <= 3.0) {
+
+        if (exitedSpotIds.has(item.id) && distMeters <= 3.0) {
           foundZeroSpot = true;
           alertMsgStr = `🚨 0.0 மீ! ${item.name} கீழே!`;
+          exitedSpotIds.delete(item.id);
           break;
         }
       }
