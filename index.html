@@ -517,19 +517,34 @@
     </div>
   </div>
 
-  <!-- Diary Modal -->
+  <!-- Diary Modal (With Icons, Edit & Delete) -->
   <div class="modal-overlay" id="diaryModal">
     <div class="modal-content">
-      <div class="modal-title">📖 மீனவர் குறிப்புத் டைரி</div>
+      <div class="modal-title" id="diaryModalTitle">📖 மீனவர் குறிப்புத் டைரி</div>
+      <input type="hidden" id="editDiaryId" value="">
+      <div class="input-group">
+        <label>வகை / சின்னம் (Icon):</label>
+        <select id="diaryTypeSelect" class="input-name" style="background:#000; color:#00ffcc; font-weight:bold; margin-bottom:6px;">
+          <option value="🪨">🪨 பாறை (Reef)</option>
+          <option value="🦀">🦀 நண்டு (Crab)</option>
+          <option value="🐟">🐟 மீன் (Fish)</option>
+          <option value="🦑">🦑 கணவா (Squid)</option>
+          <option value="🐚">🐚 சங்கு (Conch)</option>
+          <option value="🪼">🪼 திருக்கை (Ray)</option>
+          <option value="🕸️">🕸️ வலை (Net)</option>
+          <option value="📍">📍 புள்ளி (General)</option>
+        </select>
+      </div>
       <div class="input-group">
         <label>குறிப்பு / எண்கள் / பார் விபரம்:</label>
-        <textarea id="diaryInputText" class="input-name" style="height: 100px; resize: none;" placeholder="எ.கா. பார் #1 இல் நல்ல கணவா மீன் கிடைத்தது."></textarea>
+        <textarea id="diaryInputText" class="input-name" style="height: 80px; resize: none;" placeholder="எ.கா. நல்ல கணவா மீன் கிடைத்தது..."></textarea>
       </div>
       <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="saveDiaryEntry()">💾 டைரியில் சேமி</button>
-        <button class="modal-btn btn-cancel" onclick="document.getElementById('diaryModal').style.display='none'">மூடு</button>
+        <button class="modal-btn btn-save" id="diarySaveBtn" onclick="saveDiaryEntry()">💾 டைரியில் சேமி</button>
+        <button class="modal-btn btn-cancel" onclick="closeDiaryModal()">மூடு</button>
       </div>
-      <div id="savedDiaryList" style="margin-top: 12px; max-height: 120px; overflow-y: auto; font-size: 11px;"></div>
+      <div style="font-size: 11px; color: #ffcc00; margin: 12px 0 4px 0; font-weight: bold;">சேமித்த குறிப்புகள்:</div>
+      <div id="savedDiaryList" style="max-height: 160px; overflow-y: auto; font-size: 11px;"></div>
     </div>
   </div>
 
@@ -907,36 +922,98 @@
       }
     }
 
+    // --- டைரி செயல்பாடுகள் (எடிட், டெலீட், ஐகான்களுடன்) ---
     function openDiaryModal() {
+      document.getElementById('editDiaryId').value = "";
+      document.getElementById('diaryInputText').value = "";
+      document.getElementById('diaryTypeSelect').value = "🪨";
+      document.getElementById('diarySaveBtn').innerText = "💾 டைரியில் சேமி";
+      document.getElementById('diaryModalTitle').innerText = "📖 மீனவர் குறிப்புத் டைரி";
       document.getElementById('diaryModal').style.display = 'flex';
       loadDiaryEntries();
     }
 
+    function closeDiaryModal() {
+      document.getElementById('diaryModal').style.display = 'none';
+    }
+
     function saveDiaryEntry() {
       let txt = document.getElementById('diaryInputText').value.trim();
+      let icon = document.getElementById('diaryTypeSelect').value;
+      let editId = document.getElementById('editDiaryId').value;
       if (!txt) { alert("குறிப்பு எழுதவும்!"); return; }
+
       let diaries = JSON.parse(localStorage.getItem('marineDiaries') || '[]');
-      diaries.unshift({ id: Date.now(), time: getCurrentFormattedDateTime(), text: txt });
+
+      if (editId) {
+        let index = diaries.findIndex(d => d.id == editId);
+        if (index !== -1) {
+          diaries[index].text = txt;
+          diaries[index].icon = icon;
+        }
+        alert("✏️ குறிப்பு மாற்றப்பட்டது!");
+      } else {
+        diaries.unshift({
+          id: Date.now(),
+          time: getCurrentFormattedDateTime(),
+          text: txt,
+          icon: icon
+        });
+        alert("📖 டைரியில் குறிப்பு சேமிக்கப்பட்டது!");
+      }
+
       localStorage.setItem('marineDiaries', JSON.stringify(diaries));
+      document.getElementById('editDiaryId').value = "";
       document.getElementById('diaryInputText').value = "";
+      document.getElementById('diarySaveBtn').innerText = "💾 டைரியில் சேமி";
+      document.getElementById('diaryModalTitle').innerText = "📖 மீனவர் குறிப்புத் டைரி";
       loadDiaryEntries();
-      alert("📖 டைரியில் குறிப்பு சேமிக்கப்பட்டது!");
     }
 
     function loadDiaryEntries() {
       let container = document.getElementById('savedDiaryList');
       let diaries = JSON.parse(localStorage.getItem('marineDiaries') || '[]');
       if (diaries.length === 0) {
-        container.innerHTML = '<div style="color:#888; text-align:center;">குறிப்புகள் எதுவும் இல்லை</div>';
+        container.innerHTML = '<div style="color:#888; text-align:center; padding:10px;">குறிப்புகள் எதுவும் இல்லை</div>';
         return;
       }
       container.innerHTML = '';
       diaries.forEach(d => {
         let div = document.createElement('div');
-        div.style.cssText = "background:#071628; border:1px solid #1f3a60; padding:6px; border-radius:6px; margin-bottom:5px;";
-        div.innerHTML = `<div style="color:#ffcc00; font-size:9.5px;">📅 ${d.time}</div><div style="color:#fff; margin-top:2px;">${d.text}</div>`;
+        div.style.cssText = "background:#071628; border:1px solid #1f3a60; padding:8px 10px; border-radius:8px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;";
+        div.innerHTML = `
+          <div style="flex:1; margin-right:8px;">
+            <div style="color:#ffcc00; font-size:10px; font-weight:bold;">📅 ${d.time}</div>
+            <div style="color:#fff; margin-top:3px; font-size:12px; font-weight:bold;">${d.icon || '📍'} ${d.text}</div>
+          </div>
+          <div style="display:flex; gap:4px;">
+            <button onclick="editDiaryEntry(${d.id})" style="background:#0077b6; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">✏️</button>
+            <button onclick="deleteDiaryEntry(${d.id})" style="background:#d90429; color:#fff; border:none; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">🗑️</button>
+          </div>
+        `;
         container.appendChild(div);
       });
+    }
+
+    function editDiaryEntry(id) {
+      let diaries = JSON.parse(localStorage.getItem('marineDiaries') || '[]');
+      let item = diaries.find(d => d.id == id);
+      if (item) {
+        document.getElementById('editDiaryId').value = item.id;
+        document.getElementById('diaryInputText').value = item.text;
+        document.getElementById('diaryTypeSelect').value = item.icon || '🪨';
+        document.getElementById('diarySaveBtn').innerText = "✏️ மாற்றி சேமி";
+        document.getElementById('diaryModalTitle').innerText = "✏️ குறிப்பைத் திருத்து";
+      }
+    }
+
+    function deleteDiaryEntry(id) {
+      if (confirm("இந்தக் குறிப்பை நீக்கவா?")) {
+        let diaries = JSON.parse(localStorage.getItem('marineDiaries') || '[]');
+        diaries = diaries.filter(d => d.id != id);
+        localStorage.setItem('marineDiaries', JSON.stringify(diaries));
+        loadDiaryEntries();
+      }
     }
 
     function getOrGenerateDeviceId() {
@@ -1913,7 +1990,6 @@
       document.getElementById('spotsListModal').style.display = 'flex';
     }
 
-    // போன் மெமரிக்குள் நேரடி டவுன்லோட் தூண்டும் திருத்தப்பட்ட சார்பு
     function exportSingleSpotFile(spotObj) {
       let seqNo = spotObj.seq || 1;
       let safeName = (spotObj.name || 'Spot').replace(/[:\/\\?%*|"<>]/g, '_');
