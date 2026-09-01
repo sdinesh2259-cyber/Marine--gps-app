@@ -122,8 +122,8 @@
 
     /* Single-line forced layout for status bar */
     .status-bar {
-      font-size: 10px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
-      display: flex; justify-content: space-between; align-items: center; gap: 4px;
+      font-size: 9.5px; color: #ffffff; margin-top: 4px; border-top: 1px solid #444; padding-top: 3px;
+      display: flex; justify-content: space-between; align-items: center; gap: 2px;
       white-space: nowrap; overflow: hidden;
     }
 
@@ -139,7 +139,7 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
     }
 
-    /* Precisely positioned directly below the black dashboard box exactly where you marked */
+    /* Precisely positioned below dashboard box */
     .border-alert-banner {
       position: absolute; top: 112px; left: 10px; max-width: 220px; background: #d90429; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
@@ -373,7 +373,7 @@
 
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
-      <span id="spotAlertText">📍 பார் கீழே உள்ளது!</span>
+      <span id="spotAlertText">📍 பார் கீழே!</span>
       <button class="mute-btn" onclick="muteSpotAlert()">🔇 நிறுத்து</button>
     </div>
   </div>
@@ -876,7 +876,7 @@
       if (remaining < 0) remaining = 0;
       const el = document.getElementById('fuel-status');
       if (el) {
-        el.innerText = `⛽ மிச்சம்: ${remaining.toFixed(1)}L`;
+        el.innerText = `⛽ டீசல்: ${remaining.toFixed(1)}L`;
       }
     }
 
@@ -1030,10 +1030,10 @@
         if (stationaryStartTime && stationaryStartTime > 0) {
           let elapsedMinutes = Math.floor((Date.now() - stationaryStartTime) / (1000 * 60));
           if (elapsedMinutes < 0) elapsedMinutes = 0;
-          statusLabel.innerText = `⏱️ ஆட்டோ: ON (${elapsedMinutes} நிமி)`;
+          statusLabel.innerText = `⏱️ ஆட்டோ: ${elapsedMinutes}`;
           statusLabel.style.color = "#00ffcc";
         } else {
-          statusLabel.innerText = "⏱️ ஆட்டோ: ON (0 நிமி)";
+          statusLabel.innerText = "⏱️ ஆட்டோ: 0";
           statusLabel.style.color = "#00ffcc";
         }
       }
@@ -1049,7 +1049,7 @@
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (25 மீட்டர் வரை உள்ள அசைவுகள் கணக்கில் கொள்ளப்படாது)");
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
@@ -2077,7 +2077,7 @@
       ctx.fill();
       ctx.stroke();
 
-      fishList.forEach(f => {
+      joinFishList: fishList.forEach(f => {
         f.x -= f.s;
         if (f.x < -30) f.x = canvas.width + 30;
         ctx.fillStyle = f.color;
