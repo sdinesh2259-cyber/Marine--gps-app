@@ -986,16 +986,47 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    let autoSpotSaveEnabled = false;
-    let stationaryStartTime = null;
-    let stationaryAnchorLat = null;
-    let stationaryAnchorLng = null;
+    // Background persistent auto-save state in localStorage so it never resets when minimized
+    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
+    let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
+    let stationaryAnchorLat = parseFloat(localStorage.getItem('dm_auto_anchor_lat') || '0');
+    let stationaryAnchorLng = parseFloat(localStorage.getItem('dm_auto_anchor_lng') || '0');
     let lastAutoSavedLocation = null;
     let suppressedAutoSpotIds = new Set();
-    let lastAutoReefSavedLocation = null;
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {}
+    }
+
+    document.addEventListener('visibilitychange', async () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        await requestWakeLock();
+      }
+    });
+
+    // Initialize Auto Save UI state on load
+    window.addEventListener('load', () => {
+      const btn = document.getElementById('auto-save-btn');
+      const statusLabel = document.getElementById('sonar-auto-status-label');
+      if (autoSpotSaveEnabled) {
+        if(btn) btn.classList.add('tool-auto-active');
+        if(statusLabel) {
+          statusLabel.innerText = "⏱️ ஆட்டோ: ON";
+          statusLabel.style.color = "#00ffcc";
+        }
+        requestWakeLock();
+      }
+    });
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
+      localStorage.setItem('dm_auto_save_active', autoSpotSaveEnabled ? 'true' : 'false');
+      
       const btn = document.getElementById('auto-save-btn');
       const statusLabel = document.getElementById('sonar-auto-status-label');
       
@@ -1008,34 +1039,66 @@
         stationaryStartTime = Date.now();
         stationaryAnchorLat = currentLat;
         stationaryAnchorLng = currentLng;
+        localStorage.setItem('dm_auto_start_time', stationaryStartTime);
+        localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
+        localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
+        requestWakeLock();
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (Screen/Background ON)");
       } else {
         if(btn) btn.classList.remove('tool-auto-active');
         if(statusLabel) {
           statusLabel.innerText = "⏱️ ஆட்டோ: OFF";
           statusLabel.style.color = "#ffcc00";
         }
-        stationaryStartTime = null;
+        stationaryStartTime = 0;
+        localStorage.setItem('dm_auto_start_time', '0');
+        if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+        alert("⏸️ ஆட்டோ பதிவு நிறுத்தப்பட்டது.");
       }
     }
 
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) return;
-      if (stationaryAnchorLat === null || stationaryAnchorLng === null) {
-        stationaryAnchorLat = lat; stationaryAnchorLng = lng; stationaryStartTime = Date.now(); return;
+      
+      if (!stationaryAnchorLat || !stationaryAnchorLng || stationaryAnchorLat === 0) {
+        stationaryAnchorLat = lat; 
+        stationaryAnchorLng = lng; 
+        stationaryStartTime = Date.now();
+        localStorage.setItem('dm_auto_start_time', stationaryStartTime);
+        localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
+        localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
+        return;
       }
+      
       let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
+      
+      // If boat is stationary within 35 meters and speed is less than 1.0 knot
       if (distMeters <= 35 && speed < 1.0) {
-        if (!stationaryStartTime) stationaryStartTime = Date.now();
+        if (!stationaryStartTime || stationaryStartTime === 0) {
+          stationaryStartTime = Date.now();
+          localStorage.setItem('dm_auto_start_time', stationaryStartTime);
+        }
+        
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
+        
+        // Exactly 15 minutes completed in the same spot
         if (elapsedMinutes >= 15) {
           if (!lastAutoSavedLocation || parseFloat(calcDistanceNM(lat, lng, lastAutoSavedLocation.lat, lastAutoSavedLocation.lng)) * 1852 > 40) {
             triggerAutoSaveSpot(lat, lng);
             lastAutoSavedLocation = { lat, lng };
           }
+          // Reset timer for next 15 minutes cycle at this spot
           stationaryStartTime = Date.now();
+          localStorage.setItem('dm_auto_start_time', stationaryStartTime);
         }
       } else {
-        stationaryAnchorLat = lat; stationaryAnchorLng = lng; stationaryStartTime = Date.now();
+        // Boat moved away, reset anchor position and timer
+        stationaryAnchorLat = lat; 
+        stationaryAnchorLng = lng; 
+        stationaryStartTime = Date.now();
+        localStorage.setItem('dm_auto_start_time', stationaryStartTime);
+        localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
+        localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
       }
     }
 
@@ -1061,6 +1124,7 @@
       suppressedAutoSpotIds.add(newId);
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
+      playSpotBeep();
     }
 
     let map;
