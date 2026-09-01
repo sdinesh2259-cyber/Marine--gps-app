@@ -473,7 +473,6 @@
       <span id="norm-time" onclick="toggleTimeZoom(event)" style="font-weight: bold; color: #fff;">--:--:--</span>
     </div>
 
-    <!-- Navigation bar positioned cleanly below banners if active -->
     <div class="nav-bar" id="nav-info">
       <span>🚀 தூரம்: <span id="target-dist">0.0 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
       <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
@@ -710,7 +709,6 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    // நடப்பு தேதி மற்றும் நேரத்தைப் பெறுவதற்கான பொதுவான சார்பு (Function)
     function getCurrentFormattedDateTime() {
       let d = new Date();
       let day = String(d.getDate()).padStart(2, '0');
@@ -772,7 +770,7 @@
       showAllTrapsOnMapFlag = checkbox.checked;
       localStorage.setItem('dm_show_traps_master', showAllTrapsOnMapFlag ? 'true' : 'false');
       renderAllTrapsOnMap();
-      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON/OFF)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
+      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
     }
 
     function addNewTrapAtCurrentLocation() {
@@ -1164,7 +1162,7 @@
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
         
         if (elapsedMinutes >= 5) {
-          triggerSilentAutoSaveSpot(lat, lng);
+          triggerAutoSaveSpot(lat, lng);
           
           autoSpotSaveEnabled = false;
           localStorage.setItem('dm_auto_save_active', 'false');
@@ -1176,7 +1174,7 @@
       updateAutoStatusLabelUI();
     }
 
-    function triggerSilentAutoSaveSpot(lat, lng) {
+    function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
       let degLat = Math.floor(lat);
@@ -1195,10 +1193,9 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
       
-      loadSavedRefResSilently();
-    }
-
-    function loadSavedRefResSilently() {
+      // போன் மெமரியில் கோப்பாக உடனே சேமிக்கிறது
+      exportSingleSpotFile(newSpot);
+      playSpotBeep();
       loadSavedReefs();
     }
 
@@ -1836,6 +1833,8 @@
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
+      
+      // போன் மெமரி டவுன்லோட் கோப்பாக உடனே சேமிக்கிறது
       if (newSpot) { 
         exportSingleSpotFile(newSpot); 
         playSpotBeep(); 
@@ -1869,6 +1868,7 @@
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
 
+      // போன் மெமரி டவுன்லோட் கோப்பாக உடனே சேமிக்கிறது
       exportSingleSpotFile(newSpot);
       playSpotBeep();
       closeCoordModal();
@@ -1916,6 +1916,7 @@
       document.getElementById('spotsListModal').style.display = 'flex';
     }
 
+    // போன் மெமரிக்குள் (Internal Storage/Downloads) தானாக சேமிக்கும் முறை
     function exportSingleSpotFile(spotObj) {
       let seqNo = spotObj.seq || 1;
       let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
@@ -1930,29 +1931,15 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function exportSingleSpotById(id) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let item = saved.find(s => s.id == id);
-      if (item) { exportSingleSpotFileManual(item); alert("📥 டவுன்லோட் செய்யப்பட்டது!"); }
-    }
-
-    function exportSingleSpotFileManual(spotObj) {
-      let seqNo = spotObj.seq || 1;
-      let safeName = spotObj.name.replace(/[:\/\\?%*|"<>]/g, '_');
-      const exportData = {
-        number: `பதிவு #${seqNo}`, name: spotObj.name, type: getSpotTypeTamil(spotObj.type),
-        depth: spotObj.depth || 'N/A', time: spotObj.time,
-        Latitude: spotObj.latNautical || formatCoord(spotObj.lat, true),
-        Longitude: spotObj.lngNautical || formatCoord(spotObj.lng, false)
-      };
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `DM_Marine_GPS_${seqNo}_${safeName}.json`;
-      a.click();
+      if (item) { exportSingleSpotFile(item); alert("📥 டவுன்லோட் செய்யப்பட்டது!"); }
     }
 
     function exportAllPhoneMemoryFiles() {
@@ -1968,7 +1955,9 @@
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `DM_Marine_GPS_All_Spots.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       alert("📥 அத்தனையும் டவுன்லோட் ஆனது!");
     }
 
