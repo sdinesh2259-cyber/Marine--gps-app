@@ -448,10 +448,10 @@
             <div class="tool-btn tool-trap" onclick="openTrapManagerModal()" title="கூண்டுகள் மேலாண்மை (100 Traps)">🕸️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
-            <div class="tool-btn tool-weather" onclick="showWeatherReport()">🌤️</div>
+            <div class="tool-btn tool-weather" onclick="showWeatherReport()" title="வானிலை ரிப்போர்ட்">🌤️</div>
             <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()">🛤️</div>
             <div class="tool-btn" onclick="clearTrackHistory()">🗑️</div>
-            <div class="tool-btn tool-moon" onclick="showMoonSolunarData()">🌕</div>
+            <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="நிலவு நிலை">🌕</div>
             <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()">🆘</div>
             <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡</div>
             <div class="tool-btn tool-sat" id="sat-status-btn" onclick="connectSatelliteDevice()">🛰️</div>
@@ -491,7 +491,7 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- Trap Manager Modal (100 Traps Master Toggle & List) -->
+  <!-- Trap Manager Modal -->
   <div class="modal-overlay" id="trapManagerModal">
     <div class="modal-content">
       <div class="modal-title">🕸️ கூண்டுகள் மேலாண்மை (100 Traps)</div>
@@ -518,7 +518,7 @@
       <div class="modal-title">📖 மீனவர் குறிப்புத் டைரி</div>
       <div class="input-group">
         <label>குறிப்பு / எண்கள் / பார் விபரம்:</label>
-        <textarea id="diaryInputText" class="input-name" style="height: 100px; resize: none;" placeholder="எ.கா. பார் #1 இல் நல்ல கணவா மீன் கிடைத்தது. டீசல் 15 லிட்டர் செலவு."></textarea>
+        <textarea id="diaryInputText" class="input-name" style="height: 100px; resize: none;" placeholder="எ.கா. பார் #1 இல் நல்ல கணவா மீன் கிடைத்தது."></textarea>
       </div>
       <div class="modal-btn-row">
         <button class="modal-btn btn-save" onclick="saveDiaryEntry()">💾 டைரியில் சேமி</button>
@@ -537,7 +537,7 @@
         <input type="number" id="totalDieselInput" class="input-name" value="50" step="any">
       </div>
       <div class="input-group">
-        <label>1 நாட்டிக்கல் மைலுக்கு (1 NM) செலவாகும் டீசல் (லிட்டர்):</label>
+        <label>1 நாட்டிக்கல் மைலுக்கு (1 NM) செலவாகும் டீசல்:</label>
         <input type="number" id="dieselPerNMInput" class="input-name" value="0.5" step="any">
       </div>
       <div class="modal-btn-row">
@@ -577,13 +577,10 @@
   <div class="modal-overlay" id="walkieModal">
     <div class="modal-content">
       <div class="modal-title">🎙️ படகு வாக்கி-டாக்கி & இணைப்பு</div>
-      <div style="background:#001b2e; border:1px solid #0077b6; padding:8px; border-radius:8px; font-size:10.5px; color:#a8dadc; margin-bottom:10px; line-height:1.4;">
-        ℹ️ <b>குறிப்பு:</b> அருகில் உள்ள படகுகளிலும் இந்த ஆப் திறந்திருக்க வேண்டும்.
-      </div>
       <button class="modal-btn btn-save" id="scanBoatsBtn" onclick="scanNearbyBoats()" style="width:100%; margin-bottom:8px;">🔍 அருகிலுள்ள படகுகளைத் தேடு</button>
       <div id="discoveredBoatsList" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px;"></div>
       <div id="connectedChannelBox" style="display:none; background:#041a15; border:1px solid #00ffcc; padding:8px; border-radius:8px; text-align:center; margin-bottom:10px;">
-        <div style="color:#00ffcc; font-size:12px; font-weight:bold;" id="connectedBoatStatus">இணைக்கப்பட்டது: படகு #1</div>
+        <div style="color:#00ffcc; font-size:12px; font-weight:bold;" id="connectedBoatStatus">இணைக்கப்பட்டது</div>
       </div>
       <div style="text-align:center;">
         <div class="ptt-btn" id="pttButton" onmousedown="startPTT()" onmouseup="stopPTT()" ontouchstart="startPTT()" ontouchend="stopPTT()">
@@ -595,7 +592,7 @@
     </div>
   </div>
 
-  <!-- Weather & Moon Modals -->
+  <!-- Weather Modal -->
   <div class="modal-overlay" id="weatherModal">
     <div class="modal-content">
       <div class="modal-title">🌤️ நேரலை வானிலை & கடல் நிலை</div>
@@ -604,6 +601,7 @@
     </div>
   </div>
 
+  <!-- Moon Modal -->
   <div class="modal-overlay" id="moonModal">
     <div class="modal-content">
       <div class="modal-title">🌕 நிலவு நிலை & மீன் கணிப்பு</div>
@@ -612,6 +610,7 @@
     </div>
   </div>
 
+  <!-- Spot Modal -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">📍 பார் சேமிக்க</div>
@@ -734,7 +733,6 @@
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
     let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
 
-    /* --- Traps Manager & Master Toggle (Up to 100 Traps) --- */
     let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
     let activeTrapMarkers = [];
 
@@ -763,11 +761,8 @@
       let minLng = (currentLng - dLng) * 60.0;
 
       let newTrap = {
-        id: Date.now(),
-        seq: seq,
-        name: `கூண்டு #${seq}`,
-        lat: currentLat,
-        lng: currentLng,
+        id: Date.now(), seq: seq, name: `கூண்டு #${seq}`,
+        lat: currentLat, lng: currentLng,
         latNautical: `${dLat}° ${minLat.toFixed(3)}' N`,
         lngNautical: `${dLng}° ${minLng.toFixed(3)}' E`,
         time: new Date().toLocaleTimeString()
@@ -777,9 +772,7 @@
       document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
       loadTrapsListUI();
       renderAllTrapsOnMap();
-      
       exitedSpotIds.add('trap_' + newTrap.id);
-
       playSpotBeep();
       alert(`🕸️ கூண்டு #${seq} தற்போதைய இடத்தில் சேமிக்கப்பட்டது!`);
     }
@@ -824,7 +817,6 @@
       if (!map) return;
       activeTrapMarkers.forEach(m => m.remove());
       activeTrapMarkers = [];
-
       if (!showAllTrapsOnMapFlag) return;
 
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
@@ -838,13 +830,12 @@
           </div>
           <div class="trap-marker-dot"></div>
         `;
-
         let popupHtml = `
           <div class="popup-box">
             <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
             <div style="font-size:10px; color:#888;">${t.time}</div>
             <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
-            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல் (0.0 அலாரம்)</button>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
             <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
           </div>
         `;
@@ -857,7 +848,6 @@
       });
     }
 
-    /* --- Fuel & Mileage Calculator Global Variables --- */
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
     let dieselConsumePerNM = parseFloat(localStorage.getItem('marine_diesel_per_nm') || '0.5');
     let totalDistanceTraveledNM = parseFloat(localStorage.getItem('marine_total_dist_nm') || '0');
@@ -894,7 +884,6 @@
       }
     }
 
-    /* --- Diary Logic --- */
     function openDiaryModal() {
       document.getElementById('diaryModal').style.display = 'flex';
       loadDiaryEntries();
@@ -998,7 +987,6 @@
     let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     
     let borderAlertSoundMuted = false;
-    let spotAlertMutedForId = null;
     let audioCtx = null;
     let beepInterval = null;
     let spotBeepInterval = null;
@@ -1074,7 +1062,7 @@
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (25 மீட்டர் வரை உள்ள அசைவுகள் கணக்கில் கொள்ளப்படாது)");
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
@@ -1128,7 +1116,6 @@
         
         if (elapsedMinutes >= 15) {
           triggerAutoSaveSpot(lat, lng);
-          
           autoSpotSaveEnabled = false;
           localStorage.setItem('dm_auto_save_active', 'false');
           stationaryStartTime = 0;
@@ -1158,13 +1145,11 @@
       };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      
       exitedSpotIds.add('spot_' + newSpot.id);
-
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
       playSpotBeep();
-      alert(`📍 15 நிமிடம் ஒரே இடத்தில் நின்றதால் ஆட்டோ பதிவு #${seqNo} சேமிக்கப்பட்டு ஆட்டோ ஆஃப் ஆனது!`);
+      alert(`📍 15 நிமிடம் ஒரே இடத்தில் நின்றதால் ஆட்டோ பதிவு #${seqNo} சேமிக்கப்பட்டது!`);
     }
 
     let map;
@@ -1302,7 +1287,6 @@
       if (!map) return;
       permanentEntityMarkers.forEach(m => m.remove());
       permanentEntityMarkers = [];
-
       if (!showIslandsAndBuoys) return;
 
       PERMANENT_ISLANDS.forEach(isl => {
@@ -1661,7 +1645,6 @@
       if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
     }
 
-    /* --- Strict Hysteresis / Dead-Zone Proximity Alarm Logic --- */
     let exitedSpotIds = new Set();
 
     function checkSpotProximity(lat, lng) {
@@ -1679,18 +1662,11 @@
 
       for (let item of allTargets) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
-        
         if (!exitedSpotIds.has(item.id)) {
-          if (distMeters > 15.0) {
-            exitedSpotIds.add(item.id);
-          }
+          if (distMeters > 15.0) exitedSpotIds.add(item.id);
           continue;
         }
-
-        if (distMeters > 15.0) {
-          continue;
-        }
-
+        if (distMeters > 15.0) continue;
         if (distMeters <= 3.0) {
           foundZeroSpot = true;
           alertMsgStr = `🚨 0.0 மீ! ${item.name} கீழே!`;
@@ -2029,7 +2005,6 @@
       }
     }
 
-    /* --- Independent Offline GPS & Fuel Calculation Engine --- */
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
