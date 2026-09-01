@@ -78,7 +78,6 @@
       color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer;
     }
     
-    /* Fixed sub-tools menu box to fit all items perfectly with internal scrolling */
     .sub-tools {
       display: none; position: absolute; top: 48px; right: 0; flex-direction: column; gap: 5px;
       align-items: flex-end; background: rgba(0,0,0,0.96); padding: 6px; border-radius: 10px; border: 1.5px solid #ffcc00; z-index: 10000;
@@ -449,10 +448,10 @@
             <div class="tool-btn tool-diary" onclick="openDiaryModal()" title="மீனவர் டைரி">📖</div>
             <div class="tool-btn tool-trap" onclick="openTrapManagerModal()" title="கூண்டுகள் மேலாண்மை (100 Traps)">🕸️</div>
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()">🌙</div>
-            <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()">🔔</div>
+            <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="அலாரம் ஆன்/ஆஃப்">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()" title="வானிலை ரிப்போர்ட்">🌤️</div>
-            <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()">🛤️</div>
-            <div class="tool-btn" onclick="clearTrackHistory()">🗑️</div>
+            <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()" title="வழித்தடம்">🛤️</div>
+            <div class="tool-btn" onclick="clearTrackHistory()" title="அழி">🗑️</div>
             <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="நிலவு நிலை">🌕</div>
             <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()">🆘</div>
             <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()">📡</div>
@@ -1064,7 +1063,7 @@
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (25 மீட்டர் வரை உள்ள அசைவுகள் கணக்கில் கொள்ளப்படாது)");
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
@@ -1498,7 +1497,6 @@
       } catch (err) {}
     }
 
-    /* --- Weather Report Function --- */
     async function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
       const todayDateStr = new Date().toLocaleDateString('ta-IN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
@@ -1527,7 +1525,6 @@
       }
     }
 
-    /* --- Moon Solunar Function --- */
     function showMoonSolunarData() {
       const modal = document.getElementById('moonModal');
       const now = new Date();
@@ -1633,13 +1630,14 @@
 
     function toggleAlertSound() {
       borderAlertSoundMuted = !borderAlertSoundMuted;
-      const muteBtn = document.getElementById('muteBtn');
       const menuBtn = document.getElementById('borderSoundToggleBtn');
       if (borderAlertSoundMuted) {
-        muteBtn.innerText = "🔔 இயக்கு"; menuBtn.innerText = "🔕";
+        if (menuBtn) menuBtn.innerText = "🔕";
         if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
+        alert("🔔 எல்லை அலாரம் சைலன்ட் (Mute) செய்யப்பட்டது!");
       } else {
-        muteBtn.innerText = "🔇 நிறுத்து"; menuBtn.innerText = "🔔";
+        if (menuBtn) menuBtn.innerText = "🔔";
+        alert("🔔 எல்லை அலாரம் இயக்கப்பட்ட து!");
       }
     }
 
