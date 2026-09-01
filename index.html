@@ -760,6 +760,10 @@
       document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
       loadTrapsListUI();
       renderAllTrapsOnMap();
+      
+      // Mark as already exited so immediate creation doesn't alarm
+      exitedSpotIds.add('trap_' + newTrap.id);
+
       playSpotBeep();
       alert(`🕸️ கூண்டு #${seq} தற்போதைய இடத்தில் சேமிக்கப்பட்டது!`);
     }
@@ -1126,6 +1130,10 @@
       };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
+      
+      // Mark as already exited so it doesn't alarm immediately
+      exitedSpotIds.add('spot_' + newSpot.id);
+
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
       playSpotBeep();
@@ -1600,8 +1608,8 @@
       if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
     }
 
-    /* --- Precise Hysteresis / Dead-Zone Proximity Alarm Logic --- */
-    let exitedSpotIds = new Set(); // Tracks spots that user has moved away from (>15m)
+    /* --- Strict Hysteresis / Dead-Zone Proximity Alarm Logic --- */
+    let exitedSpotIds = new Set(); // Tracks spots that user has successfully moved away from (>15m)
 
     function checkSpotProximity(lat, lng) {
       const savedSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -1619,17 +1627,22 @@
       for (let item of allTargets) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
         
-        // If user moves away by more than 15 meters, mark this spot as 'exited' so alarm can re-arm
-        if (distMeters > 15.0) {
-          exitedSpotIds.add(item.id);
+        // If this spot is not yet tracked in exitedSpotIds, automatically mark it if distance is > 15m.
+        // For newly created spots, we force them to require exiting first.
+        if (!exitedSpotIds.has(item.id)) {
+          if (distMeters > 15.0) {
+            exitedSpotIds.add(item.id);
+          }
+          continue; // Suppress alarm until user has moved away at least once!
         }
 
-        // Alarm triggers ONLY if user is within 3 meters AND has previously exited this spot zone
+        // Once exited, if user moves back away (> 15m), re-arm for next time
+        if (distMeters > 15.0) {
+          continue;
+        }
+
+        // Alarm triggers ONLY if user is within 3 meters AND has already exited this zone previously
         if (distMeters <= 3.0) {
-          if (!exitedSpotIds.has(item.id)) {
-            // User hasn't left the spot yet (still sitting at anchor / GPS jitter), suppress alarm!
-            continue;
-          }
           foundZeroSpot = true;
           alertMsgStr = `🚨 0.0 மீட்டர்! ${item.name} சரியாக இந்த இடத்தின் கீழே உள்ளது! (${distMeters.toFixed(1)} மீ)`;
           break;
@@ -1648,9 +1661,6 @@
             if(navigator.vibrate) navigator.vibrate(200);
           }, 800);
         }
-      } else {
-        // If not at the spot, hide banner if no active trigger
-        // (We keep banner visible until user clicks mute or leaves, but here we let user mute manually)
       }
     }
 
@@ -1760,9 +1770,6 @@
       if (newSpot) { 
         exportSingleSpotFile(newSpot); 
         playSpotBeep(); 
-        // When a new spot is saved right here, mark it as already 'exited' initially so immediate jitter doesn't alarm
-        // (User is currently on it, so they must leave it first before alarm can trigger on return)
-        exitedSpotIds.add('spot_' + newSpot.id);
       }
 
       closeSpotModal();
@@ -1795,7 +1802,6 @@
 
       exportSingleSpotFile(newSpot);
       playSpotBeep();
-      exitedSpotIds.add('spot_' + newSpot.id);
       closeCoordModal();
       loadSavedReefs();
       alert("📍 '" + name + "' சேமிக்கப்பட்டது!");
