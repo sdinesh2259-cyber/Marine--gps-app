@@ -351,7 +351,7 @@
 </head>
 <body>
 
-  <!-- App Activation Lock Screen -->
+  <!-- App Activation Lock Screen (Updated Fee: ₹299) -->
   <div class="lock-overlay" id="activationLock">
     <div class="lock-box">
       <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
@@ -364,7 +364,7 @@
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
         <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹999 (முதல் 10 நபர்களுக்கு சிறப்புச் சலுகை)</div>
+        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹299 (சிறப்புச் சலுகை)</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -922,7 +922,6 @@
       }
     }
 
-    // --- டைரி செயல்பாடுகள் (எடிட், டெலீட், ஐகான்களுடன்) ---
     function openDiaryModal() {
       document.getElementById('editDiaryId').value = "";
       document.getElementById('diaryInputText').value = "";
@@ -1050,7 +1049,7 @@
 
     function sendDeviceIdToAdmin() {
       const devId = getOrGenerateDeviceId();
-      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${devId}. நான் கட்டணம் செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
+      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${devId}. நான் கட்டணம் (₹299) செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
       window.open(`https://api.whatsapp.com/send?phone=916381634610&text=${msg}`, '_blank');
     }
 
