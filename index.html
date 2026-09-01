@@ -679,6 +679,7 @@
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📁 எடு</button>
   </div>
 
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"></script>
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
     const PERMANENT_ISLANDS = [
@@ -986,13 +987,11 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // Background persistent auto-save state in localStorage so it never resets when minimized
+    // Background persistent auto-save state
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
     let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
     let stationaryAnchorLat = parseFloat(localStorage.getItem('dm_auto_anchor_lat') || '0');
     let stationaryAnchorLng = parseFloat(localStorage.getItem('dm_auto_anchor_lng') || '0');
-    let lastAutoSavedLocation = null;
-    let suppressedAutoSpotIds = new Set();
     let wakeLock = null;
 
     async function requestWakeLock() {
@@ -1009,7 +1008,6 @@
       }
     });
 
-    // Initialize Auto Save UI state on load
     window.addEventListener('load', () => {
       const btn = document.getElementById('auto-save-btn');
       const statusLabel = document.getElementById('sonar-auto-status-label');
@@ -1036,14 +1034,12 @@
           statusLabel.innerText = "⏱️ ஆட்டோ: ON";
           statusLabel.style.color = "#00ffcc";
         }
-        stationaryStartTime = Date.now();
-        stationaryAnchorLat = currentLat;
-        stationaryAnchorLng = currentLng;
-        localStorage.setItem('dm_auto_start_time', stationaryStartTime);
-        localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
-        localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
+        stationaryStartTime = 0;
+        stationaryAnchorLat = 0;
+        stationaryAnchorLng = 0;
+        localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (Screen/Background ON)");
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (15 நிமி நின்றால் ஒரே ஒரு முறை பதிவாகி ஆட்டோ ஆஃப் ஆகும்)");
       } else {
         if(btn) btn.classList.remove('tool-auto-active');
         if(statusLabel) {
@@ -1059,7 +1055,17 @@
 
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) return;
+
+      // If boat is running / moving (speed >= 0.8 knots), reset everything immediately
+      if (speed >= 0.8) {
+        stationaryAnchorLat = 0;
+        stationaryAnchorLng = 0;
+        stationaryStartTime = 0;
+        localStorage.setItem('dm_auto_start_time', '0');
+        return;
+      }
       
+      // If anchor point not set yet, set it now
       if (!stationaryAnchorLat || !stationaryAnchorLng || stationaryAnchorLat === 0) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
@@ -1072,33 +1078,39 @@
       
       let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
       
-      // If boat is stationary within 35 meters and speed is less than 1.0 knot
-      if (distMeters <= 35 && speed < 1.0) {
-        if (!stationaryStartTime || stationaryStartTime === 0) {
-          stationaryStartTime = Date.now();
-          localStorage.setItem('dm_auto_start_time', stationaryStartTime);
-        }
-        
-        let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
-        
-        // Exactly 15 minutes completed in the same spot
-        if (elapsedMinutes >= 15) {
-          if (!lastAutoSavedLocation || parseFloat(calcDistanceNM(lat, lng, lastAutoSavedLocation.lat, lastAutoSavedLocation.lng)) * 1852 > 40) {
-            triggerAutoSaveSpot(lat, lng);
-            lastAutoSavedLocation = { lat, lng };
-          }
-          // Reset timer for next 15 minutes cycle at this spot
-          stationaryStartTime = Date.now();
-          localStorage.setItem('dm_auto_start_time', stationaryStartTime);
-        }
-      } else {
-        // Boat moved away, reset anchor position and timer
+      // If boat has drifted / moved more than 20 meters, reset anchor for stability against wind/tide
+      if (distMeters > 20) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
         stationaryStartTime = Date.now();
         localStorage.setItem('dm_auto_start_time', stationaryStartTime);
         localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
         localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
+        return;
+      }
+
+      // If stationary within 20 meters and speed is low (< 0.8 kts)
+      if (stationaryStartTime && stationaryStartTime > 0) {
+        let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
+        
+        // Exactly 15 minutes completed without running
+        if (elapsedMinutes >= 15) {
+          triggerAutoSaveSpot(lat, lng);
+          
+          // Turn OFF auto save automatically after 1 successful save
+          autoSpotSaveEnabled = false;
+          localStorage.setItem('dm_auto_save_active', 'false');
+          const btn = document.getElementById('auto-save-btn');
+          const statusLabel = document.getElementById('sonar-auto-status-label');
+          if(btn) btn.classList.remove('tool-auto-active');
+          if(statusLabel) {
+            statusLabel.innerText = "⏱️ ஆட்டோ: OFF";
+            statusLabel.style.color = "#ffcc00";
+          }
+          stationaryStartTime = 0;
+          localStorage.setItem('dm_auto_start_time', '0');
+          if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+        }
       }
     }
 
@@ -1121,10 +1133,10 @@
       };
       saved.push(newSpot);
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      suppressedAutoSpotIds.add(newId);
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
       playSpotBeep();
+      alert(`📍 15 நிமிடம் ஒரே இடத்தில் நின்றதால் ஆட்டோ பதிவு #${seqNo} சேமிக்கப்பட்டு ஆட்டோ ஆஃப் ஆனது!`);
     }
 
     let map;
