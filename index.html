@@ -137,17 +137,17 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
     }
 
+    /* Placed safely at top-left, compact size so it never covers speed, fuel or menus */
     .border-alert-banner {
-      position: absolute; top: 95px; left: 10px; width: 45%; background: #d90429; color: white;
-      font-weight: bold; font-size: 10.5px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
+      position: absolute; top: 115px; left: 10px; max-width: 220px; background: #d90429; color: white;
+      font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-    .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9.5px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+    .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-    /* Compact Spot Alert Banner positioned on left side away from settings/menus on right */
     .spot-alert-banner {
-      position: absolute; top: 95px; left: 10px; width: 48%; background: #2a9d8f; color: white;
-      font-weight: bold; font-size: 10.5px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
+      position: absolute; top: 115px; left: 10px; max-width: 220px; background: #2a9d8f; color: white;
+      font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
 
     .sonar-panel {
@@ -364,15 +364,15 @@
 
   <div class="border-alert-banner" id="borderAlert">
     <div class="border-alert-content">
-      <span>🚨 சர்வதேச எல்லை!</span>
+      <span>🚨 எல்லை!</span>
       <button class="mute-btn" onclick="toggleAlertSound()">🔇 நிறுத்து</button>
     </div>
   </div>
 
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
-      <span id="spotAlertText">📍 பார் அருகில் உள்ளது!</span>
-      <button class="mute-btn" onclick="muteSpotAlert()">🔇 அலாரம் நிறுத்து</button>
+      <span id="spotAlertText">📍 பார் கீழே உள்ளது!</span>
+      <button class="mute-btn" onclick="muteSpotAlert()">🔇 நிறுத்து</button>
     </div>
   </div>
 
@@ -1640,7 +1640,7 @@
 
         if (distMeters <= 3.0) {
           foundZeroSpot = true;
-          alertMsgStr = `🚨 0.0 மீ! ${item.name} கீழே உள்ளது!`;
+          alertMsgStr = `🚨 0.0 மீ! ${item.name} கீழே!`;
           break;
         }
       }
