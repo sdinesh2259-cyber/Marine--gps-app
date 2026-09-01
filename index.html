@@ -346,7 +346,7 @@
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டணம் செலுத்தும் விபரம்:</div>
         <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹999</div>
+        <div>🔹 <b>வாழ்நாள் உரிமை கட்டணம்:</b> ₹999 (முதல் 10 நபர்களுக்கு சிறப்புச் சலுகை)</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -733,7 +733,7 @@
       showAllTrapsOnMapFlag = checkbox.checked;
       localStorage.setItem('dm_show_traps_master', showAllTrapsOnMapFlag ? 'true' : 'false');
       renderAllTrapsOnMap();
-      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளும் மேப்பில் காட்டப்படுகின்றன!" : "🕸️ கூண்டுகள் மேப்பிலிருந்து மறைக்கப்பட்டன.");
+      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
     }
 
     function addNewTrapAtCurrentLocation() {
@@ -989,7 +989,6 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // Background persistent auto-save state with live timer display support
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
     let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
     let stationaryAnchorLat = parseFloat(localStorage.getItem('dm_auto_anchor_lat') || '0');
@@ -1047,7 +1046,7 @@
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
         requestWakeLock();
-        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (15 நிமி நின்றால் ஒரே ஒரு முறை பதிவாகி ஆட்டோ ஆஃப் ஆகும்)");
+        alert("⏱️ 15 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது! (25 மீட்டர் வரை உள்ள அசைவுகள் கணக்கில் கொள்ளப்படாது)");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
@@ -1063,6 +1062,7 @@
         return;
       }
 
+      // If boat running speed is >= 0.8 kts, reset timer completely
       if (speed >= 0.8) {
         stationaryAnchorLat = 0;
         stationaryAnchorLng = 0;
@@ -1072,6 +1072,7 @@
         return;
       }
       
+      // If anchor not set yet, set it now
       if (!stationaryAnchorLat || !stationaryAnchorLng || stationaryAnchorLat === 0) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
@@ -1085,7 +1086,8 @@
       
       let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
       
-      if (distMeters > 20) {
+      // Allow up to 25 meters drift / jitter (satellites wave drift) without resetting timer!
+      if (distMeters > 25.0) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
         stationaryStartTime = Date.now();
@@ -1099,6 +1101,7 @@
       if (stationaryStartTime && stationaryStartTime > 0) {
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
         
+        // Exactly 15 minutes completed without moving away
         if (elapsedMinutes >= 15) {
           triggerAutoSaveSpot(lat, lng);
           
