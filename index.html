@@ -679,7 +679,6 @@
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📁 எடு</button>
   </div>
 
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"></script>
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
     const PERMANENT_ISLANDS = [
@@ -1056,7 +1055,6 @@
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) return;
 
-      // If boat is running / moving (speed >= 0.8 knots), reset everything immediately
       if (speed >= 0.8) {
         stationaryAnchorLat = 0;
         stationaryAnchorLng = 0;
@@ -1065,7 +1063,6 @@
         return;
       }
       
-      // If anchor point not set yet, set it now
       if (!stationaryAnchorLat || !stationaryAnchorLng || stationaryAnchorLat === 0) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
@@ -1078,7 +1075,6 @@
       
       let distMeters = parseFloat(calcDistanceNM(lat, lng, stationaryAnchorLat, stationaryAnchorLng)) * 1852;
       
-      // If boat has drifted / moved more than 20 meters, reset anchor for stability against wind/tide
       if (distMeters > 20) {
         stationaryAnchorLat = lat; 
         stationaryAnchorLng = lng; 
@@ -1089,15 +1085,12 @@
         return;
       }
 
-      // If stationary within 20 meters and speed is low (< 0.8 kts)
       if (stationaryStartTime && stationaryStartTime > 0) {
         let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
         
-        // Exactly 15 minutes completed without running
         if (elapsedMinutes >= 15) {
           triggerAutoSaveSpot(lat, lng);
           
-          // Turn OFF auto save automatically after 1 successful save
           autoSpotSaveEnabled = false;
           localStorage.setItem('dm_auto_save_active', 'false');
           const btn = document.getElementById('auto-save-btn');
@@ -1607,8 +1600,8 @@
       if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
     }
 
-    /* --- Precise 0.0 Meter / 0 Distance Alarm for Spots and Traps --- */
-    let zeroAlarmMutedForId = null;
+    /* --- Precise Hysteresis / Dead-Zone Proximity Alarm Logic --- */
+    let exitedSpotIds = new Set(); // Tracks spots that user has moved away from (>15m)
 
     function checkSpotProximity(lat, lng) {
       const savedSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
@@ -1626,12 +1619,17 @@
       for (let item of allTargets) {
         let distMeters = parseFloat(calcDistanceNM(lat, lng, item.lat, item.lng)) * 1852;
         
-        if (distMeters > 15 && zeroAlarmMutedForId === item.id) {
-          zeroAlarmMutedForId = null;
+        // If user moves away by more than 15 meters, mark this spot as 'exited' so alarm can re-arm
+        if (distMeters > 15.0) {
+          exitedSpotIds.add(item.id);
         }
 
+        // Alarm triggers ONLY if user is within 3 meters AND has previously exited this spot zone
         if (distMeters <= 3.0) {
-          if (zeroAlarmMutedForId === item.id) continue;
+          if (!exitedSpotIds.has(item.id)) {
+            // User hasn't left the spot yet (still sitting at anchor / GPS jitter), suppress alarm!
+            continue;
+          }
           foundZeroSpot = true;
           alertMsgStr = `🚨 0.0 மீட்டர்! ${item.name} சரியாக இந்த இடத்தின் கீழே உள்ளது! (${distMeters.toFixed(1)} மீ)`;
           break;
@@ -1650,6 +1648,9 @@
             if(navigator.vibrate) navigator.vibrate(200);
           }, 800);
         }
+      } else {
+        // If not at the spot, hide banner if no active trigger
+        // (We keep banner visible until user clicks mute or leaves, but here we let user mute manually)
       }
     }
 
@@ -1756,7 +1757,13 @@
         saved.push(newSpot);
       }
       localStorage.setItem('marineReefs', JSON.stringify(saved));
-      if (newSpot) { exportSingleSpotFile(newSpot); playSpotBeep(); }
+      if (newSpot) { 
+        exportSingleSpotFile(newSpot); 
+        playSpotBeep(); 
+        // When a new spot is saved right here, mark it as already 'exited' initially so immediate jitter doesn't alarm
+        // (User is currently on it, so they must leave it first before alarm can trigger on return)
+        exitedSpotIds.add('spot_' + newSpot.id);
+      }
 
       closeSpotModal();
       loadSavedReefs();
@@ -1788,6 +1795,7 @@
 
       exportSingleSpotFile(newSpot);
       playSpotBeep();
+      exitedSpotIds.add('spot_' + newSpot.id);
       closeCoordModal();
       loadSavedReefs();
       alert("📍 '" + name + "' சேமிக்கப்பட்டது!");
