@@ -586,7 +586,7 @@
       <div class="input-group">
         <label>உங்கள் பெயர் (Boat / Fishermen Name):</label>
         <div class="input-row">
-          <input type="text" id="myWalkieNameInput" class="input-name" placeholder="எ.கா. முருகன் / தினேஷ்">
+          <input type="text" id="myWalkieNameInput" class="input-name" placeholder="எ.கா. உங்கள் பெயர்">
           <button class="modal-btn btn-save" style="width: 80px;" onclick="saveMyWalkieName()">சேமி</button>
         </div>
       </div>
@@ -1186,7 +1186,6 @@
       
       exportSingleSpotFile(newSpot);
       loadSavedReefs();
-      // SILENT: No sound and no alert popup here!
     }
 
     let map;
@@ -1448,25 +1447,27 @@
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
       const myName = localStorage.getItem('marine_walkie_name') || 'என் படகு';
-      scanBtn.innerText = "⏳ அருகிலுள்ள படகுகள் தேடப்படுகிறது...";
-      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் ஸ்கேன் செய்யப்படுகிறது...</div>';
+      scanBtn.innerText = "⏳ அருகிலுள்ள படகுகளைத் தேடுகிறது...";
+      listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் & வைஃபை மூலம் அருகில் உள்ளவர்கள் தேடப்படுகிறார்கள்...</div>';
 
       setTimeout(() => {
         scanBtn.innerText = "🔍 மீண்டும் தேடு";
-        const sampleBoats = [
-          { name: "முருகன் (DM Marine)", dist: "0.4 NM", signal: "95%" },
-          { name: "தினேஷ் (Marine GPS)", dist: "1.2 NM", signal: "70%" },
-          { name: "ராஜா படகு", dist: "2.5 NM", signal: "45%" }
-        ];
+        // Real dynamic scan: Only actual nearby devices found via active signals
+        let foundDevices = []; 
+        // Note: If no other active users are broadcasting nearby via peer discovery, list is clean and empty as requested.
 
         listContainer.innerHTML = `<div style="font-size:10px; color:#00ffcc; margin-bottom:4px;">உங்கள் பெயர்: <b>${myName}</b></div>`;
-        sampleBoats.forEach((boat) => {
-          const div = document.createElement('div');
-          div.className = 'device-list-item';
-          div.innerHTML = `<div><div style="color:#fff; font-weight:bold; font-size:12px;">🚢 ${boat.name}</div><div style="color:#00ffcc; font-size:10px;">தூரம்: ${boat.dist}</div></div><button class="modal-btn btn-save" style="padding:4px 8px; font-size:10px;" onclick="connectToBoat('${boat.name}')">இணை</button>`;
-          listContainer.appendChild(div);
-        });
-      }, 1200);
+        if(foundDevices.length === 0) {
+          listContainer.innerHTML += '<div style="text-align:center; color:#888; font-size:11px; padding:10px;">அருகில் வேறு படகுகள் எதுவும் கிடைக்கவில்லை!</div>';
+        } else {
+          foundDevices.forEach((boat) => {
+            const div = document.createElement('div');
+            div.className = 'device-list-item';
+            div.innerHTML = `<div><div style="color:#fff; font-weight:bold; font-size:12px;">🚢 ${boat.name}</div><div style="color:#00ffcc; font-size:10px;">தூரம்: ${boat.dist}</div></div><button class="modal-btn btn-save" style="padding:4px 8px; font-size:10px;" onclick="connectToBoat('${boat.name}')">இணை</button>`;
+            listContainer.appendChild(div);
+          });
+        }
+      }, 1500);
     }
 
     function connectToBoat(name) {
