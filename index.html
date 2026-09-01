@@ -365,7 +365,7 @@
 </head>
 <body>
 
-  <!-- Dynamic Activation Screen -->
+  <!-- Activation Lock Screen -->
   <div class="lock-overlay" id="activationLock">
     <div class="lock-box">
       <div style="font-size: 26px; margin-bottom: 4px;">🛰️🔒</div>
@@ -375,7 +375,6 @@
       <div style="font-size: 11px; color: #aaa;">உங்கள் சாதன எண் (Device ID):</div>
       <div class="device-tag" id="displayDeviceId">DM-XXXXX-1</div>
 
-      <!-- Dynamic Price Detail Box -->
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
       </div>
 
@@ -563,7 +562,7 @@
     </div>
   </div>
 
-  <!-- Fuel Config Modal -->
+  <!-- Fuel Modal -->
   <div class="modal-overlay" id="fuelModal">
     <div class="modal-content">
       <div class="modal-title">⛽ டீசல் & மைலேஜ் அமைப்பு</div>
@@ -1030,13 +1029,19 @@
       }
     }
 
-    // --- Dynamic Multi-Month Device ID & Secure Key System ---
+    // --- Dynamic Monthly Rotating Device ID & Pass Key System ---
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
         base = Math.floor(10000 + Math.random() * 90000).toString();
         localStorage.setItem('dm_marine_device_base', base);
       }
+      return base;
+    }
+
+    function generateNewDeviceBase() {
+      let base = Math.floor(10000 + Math.random() * 90000).toString();
+      localStorage.setItem('dm_marine_device_base', base);
       return base;
     }
 
@@ -1049,13 +1054,14 @@
     function getFullDeviceId() {
       let base = getOrGenerateDeviceBase();
       let cycle = getActivationCycle();
-      return `DM-${base}-${cycle}`;
+      if (cycle === 1) return `DM-${base}-1`;
+      if (cycle === 2) return `DM-${base}-2`;
+      return `DM-${base}`;
     }
 
     function calculateExpectedKey() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
-      let cycle = getActivationCycle();
-      let keyVal = base + 7351 + cycle;
+      let keyVal = base + 7351;
       return 'PASS-' + keyVal;
     }
 
@@ -1090,13 +1096,14 @@
         }
         if (lockEl) lockEl.style.display = 'none';
       } else {
-        // Expired -> Advance cycle if not already expired
+        // Expired -> Advance cycle and generate fresh 5-digit Device Base for subsequent months
         if (expiryTimestamp > 0 && expiryTimestamp <= now) {
-          let hasIncremented = localStorage.getItem('dm_cycle_incremented');
-          if (!hasIncremented) {
+          let hasRotated = localStorage.getItem('dm_cycle_rotated');
+          if (!hasRotated) {
             let cycle = getActivationCycle() + 1;
             localStorage.setItem('dm_marine_cycle', cycle.toString());
-            localStorage.setItem('dm_cycle_incremented', 'true');
+            generateNewDeviceBase();
+            localStorage.setItem('dm_cycle_rotated', 'true');
           }
         }
 
@@ -1150,7 +1157,7 @@
       const enteredKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
       const expectedKey = calculateExpectedKey();
 
-      // அட்மின் மாஸ்டர் கீ
+      // Master Admin Key
       if (enteredKey === 'DM-BOSS-6381') {
         let lifetimeMs = 100 * 365 * 24 * 60 * 60 * 1000;
         localStorage.setItem('dm_marine_expiry', (Date.now() + lifetimeMs).toString());
@@ -1161,13 +1168,13 @@
         return;
       }
 
-      // வாடிக்கையாளர் 30 நாள் Key
+      // Customer Key
       if (enteredKey === expectedKey) {
         let thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
         let newExpiry = Date.now() + thirtyDaysMs;
         localStorage.setItem('dm_marine_expiry', newExpiry.toString());
         localStorage.removeItem('dm_is_admin');
-        localStorage.removeItem('dm_cycle_incremented');
+        localStorage.removeItem('dm_cycle_rotated');
         alert('✅ 30 நாட்களுக்கு ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
         document.getElementById('activationLock').style.display = 'none';
         checkAppActivation();
