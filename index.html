@@ -60,11 +60,7 @@
     .compass-container {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: #111; padding: 4px 8px; border-radius: 8px; border: 1px solid #444; cursor: pointer;
-      pointer-events: auto !important; transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .compass-container.zoomed {
-      transform: scale(2.2); transform-origin: top right; z-index: 10000;
-      background: #051422; border: 2px solid #00ffcc; box-shadow: 0 8px 30px rgba(0,255,204,0.6);
+      pointer-events: auto !important;
     }
     .compass-dial {
       width: 38px; height: 38px; border-radius: 50%; border: 2px solid #ffcc00;
@@ -84,6 +80,56 @@
     }
     .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
+
+    /* FULL-SCREEN PRO COMPASS OVERLAY */
+    .fullscreen-compass-modal {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #010a14; z-index: 99999; display: none; flex-direction: column;
+      justify-content: space-between; padding: 18px 16px; align-items: center;
+    }
+    .fs-compass-top-bar {
+      width: 100%; display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .fs-info-card {
+      background: rgba(4, 20, 36, 0.9); border: 1.5px solid #00ffcc; border-radius: 8px;
+      padding: 6px 10px; text-align: center; min-width: 90px;
+    }
+    .fs-close-btn {
+      background: #d90429; color: #fff; border: 2px solid #fff; border-radius: 50%;
+      width: 38px; height: 38px; font-size: 18px; font-weight: 900; display: flex;
+      align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(217,4,41,0.8);
+    }
+    .fs-compass-dial-large {
+      width: 270px; height: 270px; border-radius: 50%; border: 4px solid #ffcc00;
+      background: radial-gradient(circle, #0a192f 0%, #00050d 100%);
+      position: relative; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 35px rgba(0, 255, 204, 0.4);
+    }
+    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; }
+    .fs-lbl-n { top: 8px; font-size: 20px; color: #ff0044; }
+    .fs-lbl-s { bottom: 8px; font-size: 18px; color: #fff; }
+    .fs-lbl-e { right: 12px; font-size: 18px; color: #fff; }
+    .fs-lbl-w { left: 12px; font-size: 18px; color: #fff; }
+
+    .fs-compass-needle-wrapper {
+      width: 8px; height: 190px; position: absolute; display: flex; flex-direction: column; align-items: center;
+    }
+    .fs-arrow-head {
+      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 95px solid #00ffcc;
+      filter: drop-shadow(0 0 8px #00ffcc);
+    }
+    .fs-arrow-tail {
+      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 95px solid #ffffff;
+    }
+
+    /* Target Direction Needle (Points directly to selected spot) */
+    .target-dir-needle {
+      position: absolute; width: 6px; height: 230px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+    }
+    .target-arrow-head {
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 45px solid #ff0055;
+      filter: drop-shadow(0 0 10px #ff0055);
+    }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
     .main-menu-btn {
@@ -106,7 +152,6 @@
     .tool-sonar { border-color: #0077b6; background: rgba(0, 119, 182, 0.9); }
     .tool-sat { border-color: #d90429; background: rgba(217, 4, 41, 0.9); }
     .tool-walkie { border-color: #7b2cbf; background: rgba(123, 44, 191, 0.9); }
-    .tool-track { border-color: #ffb703; background: rgba(251, 133, 0, 0.9); }
     .tool-night { border-color: #e63946; background: rgba(230, 57, 70, 0.9); }
     .tool-moon { border-color: #a8dadc; background: rgba(69, 123, 157, 0.9); }
     .tool-border { border-color: #ff0055; background: rgba(255, 0, 85, 0.9); }
@@ -150,15 +195,6 @@
       font-family: monospace;
       font-weight: bold;
     }
-    #norm-time.zoomed-time {
-      font-size: 15px !important;
-      color: #ffcc00 !important;
-      background: rgba(0, 255, 204, 0.2);
-      border: 1px solid #00ffcc;
-      padding: 2px 6px;
-      font-weight: 900;
-      z-index: 10002;
-    }
 
     .nav-bar {
       display: none; background: #e63946; color: white; font-size: 11px; font-weight: bold;
@@ -197,7 +233,6 @@
     .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
-    /* Strict Circular Center Action Button Layout */
     .btn-container {
       position: absolute !important; bottom: 5px !important; left: 50% !important; transform: translateX(-50%) !important;
       display: flex !important; align-items: center !important; gap: 6px !important; z-index: 10000 !important;
@@ -214,7 +249,6 @@
     .btn-blue-list { background: #1d3557 !important; border: 1px solid #457b9d !important; }
     .btn-darkblue-export { background: #14213d !important; border: 1px solid #33415c !important; }
 
-    /* Guaranteed Center Round Button with High Visibility */
     .btn-round-center-save {
       width: 62px !important; height: 62px !important; border-radius: 50% !important;
       background: radial-gradient(circle, #ff1a40 0%, #a0001e 100%) !important;
@@ -407,6 +441,61 @@
     </div>
   </div>
 
+  <!-- FULLSCREEN COMPASS MODAL -->
+  <div class="fullscreen-compass-modal" id="fsCompassModal">
+    <div class="fs-compass-top-bar">
+      <!-- Speed -->
+      <div class="fs-info-card">
+        <div style="font-size:9px; color:#888;">வேகம்</div>
+        <div style="font-size:16px; font-weight:bold; color:#00ffcc; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
+      </div>
+      
+      <!-- Live Clock (Center) -->
+      <div class="fs-info-card" style="border-color:#ffcc00; min-width: 110px;">
+        <div style="font-size:9px; color:#ffcc00;">மணி</div>
+        <div style="font-size:16px; font-weight:bold; color:#fff; font-family:monospace;" id="fs-time-val">--:--:--</div>
+      </div>
+
+      <!-- Distance & Close Button -->
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="fs-info-card">
+          <div style="font-size:9px; color:#888;">தூரம்</div>
+          <div style="font-size:16px; font-weight:bold; color:#ff0055; font-family:monospace;" id="fs-dist-val">-- NM</div>
+        </div>
+        <div class="fs-close-btn" onclick="closeFullscreenCompass()">❌</div>
+      </div>
+    </div>
+
+    <!-- Big Compass Dial -->
+    <div class="fs-compass-dial-large">
+      <span class="fs-lbl fs-lbl-n">N</span>
+      <span class="fs-lbl fs-lbl-s">S</span>
+      <span class="fs-lbl fs-lbl-e">E</span>
+      <span class="fs-lbl fs-lbl-w">W</span>
+
+      <!-- Boat Direction Needle -->
+      <div class="fs-compass-needle-wrapper" id="fs-compass-needle">
+        <div class="fs-arrow-head"></div>
+        <div class="fs-arrow-tail"></div>
+      </div>
+
+      <!-- Target Navigation Needle (Red arrow pointing to spot) -->
+      <div class="target-dir-needle" id="fsTargetNeedle">
+        <div class="target-arrow-head"></div>
+      </div>
+
+      <div style="position:absolute; bottom:38px; text-align:center;">
+        <div id="fs-heading-text" style="font-size:18px; font-weight:900; color:#00ffcc; font-family:monospace;">0° N</div>
+        <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#ff0055; display:none;">இலக்கு: 0°</div>
+      </div>
+    </div>
+
+    <!-- Bottom Status Text -->
+    <div style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">
+      நேவிகேஷன் இலக்கை நோக்கி அம்பு காட்டும் திசையில் படகை செலுத்தவும்.
+    </div>
+  </div>
+
   <div class="border-alert-banner" id="borderAlert">
     <div class="border-alert-content">
       <span>🚨 எல்லை!</span>
@@ -463,7 +552,8 @@
       </div>
       
       <div class="dashboard-right">
-        <div class="compass-container" id="compassBox" onclick="toggleCompassZoom(event)">
+        <!-- Tap to Open Fullscreen Compass -->
+        <div class="compass-container" id="compassBox" onclick="openFullscreenCompass()">
           <div class="compass-dial">
             <span class="c-label lbl-n">N</span>
             <span class="c-label lbl-s">S</span>
@@ -485,8 +575,6 @@
             <div class="tool-btn tool-night" id="viewModeBtn" onclick="cycleViewModes()" title="நைட் மோட்">🌙</div>
             <div class="tool-btn tool-border" id="borderSoundToggleBtn" onclick="toggleAlertSound()" title="எல்லை அலாரம் ஆன்/ஆஃப்">🔔</div>
             <div class="tool-btn tool-weather" onclick="showWeatherReport()" title="வானிலை ரிப்போர்ட்">🌤️</div>
-            <div class="tool-btn tool-track" id="track-btn" onclick="toggleTrackRecorder()" title="வழித்தடம்">🛤️</div>
-            <div class="tool-btn" onclick="clearTrackHistory()" title="பாதை அழி">🗑️</div>
             <div class="tool-btn tool-moon" onclick="showMoonSolunarData()" title="நிலவு நிலை">🌕</div>
             <div class="tool-btn" style="background:#d90429; border-color:#ffcc00;" onclick="openSosModal()" title="SOS">🆘</div>
             <div class="tool-btn tool-sonar" id="bt-status-btn" onclick="connectBluetoothSonar()" title="சோனார்">📡</div>
@@ -501,11 +589,11 @@
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
       <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ON [0]</span>
-      <span id="norm-time" onclick="toggleTimeZoom(event)">--:--:-- PM</span>
+      <span id="norm-time">--:--:-- PM</span>
     </div>
 
     <div class="nav-bar" id="nav-info">
-      <span>🚀 தூரம்: <span id="target-dist">0.0 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
+      <span>🚀 தூரம்: <span id="target-dist">0.00 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
       <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
     </div>
   </div>
@@ -527,15 +615,12 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- Trap Manager Modal (Compact with Inline Left Icon Number Badge) -->
+  <!-- Trap Manager Modal -->
   <div class="modal-overlay" id="trapManagerModal">
     <div class="modal-content">
       <div class="modal-title">🕸️ கூண்டுகள் மேலாண்மை</div>
 
-      <!-- Toggle row with Left Icon Count Badge and Right Checkbox -->
       <div style="background:#051422; border:1.5px solid #00ffcc; padding:8px 10px; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
-        
-        <!-- Left: Icon with Live Counter -->
         <div style="display:flex; align-items:center; gap:6px;">
           <div style="background:#000; border:1.5px solid #ffcc00; border-radius:6px; padding:3px 8px; display:flex; align-items:center; gap:4px;">
             <span style="font-size:16px;">🕸️</span>
@@ -543,8 +628,6 @@
           </div>
           <span style="font-size:12px; color:#fff; font-weight:bold;">மேப்பில் கூண்டுகளைக் காட்டு</span>
         </div>
-
-        <!-- Right: Checkbox -->
         <label style="display:inline-flex; align-items:center; cursor:pointer;">
           <input type="checkbox" id="masterTrapToggleCheckbox" onchange="toggleMasterTrapsDisplay(this)" style="width:22px; height:22px; accent-color:#00ffcc; cursor:pointer;">
         </label>
@@ -760,11 +843,10 @@
     </div>
   </div>
 
-  <!-- REORDERED BOTTOM ACTIONS WITH FORCED ROUND CENTER BUTTON -->
+  <!-- BOTTOM ACTIONS -->
   <div class="btn-container">
     <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
     
-    <!-- Center Circular Round Button -->
     <div class="btn-round-center-save" onclick="openCurrentBoatModal()">
       <span style="font-size: 16px;">📍</span>
       <span>பார் சேமி</span>
@@ -776,7 +858,6 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    // --- 100% PERSISTENT SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
@@ -786,6 +867,21 @@
           })
           .catch(err => console.warn('SW Error:', err));
       });
+    }
+
+    // --- TAMIL TEXT TO SPEECH (VOICE ENGINE) ---
+    function speakTamil(text) {
+      try {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          let utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ta-IN';
+          utterance.rate = 0.9;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {
+        console.warn("Speech synthesis error", e);
+      }
     }
 
     function getCurrentFormattedDateTime() {
@@ -837,7 +933,6 @@
     let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
     let activeTrapMarkers = [];
 
-    // Dynamically update traps count on left icon badge
     function updateTrapCounters() {
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
       const badge = document.getElementById('trapInlineCounterBadge');
@@ -860,7 +955,6 @@
       alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
     }
 
-    // SAVES ONLY INSIDE APP/LOCALSTORAGE WITHOUT DOWNLOADING ANY FILE
     function addNewTrapAtCurrentLocation() {
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
       if (traps.length >= 100) { alert("அதிகபட்சம் 100 கூண்டுகள் மட்டுமே சேர்க்க முடியும்!"); return; }
@@ -884,7 +978,7 @@
       renderAllTrapsOnMap();
       exitedSpotIds.add('trap_' + newTrap.id);
       playSpotBeep();
-      alert(`🕸️ கூண்டு #${seq} சேமிக்கப்பட்டது! (போன் ஃபைல் டவுன்லோட் ஆகாது)`);
+      alert(`🕸️ கூண்டு #${seq} சேமிக்கப்பட்டது!`);
     }
 
     function loadTrapsListUI() {
@@ -1090,7 +1184,6 @@
       }
     }
 
-    // --- Dynamic Monthly Rotating Device ID & Pass Key System ---
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -1263,13 +1356,12 @@
     let currentLng = 78.1567;
     let currentHeading = 0;
     let lastValidHeading = 0;
+    let currentSpeedKts = 0;
 
     let boatMarker = null;
     let arrowInnerEl = null;
     let targetTarget = null;
     let followBoat = true;
-    let trackRecording = true;
-    let boatTrackCoords = JSON.parse(localStorage.getItem('marineTrackHistory') || '[]');
     
     let borderAlertSoundMuted = false;
     let audioCtx = null;
@@ -1278,6 +1370,15 @@
     let currentViewMode = 0;
     let currentLayerType = 'satellite';
     let activeMarkers = [];
+
+    // Navigation Voice Alert Step Trackers
+    let navVoiceStep = {
+      spoke1_5: false,
+      spoke1_0: false,
+      spoke0_50: false,
+      spoke0_10: false,
+      spokeZero: false
+    };
 
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
     let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
@@ -1329,16 +1430,45 @@
       }
     }
 
-    function toggleTimeZoom(event) {
-      event.stopPropagation();
-      document.getElementById('norm-time').classList.toggle('zoomed-time');
+    // FULLSCREEN COMPASS CONTROLLERS
+    function openFullscreenCompass() {
+      document.getElementById('fsCompassModal').style.display = 'flex';
+      updateFsCompassElements();
     }
 
-    document.addEventListener('click', function(e) {
-      if (!document.getElementById('norm-time').contains(e.target)) {
-        document.getElementById('norm-time').classList.remove('zoomed-time');
+    function closeFullscreenCompass() {
+      document.getElementById('fsCompassModal').style.display = 'none';
+    }
+
+    function updateFsCompassElements() {
+      const modal = document.getElementById('fsCompassModal');
+      if (!modal || modal.style.display !== 'flex') return;
+
+      document.getElementById('fs-speed-val').innerText = `${currentSpeedKts.toFixed(1)} kts`;
+      document.getElementById('fs-heading-text').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
+
+      const needle = document.getElementById('fs-compass-needle');
+      if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
+
+      const targetNeedle = document.getElementById('fsTargetNeedle');
+      const distCard = document.getElementById('fs-dist-val');
+      const targetBearingText = document.getElementById('fs-target-bearing-text');
+
+      if (targetTarget) {
+        let dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
+        let bear = Math.round(calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng));
+        distCard.innerText = `${dist} NM`;
+        targetBearingText.innerText = `இலக்கு கோணம்: ${bear}°`;
+        targetBearingText.style.display = 'block';
+
+        targetNeedle.style.display = 'flex';
+        targetNeedle.style.transform = `rotate(${bear}deg)`;
+      } else {
+        distCard.innerText = `-- NM`;
+        targetBearingText.style.display = 'none';
+        targetNeedle.style.display = 'none';
       }
-    });
+    }
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
@@ -1451,7 +1581,6 @@
       loadSavedReefs();
     }
 
-    // --- MAPLIBRE SAFEGUARD & OFFLINE TILE TOLERANCE ---
     let map = null;
     try {
       if (typeof maplibregl !== 'undefined') {
@@ -1514,13 +1643,9 @@
       
       function initMapLayers() {
         try {
-          if (!map.getSource('trackSource')) {
-            map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
-            map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
-          }
           if (!map.getSource('navSource')) {
             map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-            map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+            map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#00ffcc', 'line-width': 4 } });
           }
         } catch(err) {}
         renderPermanentMarineEntities();
@@ -1872,7 +1997,9 @@
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      return (R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)))).toFixed(2);
+      let dist = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+      if (dist < 0.005) return "0.00";
+      return dist.toFixed(2);
     }
 
     function calcBearing(lat1, lon1, lat2, lon2) {
@@ -1882,10 +2009,8 @@
     }
 
     function toggleToolsMenu(event) { event.stopPropagation(); document.getElementById('toolsPanel').classList.toggle('open'); }
-    function toggleCompassZoom(event) { event.stopPropagation(); document.getElementById('compassBox').classList.toggle('zoomed'); }
     
     document.addEventListener('click', function(e) {
-      if (!document.getElementById('compassBox').contains(e.target)) document.getElementById('compassBox').classList.remove('zoomed');
       if (!document.getElementById('toolsPanel').contains(e.target)) document.getElementById('toolsPanel').classList.remove('open');
       closeMapControls();
     });
@@ -1972,9 +2097,9 @@
           continue;
         }
 
-        if (exitedSpotIds.has(item.id) && distMeters <= 3.0) {
+        if (exitedSpotIds.has(item.id) && distMeters <= 5.0) {
           foundZeroSpot = true;
-          alertMsgStr = `🚨 0.0 மீ! ${item.name} கீழே!`;
+          alertMsgStr = `🚨 0.00 மீ! ${item.name} கீழே!`;
           exitedSpotIds.delete(item.id);
           break;
         }
@@ -2003,29 +2128,6 @@
       } else {
         banner.style.display = 'none';
         if (beepInterval) { clearInterval(beepInterval); beepInterval = null; }
-      }
-    }
-
-    function toggleTrackRecorder() {
-      trackRecording = !trackRecording;
-      const btn = document.getElementById('track-btn');
-      if (trackRecording) { btn.style.background = "rgba(251, 133, 0, 0.9)"; alert("🛤️ வழித்தடப் பதிவு இயக்கப்பட்டது!"); } 
-      else { btn.style.background = "#555"; alert("⏸️ தற்காலிகமாக நிறுத்தப்பட்டது."); }
-    }
-
-    function clearTrackHistory() {
-      if (confirm("பாதை முழுவதையும் அழிக்கவா?")) {
-        boatTrackCoords = [];
-        totalDistanceTraveledNM = 0;
-        localStorage.removeItem('marineTrackHistory');
-        localStorage.setItem('marine_total_dist_nm', '0');
-        try {
-          if (map && map.getSource('trackSource')) {
-            map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
-          }
-        } catch(e) {}
-        alert("🗑️ அழிக்கப்பட்டது!");
-        updateFuelDisplay();
       }
     }
 
@@ -2295,8 +2397,11 @@
 
     function startNavigation(lat, lng) {
       targetTarget = { lat, lng };
+      navVoiceStep = { spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false, spokeZero: false };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
+      updateFsCompassElements();
+      speakTamil("வழிகாட்டல் தொடங்கப்பட்டது");
       alert("🚀 வழிகாட்டுகிறது!");
     }
 
@@ -2308,6 +2413,7 @@
           map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
         } catch(e) {}
       }
+      updateFsCompassElements();
     }
 
     function updateNavigationLine(tLat, tLng) {
@@ -2325,6 +2431,10 @@
         let speed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
         let heading = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : lastValidHeading;
 
+        currentSpeedKts = speed;
+        currentLat = lat; currentLng = lng; currentHeading = heading;
+        lastValidHeading = heading;
+
         if (lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, lat, lng));
           if (stepNM > 0.001 && stepNM < 5.0) {
@@ -2335,9 +2445,6 @@
         }
         lastLatForFuel = lat;
         lastLngForFuel = lng;
-
-        currentLat = lat; currentLng = lng; currentHeading = heading;
-        lastValidHeading = heading;
 
         let latStr = formatCoord(lat, true);
         let lngStr = formatCoord(lng, false);
@@ -2357,28 +2464,46 @@
           try { map.easeTo({ center: [lng, lat], duration: 300 }); } catch(e) {}
         }
 
-        if (trackRecording) {
-          boatTrackCoords.push([lng, lat]);
-          if (boatTrackCoords.length > 1000) boatTrackCoords.shift();
-          localStorage.setItem('marineTrackHistory', JSON.stringify(boatTrackCoords));
-          if (map && map.getSource('trackSource')) {
-            try {
-              map.getSource('trackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } });
-            } catch(e) {}
-          }
-        }
-
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
         checkAndHandleAutoSpotSave(lat, lng, speed);
 
+        // NAVIGATION LOGIC & STEP VOICE ALERTS
         if (targetTarget) {
-          let dist = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
+          let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
+          let dist = parseFloat(distStr);
           let bear = Math.round(calcBearing(lat, lng, targetTarget.lat, targetTarget.lng));
-          document.getElementById('target-dist').innerText = `${dist} NM`;
+          
+          document.getElementById('target-dist').innerText = `${distStr} NM`;
           document.getElementById('target-bearing').innerText = `${bear}°`;
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
+
+          // Voice Alerts based on remaining distance
+          if (!navVoiceStep.spoke1_5 && dist <= 1.50 && dist > 1.00) {
+            speakTamil("இன்னும் ஒன்றரை மைல் தூரம் உள்ளது");
+            navVoiceStep.spoke1_5 = true;
+          } else if (!navVoiceStep.spoke1_0 && dist <= 1.00 && dist > 0.50) {
+            speakTamil("இன்னும் ஒரு மைல் தூரம் உள்ளது");
+            navVoiceStep.spoke1_0 = true;
+          } else if (!navVoiceStep.spoke0_50 && dist <= 0.50 && dist > 0.10) {
+            speakTamil("இன்னும் 50 பாயிண்ட் தூரம் உள்ளது");
+            navVoiceStep.spoke0_50 = true;
+          } else if (!navVoiceStep.spoke0_10 && dist <= 0.10 && dist > 0.005) {
+            speakTamil("இன்னும் 10 பாயிண்ட் மட்டுமே உள்ளது");
+            navVoiceStep.spoke0_10 = true;
+          } else if (!navVoiceStep.spokeZero && dist <= 0.005) {
+            document.getElementById('target-dist').innerText = `0.00 NM`;
+            speakTamil("இலக்கை அடைந்துவிட்டீர்கள், பார் கீழே உள்ளது");
+            if (spotAlarmMasterEnabled) {
+              playSpotBeep();
+              if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+            }
+            navVoiceStep.spokeZero = true;
+          }
         }
+
+        updateFsCompassElements();
+
       }, (err) => {
         console.warn("GPS Active.");
       }, { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 });
@@ -2386,7 +2511,11 @@
 
     setInterval(() => {
       let d = new Date();
-      document.getElementById('norm-time').innerText = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      let timeString = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      document.getElementById('norm-time').innerText = timeString;
+      const fsTime = document.getElementById('fs-time-val');
+      if (fsTime) fsTime.innerText = timeString;
+
       updateAutoStatusLabelUI();
       checkAppActivation();
     }, 1000);
