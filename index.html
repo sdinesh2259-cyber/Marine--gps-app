@@ -484,7 +484,6 @@
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     
     <div id="compassContentContainer">
-      <!-- உச்சி முனையில் அமரும் டாப் பார் (வேகம், பிரைட்னஸ், மணி, தூரம், க்ளோஸ்) -->
       <div class="fs-compass-top-bar">
         <!-- வேகம் -->
         <div class="fs-info-card">
@@ -499,7 +498,6 @@
             <input type="range" id="compassBrightnessRange" min="0.15" max="1.0" step="0.05" value="1.0" oninput="adjustCompassBrightness(this.value)">
           </div>
 
-          <!-- மணியின் அட்டை -->
           <div class="fs-clock-card">
             <div style="font-size:8px; color:#ffcc00; font-weight:bold;">நேரலை மணி</div>
             <div style="font-size:12px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
@@ -524,11 +522,13 @@
           <span class="fs-lbl fs-lbl-e">E</span>
           <span class="fs-lbl fs-lbl-w">W</span>
 
+          <!-- இயல்பான வடக்கு முள் -->
           <div class="fs-compass-needle-wrapper" id="fs-compass-needle">
             <div class="fs-arrow-head"></div>
             <div class="fs-arrow-tail"></div>
           </div>
 
+          <!-- வழிகாட்டும் ஒரே துல்லிய அம்பு -->
           <div class="target-dir-needle" id="fsTargetNeedle">
             <div class="target-arrow-head"></div>
           </div>
@@ -1535,17 +1535,18 @@
         targetBearingText.innerText = `இலக்கு திசை: ${targetBear}°`;
         targetBearingText.style.display = 'block';
 
-        let relativeAngle = (targetBear - currentHeading + 360) % 360;
-
+        // வழிகாட்டும் போது ஒரே அம்பு மட்டும் டார்கெட் நோக்கி திரும்பும்
+        if (needle) needle.style.display = 'none';
         targetNeedle.style.display = 'flex';
-        targetNeedle.style.transform = `rotate(${relativeAngle}deg)`;
-
-        if (needle) needle.style.transform = `rotate(${(360 - currentHeading) % 360}deg)`;
+        targetNeedle.style.transform = `rotate(${targetBear}deg)`;
       } else {
         distCard.innerText = `-- NM`;
         targetBearingText.style.display = 'none';
         targetNeedle.style.display = 'none';
-        if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
+        if (needle) {
+          needle.style.display = 'flex';
+          needle.style.transform = `rotate(${currentHeading}deg)`;
+        }
       }
     }
 
@@ -1726,7 +1727,18 @@
         try {
           if (!map.getSource('navSource')) {
             map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-            map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#00ffcc', 'line-width': 4 } });
+            // சிகப்பு நிறத்தில் விட்டு விட்டு வரும் கோடு (Dashed Red Line)
+            map.addLayer({ 
+              id: 'navLayer', 
+              type: 'line', 
+              source: 'navSource', 
+              layout: { 'line-join': 'round', 'line-cap': 'round' }, 
+              paint: { 
+                'line-color': '#ff0033', 
+                'line-width': 4,
+                'line-dasharray': [2, 2] 
+              } 
+            });
           }
         } catch(err) {}
         renderPermanentMarineEntities();
