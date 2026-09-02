@@ -1415,8 +1415,7 @@
       spoke1_5: false,
       spoke1_0: false,
       spoke0_50: false,
-      spoke0_10: false,
-      spokeZero: false
+      spoke0_10: false
     };
 
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
@@ -1453,7 +1452,6 @@
       document.getElementById('fsCompassModal').style.display = 'none';
     }
 
-    // TARGET BEARING LOCK FOR FULLSCREEN COMPASS
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -2428,7 +2426,7 @@
 
     function startNavigation(lat, lng) {
       targetTarget = { lat, lng };
-      navVoiceStep = { spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false, spokeZero: false };
+      navVoiceStep = { spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
       updateFsCompassElements();
@@ -2499,6 +2497,7 @@
         checkSpotProximity(lat, lng);
         checkAndHandleAutoSpotSave(lat, lng, speed);
 
+        // NAVIGATION LOGIC & STEP VOICE ALERTS (0.00 NM-ல் வாய்ஸ் வராது)
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2520,14 +2519,8 @@
           } else if (!navVoiceStep.spoke0_10 && dist <= 0.10 && dist > 0.005) {
             speakTamil("இன்னும் 10 பாயிண்ட் மட்டுமே உள்ளது");
             navVoiceStep.spoke0_10 = true;
-          } else if (!navVoiceStep.spokeZero && dist <= 0.005) {
+          } else if (dist <= 0.005) {
             document.getElementById('target-dist').innerText = `0.00 NM`;
-            speakTamil("இலக்கை அடைந்துவிட்டீர்கள், பார் கீழே உள்ளது");
-            if (spotAlarmMasterEnabled) {
-              playSpotBeep();
-              if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
-            }
-            navVoiceStep.spokeZero = true;
           }
         }
 
