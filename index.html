@@ -456,33 +456,36 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL WITH CLOCK DOWN & CLOSE BUTTON FIXED -->
+  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL WITH FULL BRIGHTNESS WRAPPER -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
-    <div class="fs-compass-top-bar">
-      <!-- Speed -->
-      <div class="fs-info-card">
-        <div style="font-size:9px; color:#aaa;">வேகம்</div>
-        <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
-      </div>
+    
+    <!-- Entire Compass Modal Wrapper for Global Brightness Control -->
+    <div id="compassBrightnessWrapper" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; align-items:center; transition: filter 0.1s ease;">
       
-      <!-- Brightness Slider -->
-      <div class="fs-brightness-control">
-        <div style="font-size:9px; color:#aaa;">💡 பிரைட்னஸ்</div>
-        <input type="range" id="compassBrightnessRange" min="0.3" max="1.0" step="0.05" value="1.0" oninput="adjustCompassBrightness(this.value)">
-      </div>
-
-      <!-- Distance & Close Button (Side by side) -->
-      <div style="display:flex; align-items:center; gap:6px;">
+      <div class="fs-compass-top-bar">
+        <!-- Speed -->
         <div class="fs-info-card">
-          <div style="font-size:9px; color:#aaa;">தூரம்</div>
-          <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-dist-val">-- NM</div>
+          <div style="font-size:9px; color:#aaa;">வேகம்</div>
+          <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
         </div>
-        <div class="fs-close-btn" onclick="closeFullscreenCompass()">✕</div>
-      </div>
-    </div>
+        
+        <!-- Brightness Slider -->
+        <div class="fs-brightness-control">
+          <div style="font-size:9px; color:#aaa;">💡 பிரைட்னஸ்</div>
+          <input type="range" id="compassBrightnessRange" min="0.2" max="1.0" step="0.05" value="1.0" oninput="adjustCompassBrightness(this.value)">
+        </div>
 
-    <!-- Classic B&W Large Compass Dial container with Brightness Filter -->
-    <div id="compassBrightnessWrapper" style="display:flex; flex-direction:column; align-items:center; transition: filter 0.1s ease;">
+        <!-- Distance & Close Button -->
+        <div style="display:flex; align-items:center; gap:6px;">
+          <div class="fs-info-card">
+            <div style="font-size:9px; color:#aaa;">தூரம்</div>
+            <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-dist-val">-- NM</div>
+          </div>
+          <div class="fs-close-btn" onclick="closeFullscreenCompass()">✕</div>
+        </div>
+      </div>
+
+      <!-- Classic B&W Large Compass Dial -->
       <div class="fs-compass-dial-large">
         <span class="fs-lbl fs-lbl-n">N</span>
         <span class="fs-lbl fs-lbl-s">S</span>
@@ -503,12 +506,13 @@
           <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#cccccc; display:none;">இலக்கு திசை: 0°</div>
         </div>
       </div>
-    </div>
 
-    <!-- Live Clock at Bottom Center -->
-    <div style="background:#0d0d0d; border:1.5px solid #ffffff; border-radius:8px; padding:6px 16px; text-align:center;">
-      <div style="font-size:9px; color:#ffcc00;">நேரலை மணி (Time)</div>
-      <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
+      <!-- Live Clock at Bottom Center -->
+      <div style="background:#0d0d0d; border:1.5px solid #ffffff; border-radius:8px; padding:6px 16px; text-align:center; margin-bottom:10px;">
+        <div style="font-size:9px; color:#ffcc00;">நேரலை மணி (Time)</div>
+        <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
+      </div>
+
     </div>
   </div>
 
@@ -1833,7 +1837,7 @@
       const latStr = formatCoord(currentLat, true);
       const lngStr = formatCoord(currentLng, false);
       const mapLink = `https://maps.google.com/?q=${currentLat.toFixed(6)},${currentLng.toFixed(6)}`;
-      return `🚨 அவசர உதவி! (DM Marine GPS Alert) 🚨\nஎங்கள் படகு கடலில் ஆபத்தில் உள்ளது. எங்களை காப்பாற்றவும்!\n\n📍 அட்சரேகை/தீர்க்கரேகை:\nLat: ${latStr}\nLng: ${lngStr}\n\n🗺️ நேரலை வரைபடம்:\n${mapLink}`;
+      return `🚨 அவசர உதவி! (DM Marine GPS Alert) 🚨\nஎங்கள் படகு கடலில் ஆபத்தில் உள்ளது. எங்களை காப்பாற்றவும்!\n\n📍 அட்சரேகை/தீர்க்கரேகை:\nLat: ${latStr}\nLng: ${lngStr}\n\n🗺️ வரைபடம்:\n${mapLink}`;
     }
 
     function sendSOSWhatsApp() {
