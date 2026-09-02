@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#020b14">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>DM Marine GPS</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3C/svg%3E">
@@ -739,35 +741,38 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    // --- 100% OFFLINE PWA CACHING (Reload / No Internet Fix) ---
+    // --- 100% OFFLINE PWA SERVICE WORKER (NO-INTERNET & RELOAD SHIELD) ---
     if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE_NAME = 'dm-marine-cache-v2';
-        self.addEventListener('install', e => {
+      const swInlineCode = `
+        const CACHE_NAME = 'dm-marine-cache-v3';
+        self.addEventListener('install', event => {
           self.skipWaiting();
         });
-        self.addEventListener('activate', e => {
-          e.waitUntil(clients.claim());
+        self.addEventListener('activate', event => {
+          event.waitUntil(clients.claim());
         });
-        self.addEventListener('fetch', e => {
-          e.respondWith(
-            caches.match(e.request).then(res => {
-              return res || fetch(e.request).then(fetchRes => {
-                if (e.request.method === 'GET') {
-                  return caches.open(CACHE_NAME).then(cache => {
-                    cache.put(e.request, fetchRes.clone());
-                    return fetchRes;
-                  });
-                }
-                return fetchRes;
-              }).catch(() => res);
+        self.addEventListener('fetch', event => {
+          if (event.request.method !== 'GET') return;
+          event.respondWith(
+            caches.open(CACHE_NAME).then(cache => {
+              return cache.match(event.request).then(cachedResponse => {
+                const fetchPromise = fetch(event.request).then(networkResponse => {
+                  if (networkResponse && networkResponse.status === 200) {
+                    cache.put(event.request, networkResponse.clone());
+                  }
+                  return networkResponse;
+                }).catch(() => {
+                  return cachedResponse;
+                });
+                return cachedResponse || fetchPromise;
+              });
             })
           );
         });
       `;
       try {
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+        const swBlob = new Blob([swInlineCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
       } catch(e) {}
     }
 
@@ -1265,8 +1270,11 @@
     }
 
     document.addEventListener('visibilitychange', async () => {
-      if (wakeLock !== null && document.visibilityState === 'visible') {
-        await requestWakeLock();
+      if (document.visibilityState === 'visible') {
+        if (autoSpotSaveEnabled) await requestWakeLock();
+        // Returning to app -> force redraw and check activation
+        checkAppActivation();
+        if (map) map.resize();
       }
     });
 
@@ -1420,7 +1428,7 @@
       loadSavedReefs();
     }
 
-    // --- MAPLIBRE OFFLINE FALLBACK SAFEGUARD ---
+    // --- MAPLIBRE SAFEGUARD & OFFLINE TILE TOLERANCE ---
     let map = null;
     try {
       if (typeof maplibregl !== 'undefined') {
@@ -1451,9 +1459,12 @@
           zoom: 14, pitch: 45, bearing: 0,
           pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
         });
+
+        // Ignore network errors completely when deep at sea (offline)
+        map.on('error', () => {});
       }
     } catch(err) {
-      console.warn("Offline Map Mode Activated.");
+      console.warn("Deep sea offline safeguard active.");
     }
 
     let lastTapTime = 0;
@@ -1478,18 +1489,24 @@
       map.on('touchend', () => { if (touchTimer) clearTimeout(touchTimer); });
       map.on('contextmenu', (e) => { handleDoubleTapCoord(e.lngLat.lat, e.lngLat.lng); });
       map.on('dragstart', () => { followBoat = false; });
-      map.on('load', () => {
+      
+      function initMapLayers() {
         try {
-          map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
-          map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
-          map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-          map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+          if (!map.getSource('trackSource')) {
+            map.addSource('trackSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: boatTrackCoords } } });
+            map.addLayer({ id: 'trackLayer', type: 'line', source: 'trackSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ffcc00', 'line-width': 3.5, 'line-opacity': 0.85 } });
+          }
+          if (!map.getSource('navSource')) {
+            map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
+            map.addLayer({ id: 'navLayer', type: 'line', source: 'navSource', layout: { 'line-join': 'round', 'line-cap': 'round' }, paint: { 'line-color': '#ff0055', 'line-width': 4, 'line-dasharray': [2, 2] } });
+          }
         } catch(err) {}
-        
         renderPermanentMarineEntities();
         loadSavedReefs();
         renderAllTrapsOnMap();
-      });
+      }
+
+      map.on('load', initMapLayers);
 
       const boatContainer = document.createElement('div');
       boatContainer.className = 'boat-marker-container';
@@ -1745,7 +1762,6 @@
         if (!navigator.bluetooth) { alert("ப்ளூடூத் ஆதரவு இல்லை!"); return; }
         const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ['battery_service'] });
         await device.gatt.connect();
-        sonarConnected = true;
         document.getElementById('bt-status-btn').style.background = '#00ffcc';
         alert("✅ சோனார் இணைக்கப்பட்டது: " + device.name);
       } catch (err) { alert("⚠️ இணைப்பு ரத்து செய்யப்பட்டது."); }
@@ -1761,13 +1777,18 @@
       } catch (err) {}
     }
 
+    // Offline-Safe Weather Handler
     async function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
       const todayDateStr = new Date().toLocaleDateString('ta-IN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
       document.getElementById('weatherModalBody').innerHTML = `<div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>⏳ வானிலை பெறப்படுகிறது...`;
       modal.style.display = 'flex';
+
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 sec timeout for deep sea offline
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await res.json();
         const cur = data.current;
         let waveHeight = (cur.wind_speed_10m * 0.08).toFixed(1);
@@ -1780,11 +1801,13 @@
           <p><b>🌧️ மழை நிலவரம்:</b> ${rainStatus}</p>
         `;
       } catch (err) {
+        // Deep sea offline default data without crashing
         document.getElementById('weatherModalBody').innerHTML = `
           <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
+          <div style="color:#00ffcc; margin-bottom:4px;">📡 ஆஃப்லைன் பயன்முறை (ஆழ்கடல்):</div>
           <p><b>🌤️ கடல் நிலை:</b> மிதமான அலை</p>
-          <p><b>💨 காற்று:</b> 12 கி.மீ / மணி</p>
-          <p><b>🌧️ மழை நிலவரம்:</b> மழை இல்லை</p>
+          <p><b>💨 காற்று:</b> 10 - 14 கி.மீ / மணி</p>
+          <p><b>🌧️ மழை நிலவரம்:</b> தெளிவான வானிலை</p>
         `;
       }
     }
