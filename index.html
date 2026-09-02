@@ -81,7 +81,7 @@
     .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
-    /* FULL-SCREEN PRO COMPASS OVERLAY */
+    /* FULLSCREEN COMPASS MODAL */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #010a14; z-index: 99999; display: none; flex-direction: column;
@@ -122,7 +122,7 @@
       width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 95px solid #ffffff;
     }
 
-    /* Target Direction Needle (Points directly to selected spot) */
+    /* Target Direction Needle (Strict Direction Lock) */
     .target-dir-needle {
       position: absolute; width: 6px; height: 230px; display: none; flex-direction: column; align-items: center; pointer-events: none;
     }
@@ -170,7 +170,7 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 175px;
+      min-width: 185px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
@@ -473,13 +473,13 @@
       <span class="fs-lbl fs-lbl-e">E</span>
       <span class="fs-lbl fs-lbl-w">W</span>
 
-      <!-- Boat Direction Needle -->
+      <!-- Boat Heading Needle -->
       <div class="fs-compass-needle-wrapper" id="fs-compass-needle">
         <div class="fs-arrow-head"></div>
         <div class="fs-arrow-tail"></div>
       </div>
 
-      <!-- Target Navigation Needle (Red arrow pointing to spot) -->
+      <!-- Target Navigation Needle (Red arrow strictly pointing to selected spot) -->
       <div class="target-dir-needle" id="fsTargetNeedle">
         <div class="target-arrow-head"></div>
       </div>
@@ -492,7 +492,7 @@
 
     <!-- Bottom Status Text -->
     <div style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">
-      நேவிகேஷன் இலக்கை நோக்கி அம்பு காட்டும் திசையில் படகை செலுத்தவும்.
+      சிவப்பு அம்பு காட்டும் நேர்கோட்டில் படகை செலுத்தினால் நேராகப் பார் அடையலாம்.
     </div>
   </div>
 
@@ -541,6 +541,10 @@
               <button class="map-menu-item-btn" id="menuSonarReefToggleBtn" onclick="toggleSonarReefAutoSave();">
                 <span>🪨 சோனார் ஆட்டோ பார்</span>
                 <span id="sonarReefStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuVoiceAlertToggleBtn" onclick="toggleVoiceAlertMaster();">
+                <span>🗣️ பாயிண்ட் குரல் அறிவிப்பு</span>
+                <span id="voiceAlertStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
               <button class="map-menu-item-btn" id="menuSpotAlarmToggleBtn" onclick="toggleSpotAlarmMaster();">
                 <span>🔔 பார்/கூண்டு அலாரம்</span>
@@ -869,8 +873,19 @@
       });
     }
 
+    let voiceAlertMasterEnabled = localStorage.getItem('dm_voice_alert_master') !== 'false';
+
+    function toggleVoiceAlertMaster() {
+      voiceAlertMasterEnabled = !voiceAlertMasterEnabled;
+      localStorage.setItem('dm_voice_alert_master', voiceAlertMasterEnabled ? 'true' : 'false');
+      updateMapMenuBadges();
+      closeMapControls();
+      alert(voiceAlertMasterEnabled ? "🗣️ பாயிண்ட் குரல் அறிவிப்பு ஆன் செய்யப்பட்டது (ON)" : "🔇 குரல் அறிவிப்பு ஆஃப் செய்யப்பட்டது (OFF)");
+    }
+
     // --- TAMIL TEXT TO SPEECH (VOICE ENGINE) ---
     function speakTamil(text) {
+      if (!voiceAlertMasterEnabled) return;
       try {
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
@@ -1503,6 +1518,7 @@
       const islBadge = document.getElementById('islandStatusBadge');
       const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       const spotAlarmBadge = document.getElementById('spotAlarmStatusBadge');
+      const voiceBadge = document.getElementById('voiceAlertStatusBadge');
       
       if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
       if (islBadge) {
@@ -1516,6 +1532,10 @@
       if (spotAlarmBadge) {
         spotAlarmBadge.innerText = spotAlarmMasterEnabled ? "ON" : "OFF";
         spotAlarmBadge.style.color = spotAlarmMasterEnabled ? "#00ffcc" : "#ff0055";
+      }
+      if (voiceBadge) {
+        voiceBadge.innerText = voiceAlertMasterEnabled ? "ON" : "OFF";
+        voiceBadge.style.color = voiceAlertMasterEnabled ? "#00ffcc" : "#ff0055";
       }
     }
 
