@@ -185,7 +185,7 @@
     }
 
     .sonar-panel {
-      position: absolute; bottom: 48px; left: 0; right: 0; height: 115px;
+      position: absolute; bottom: 58px; left: 0; right: 0; height: 110px;
       background: #020b14; border-top: 2px solid #00ffcc; z-index: 9999; display: flex;
       pointer-events: auto !important;
     }
@@ -197,20 +197,33 @@
     .sonar-bottom-type { font-size: 10px; font-weight: bold; color: #00ffcc; }
     #sonarCanvas { flex: 1; height: 100%; background: #010810; }
     
+    /* Bottom Actions - Center Round Circular Button Layout */
     .btn-container {
-      position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 4px; z-index: 10000; width: 98%; max-width: 440px; justify-content: center;
+      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 6px; z-index: 10000; width: 96%; max-width: 440px; justify-content: space-between;
       pointer-events: auto !important;
     }
     .btn-action {
-      flex: 1; border: none; padding: 8px 2px; font-size: 10px; font-weight: bold;
-      border-radius: 16px; color: white; cursor: pointer; text-align: center;
+      flex: 1; border: none; padding: 9px 2px; font-size: 10.5px; font-weight: bold;
+      border-radius: 12px; color: white; cursor: pointer; text-align: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.6);
       pointer-events: auto !important;
     }
-    .btn-red { background: #e63946; }
-    .btn-green-save { background: #2a9d8f; }
-    .btn-blue-list { background: #1d3557; }
-    .btn-darkblue-export { background: #14213d; }
+    .btn-green-save { background: #2a9d8f; border: 1px solid #2ec4b6; }
+    .btn-blue-list { background: #1d3557; border: 1px solid #457b9d; }
+    .btn-darkblue-export { background: #14213d; border: 1px solid #33415c; }
+
+    /* Centered Circular Round Floating 'பார் சேமி' Button */
+    .btn-round-center-save {
+      width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(145deg, #e63946, #b51724);
+      border: 3px solid #ffcc00; color: #ffffff; font-size: 10px; font-weight: 900;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 4px 15px rgba(230, 57, 70, 0.7);
+      margin: 0 2px; flex-shrink: 0; line-height: 1.1; text-align: center;
+      transform: translateY(-8px);
+      transition: transform 0.1s ease;
+    }
+    .btn-round-center-save:active { transform: translateY(-4px) scale(0.95); }
 
     .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
@@ -665,7 +678,7 @@
     </div>
   </div>
 
-  <!-- Spot Modal -->
+  <!-- Spot Modal (For Current Boat Location & Edits) -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">📍 பார் சேமிக்க</div>
@@ -710,6 +723,7 @@
     </div>
   </div>
 
+  <!-- Coord Modal (Manual Input by typing) -->
   <div class="modal-overlay" id="coordModal">
     <div class="modal-content">
       <div class="modal-title" id="coordModalTitle">🧭 புதிய எண் மூலம் பார் சேமி</div>
@@ -743,21 +757,28 @@
     </div>
   </div>
 
+  <!-- REORDERED BOTTOM ACTIONS WITH CENTER CIRCULAR ROUND 'பார் சேமி' BUTTON -->
   <div class="btn-container">
-    <button class="btn-action btn-red" onclick="openCurrentBoatModal()">📍 பார் சேமி</button>
     <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
+    
+    <!-- Central Circular Round Action Button -->
+    <div class="btn-round-center-save" onclick="openCurrentBoatModal()">
+      <span style="font-size: 16px;">📍</span>
+      <span>பார் சேமி</span>
+    </div>
+
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
-    <button class="btn-action btn-darkblue-export" onclick="exportData()">📁 எடு</button>
+    <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    // --- 100% RELIABLE PERSISTENT SERVICE WORKER REGISTRATION ---
+    // --- 100% PERSISTENT SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('ServiceWorker registered:', reg.scope))
-          .catch(err => console.warn('SW registration fallback:', err));
+          .then(reg => console.log('SW Registered:', reg.scope))
+          .catch(err => console.warn('SW Error:', err));
       });
     }
 
@@ -832,6 +853,7 @@
       alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
     }
 
+    // SAVES ONLY INSIDE APP/LOCALSTORAGE WITHOUT DOWNLOADING ANY FILE
     function addNewTrapAtCurrentLocation() {
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
       if (traps.length >= 100) { alert("அதிகபட்சம் 100 கூண்டுகள் மட்டுமே சேர்க்க முடியும்!"); return; }
@@ -855,7 +877,7 @@
       renderAllTrapsOnMap();
       exitedSpotIds.add('trap_' + newTrap.id);
       playSpotBeep();
-      alert(`🕸️ கூண்டு #${seq} தற்போதைய இடத்தில் சேமிக்கப்பட்டது!`);
+      alert(`🕸️ கூண்டு #${seq} சேமிக்கப்பட்டது! (போன் ஃபைல் டவுன்லோட் ஆகாது)`);
     }
 
     function loadTrapsListUI() {
@@ -2000,6 +2022,7 @@
       }
     }
 
+    // Opens Modal for Current Boat Spot with Full Customization (Symbols, Name, Coordinate adjustment)
     function openCurrentBoatModal() {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let nextNum = saved.length + 1;
