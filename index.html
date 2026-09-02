@@ -513,22 +513,33 @@
     <canvas id="sonarCanvas"></canvas>
   </div>
 
-  <!-- Trap Manager Modal -->
+  <!-- Trap Manager Modal (Updated with Live Total Count & High-Visibility Icon) -->
   <div class="modal-overlay" id="trapManagerModal">
     <div class="modal-content">
       <div class="modal-title">🕸️ கூண்டுகள் மேலாண்மை (100 Traps)</div>
-      <div style="background:#051422; border:1px solid #00ffcc; padding:10px; border-radius:8px; margin-bottom:12px; text-align:center;">
-        <div style="font-size:12px; color:#ffcc00; font-weight:bold; margin-bottom:6px;">மாஸ்டர் ஆன் / ஆஃப் சுவிட்ச்:</div>
-        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; color:#00ffcc; font-weight:bold; font-size:13px;">
-          <input type="checkbox" id="masterTrapToggleCheckbox" onchange="toggleMasterTrapsDisplay(this)" style="width:18px; height:18px; accent-color:#00ffcc;">
-          <span>அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)</span>
+
+      <!-- Live Trap Counter Banner -->
+      <div style="background:#031422; border: 2px solid #00ffcc; border-radius: 8px; padding: 8px; margin-bottom: 10px; text-align: center; box-shadow: 0 0 10px rgba(0,255,204,0.3);">
+        <div style="font-size: 11px; color: #ffcc00; font-weight: bold;">பதிவு செய்யப்பட்ட கூண்டுகள்:</div>
+        <div style="font-size: 22px; font-weight: 900; color: #00ffcc; font-family: monospace; margin-top: 2px;" id="totalTrapsCounterBadge">0 கூண்டுகள்</div>
+      </div>
+
+      <!-- Master Toggle Switch with Large Visible Icon -->
+      <div style="background:#051422; border:1.5px solid #ffcc00; padding:10px; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size: 24px; background: rgba(0,255,204,0.15); border: 1.5px solid #00ffcc; border-radius: 8px; padding: 2px 6px;">🕸️</span>
+          <span style="font-size: 12px; color: #fff; font-weight: bold;">மேப்பில் கூண்டுகளைக் காட்டு</span>
+        </div>
+        <label style="display:inline-flex; align-items:center; cursor:pointer;">
+          <input type="checkbox" id="masterTrapToggleCheckbox" onchange="toggleMasterTrapsDisplay(this)" style="width:22px; height:22px; accent-color:#00ffcc; cursor:pointer;">
         </label>
       </div>
+
       <div class="input-group">
         <label>புதிய கூண்டு சேர்க்க (Current Location):</label>
         <button class="modal-btn btn-save" onclick="addNewTrapAtCurrentLocation()">📍 தற்போதைய இடத்தில் கூண்டு வை (#<span id="nextTrapSeqNum">1</span>)</button>
       </div>
-      <div style="font-size: 11px; color: #ffcc00; margin: 8px 0 4px 0;">பதிவு செய்யப்பட்ட கூண்டுகள் பட்டியல்:</div>
+      <div style="font-size: 11px; color: #ffcc00; margin: 8px 0 4px 0; font-weight: bold;">பதிவு செய்யப்பட்ட கூண்டுகள் பட்டியல்:</div>
       <div id="trapsListContainer" style="max-height: 160px; overflow-y: auto; margin-bottom: 10px;"></div>
       <button class="modal-btn btn-cancel" onclick="document.getElementById('trapManagerModal').style.display='none'" style="width:100%;">மூடு</button>
     </div>
@@ -741,39 +752,13 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
-    // --- 100% OFFLINE PWA SERVICE WORKER (NO-INTERNET & RELOAD SHIELD) ---
+    // --- 100% RELIABLE PERSISTENT SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
-      const swInlineCode = `
-        const CACHE_NAME = 'dm-marine-cache-v3';
-        self.addEventListener('install', event => {
-          self.skipWaiting();
-        });
-        self.addEventListener('activate', event => {
-          event.waitUntil(clients.claim());
-        });
-        self.addEventListener('fetch', event => {
-          if (event.request.method !== 'GET') return;
-          event.respondWith(
-            caches.open(CACHE_NAME).then(cache => {
-              return cache.match(event.request).then(cachedResponse => {
-                const fetchPromise = fetch(event.request).then(networkResponse => {
-                  if (networkResponse && networkResponse.status === 200) {
-                    cache.put(event.request, networkResponse.clone());
-                  }
-                  return networkResponse;
-                }).catch(() => {
-                  return cachedResponse;
-                });
-                return cachedResponse || fetchPromise;
-              });
-            })
-          );
-        });
-      `;
-      try {
-        const swBlob = new Blob([swInlineCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
-      } catch(e) {}
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('ServiceWorker registered:', reg.scope))
+          .catch(err => console.warn('SW registration fallback:', err));
+      });
     }
 
     function getCurrentFormattedDateTime() {
@@ -825,10 +810,17 @@
     let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
     let activeTrapMarkers = [];
 
+    function updateTrapCounters() {
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      const badge = document.getElementById('totalTrapsCounterBadge');
+      const seqEl = document.getElementById('nextTrapSeqNum');
+      if (badge) badge.innerText = `${traps.length} கூண்டுகள்`;
+      if (seqEl) seqEl.innerText = traps.length + 1;
+    }
+
     function openTrapManagerModal() {
       document.getElementById('masterTrapToggleCheckbox').checked = showAllTrapsOnMapFlag;
-      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-      document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
+      updateTrapCounters();
       loadTrapsListUI();
       document.getElementById('trapManagerModal').style.display = 'flex';
     }
@@ -858,7 +850,7 @@
       };
       traps.push(newTrap);
       localStorage.setItem('marineTrapsList', JSON.stringify(traps));
-      document.getElementById('nextTrapSeqNum').innerText = traps.length + 1;
+      updateTrapCounters();
       loadTrapsListUI();
       renderAllTrapsOnMap();
       exitedSpotIds.add('trap_' + newTrap.id);
@@ -869,6 +861,7 @@
     function loadTrapsListUI() {
       const container = document.getElementById('trapsListContainer');
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      updateTrapCounters();
       if (traps.length === 0) {
         container.innerHTML = '<div style="text-align:center; color:#888; font-size:11px; padding:10px;">கூண்டுகள் எதுவும் இல்லை!</div>';
         return;
@@ -898,6 +891,7 @@
         traps = traps.filter(t => t.id != id);
         traps.forEach((t, i) => { t.seq = i + 1; });
         localStorage.setItem('marineTrapsList', JSON.stringify(traps));
+        updateTrapCounters();
         loadTrapsListUI();
         renderAllTrapsOnMap();
       }
@@ -1222,6 +1216,7 @@
       checkAppActivation();
       updateMapMenuBadges();
       updateFuelDisplay();
+      updateTrapCounters();
       let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
@@ -1272,7 +1267,6 @@
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
         if (autoSpotSaveEnabled) await requestWakeLock();
-        // Returning to app -> force redraw and check activation
         checkAppActivation();
         if (map) map.resize();
       }
@@ -1460,7 +1454,6 @@
           pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
         });
 
-        // Ignore network errors completely when deep at sea (offline)
         map.on('error', () => {});
       }
     } catch(err) {
@@ -1777,7 +1770,6 @@
       } catch (err) {}
     }
 
-    // Offline-Safe Weather Handler
     async function showWeatherReport() {
       const modal = document.getElementById('weatherModal');
       const todayDateStr = new Date().toLocaleDateString('ta-IN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
@@ -1786,7 +1778,7 @@
 
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 sec timeout for deep sea offline
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${currentLat}&longitude=${currentLng}&current=temperature_2m,wind_speed_10m,precipitation,weather_code`, { signal: controller.signal });
         clearTimeout(timeoutId);
         const data = await res.json();
@@ -1801,7 +1793,6 @@
           <p><b>🌧️ மழை நிலவரம்:</b> ${rainStatus}</p>
         `;
       } catch (err) {
-        // Deep sea offline default data without crashing
         document.getElementById('weatherModalBody').innerHTML = `
           <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
           <div style="color:#00ffcc; margin-bottom:4px;">📡 ஆஃப்லைன் பயன்முறை (ஆழ்கடல்):</div>
