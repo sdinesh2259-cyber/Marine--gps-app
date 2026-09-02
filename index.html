@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#020b14">
   <title>DM Marine GPS</title>
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3C/svg%3E">
@@ -10,7 +11,7 @@
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #000; overflow: hidden; }
+    body { margin: 0; padding: 0; font-family: sans-serif; user-select: none; background: #001220; overflow: hidden; }
     
     #map {
       height: calc(100vh - 165px);
@@ -738,6 +739,38 @@
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
   <script>
+    // --- 100% OFFLINE PWA CACHING (Reload / No Internet Fix) ---
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'dm-marine-cache-v2';
+        self.addEventListener('install', e => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', e => {
+          e.waitUntil(clients.claim());
+        });
+        self.addEventListener('fetch', e => {
+          e.respondWith(
+            caches.match(e.request).then(res => {
+              return res || fetch(e.request).then(fetchRes => {
+                if (e.request.method === 'GET') {
+                  return caches.open(CACHE_NAME).then(cache => {
+                    cache.put(e.request, fetchRes.clone());
+                    return fetchRes;
+                  });
+                }
+                return fetchRes;
+              }).catch(() => res);
+            })
+          );
+        });
+      `;
+      try {
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+      } catch(e) {}
+    }
+
     function getCurrentFormattedDateTime() {
       let d = new Date();
       let day = String(d.getDate()).padStart(2, '0');
@@ -1096,7 +1129,6 @@
         }
         if (lockEl) lockEl.style.display = 'none';
       } else {
-        // Expired -> Advance cycle and generate fresh 5-digit Device Base for subsequent months
         if (expiryTimestamp > 0 && expiryTimestamp <= now) {
           let hasRotated = localStorage.getItem('dm_cycle_rotated');
           if (!hasRotated) {
@@ -1157,7 +1189,6 @@
       const enteredKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
       const expectedKey = calculateExpectedKey();
 
-      // Master Admin Key
       if (enteredKey === 'DM-BOSS-6381') {
         let lifetimeMs = 100 * 365 * 24 * 60 * 60 * 1000;
         localStorage.setItem('dm_marine_expiry', (Date.now() + lifetimeMs).toString());
@@ -1168,7 +1199,6 @@
         return;
       }
 
-      // Customer Key
       if (enteredKey === expectedKey) {
         let thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
         let newExpiry = Date.now() + thirtyDaysMs;
@@ -1390,37 +1420,40 @@
       loadSavedReefs();
     }
 
-    let map;
+    // --- MAPLIBRE OFFLINE FALLBACK SAFEGUARD ---
+    let map = null;
     try {
-      map = new maplibregl.Map({
-        container: 'map',
-        maxZoom: 19,
-        style: {
-          version: 8,
-          sources: {
-            'satellite-tiles': { 
-              type: 'raster', 
-              tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], 
-              tileSize: 256, maxzoom: 19, attribution: '' 
+      if (typeof maplibregl !== 'undefined') {
+        map = new maplibregl.Map({
+          container: 'map',
+          maxZoom: 19,
+          style: {
+            version: 8,
+            sources: {
+              'satellite-tiles': { 
+                type: 'raster', 
+                tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], 
+                tileSize: 256, maxzoom: 19, attribution: '' 
+              },
+              'osm-marine-tiles': { 
+                type: 'raster', 
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], 
+                tileSize: 256, maxzoom: 19, attribution: '' 
+              }
             },
-            'osm-marine-tiles': { 
-              type: 'raster', 
-              tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], 
-              tileSize: 256, maxzoom: 19, attribution: '' 
-            }
+            layers: [
+              { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
+              { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
+              { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
+            ]
           },
-          layers: [
-            { id: 'background', type: 'background', paint: { 'background-color': '#001a2e' } },
-            { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-            { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
-          ]
-        },
-        center: [currentLng, currentLat],
-        zoom: 14, pitch: 45, bearing: 0,
-        pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
-      });
-    } catch(e) {
-      console.warn("Map offline safeguard active.");
+          center: [currentLng, currentLat],
+          zoom: 14, pitch: 45, bearing: 0,
+          pitchWithRotate: true, dragRotate: true, touchZoomRotate: true
+        });
+      }
+    } catch(err) {
+      console.warn("Offline Map Mode Activated.");
     }
 
     let lastTapTime = 0;
@@ -1457,6 +1490,15 @@
         loadSavedReefs();
         renderAllTrapsOnMap();
       });
+
+      const boatContainer = document.createElement('div');
+      boatContainer.className = 'boat-marker-container';
+      arrowInnerEl = document.createElement('div');
+      arrowInnerEl.className = 'boat-heading-arrow';
+      boatContainer.appendChild(arrowInnerEl);
+
+      boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
+        .setLngLat([currentLng, currentLat]).addTo(map);
     }
 
     function toggleMapControlsMenu(event) {
@@ -1767,17 +1809,6 @@
         <p><b>🐟 மீன் கணிப்பு:</b> இன்றைய நாளில் மீன்கள் அதிகம் கூடும் நேரம் காலை மற்றும் மாலை வேளைகள் ஆகும்.</p>
       `;
       modal.style.display = 'flex';
-    }
-
-    if (map) {
-      const boatContainer = document.createElement('div');
-      boatContainer.className = 'boat-marker-container';
-      arrowInnerEl = document.createElement('div');
-      arrowInnerEl.className = 'boat-heading-arrow';
-      boatContainer.appendChild(arrowInnerEl);
-
-      boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
-        .setLngLat([currentLng, currentLat]).addTo(map);
     }
 
     function formatCoord(val, isLat) {
