@@ -85,15 +85,14 @@
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000000; z-index: 99999; display: none; flex-direction: column;
-      justify-content: space-between; padding: 18px 16px; align-items: center;
-      transition: opacity 0.2s ease;
+      justify-content: space-between; padding: 16px 14px; align-items: center;
     }
     .fs-compass-top-bar {
-      width: 100%; display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 6px;
     }
     .fs-info-card {
       background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 6px 10px; text-align: center; min-width: 85px;
+      padding: 6px 10px; text-align: center; min-width: 90px;
     }
     .fs-close-btn {
       background: #ffffff; color: #000000; border: 2px solid #ffffff; border-radius: 50%;
@@ -102,17 +101,16 @@
       flex-shrink: 0;
     }
     
-    /* Compass Brightness Control Box */
     .fs-brightness-control {
       background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 6px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      padding: 4px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
     }
     .fs-brightness-control input[type=range] {
-      width: 80px; accent-color: #ffffff; cursor: pointer; height: 4px;
+      width: 70px; accent-color: #ffffff; cursor: pointer; height: 3px;
     }
 
     .fs-compass-dial-large {
-      width: 270px; height: 270px; border-radius: 50%; border: 4px solid #ffffff;
+      width: 260px; height: 260px; border-radius: 50%; border: 4px solid #ffffff;
       background: #000000;
       position: relative; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 0 35px rgba(255, 255, 255, 0.2);
@@ -124,7 +122,7 @@
     .fs-lbl-w { left: 12px; font-size: 18px; color: #ffffff; }
 
     .fs-compass-needle-wrapper {
-      width: 16px; height: 180px; position: absolute; display: flex; flex-direction: column; align-items: center;
+      width: 16px; height: 170px; position: absolute; display: flex; flex-direction: column; align-items: center;
     }
     .fs-arrow-head {
       width: 0; height: 0; 
@@ -134,17 +132,17 @@
       filter: drop-shadow(0 0 4px rgba(255,255,255,0.8));
     }
     .fs-arrow-tail {
-      width: 4px; height: 60px; background: #888888;
+      width: 4px; height: 50px; background: #888888;
     }
 
     .target-dir-needle {
-      position: absolute; width: 18px; height: 220px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      position: absolute; width: 18px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
     }
     .target-arrow-head {
       width: 0; height: 0; 
       border-left: 11px solid transparent; 
       border-right: 11px solid transparent; 
-      border-bottom: 85px solid #ffffff;
+      border-bottom: 80px solid #ffffff;
       filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
     }
 
@@ -458,25 +456,22 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL WITH BRIGHTNESS SLIDER -->
+  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL WITH CLOCK DOWN & CLOSE BUTTON FIXED -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div class="fs-compass-top-bar">
+      <!-- Speed -->
       <div class="fs-info-card">
         <div style="font-size:9px; color:#aaa;">வேகம்</div>
         <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
       </div>
       
-      <div class="fs-info-card" style="border-color:#ffffff; min-width: 95px;">
-        <div style="font-size:9px; color:#aaa;">மணி</div>
-        <div style="font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
-      </div>
-
-      <!-- Compass Brightness Control Slider -->
+      <!-- Brightness Slider -->
       <div class="fs-brightness-control">
         <div style="font-size:9px; color:#aaa;">💡 பிரைட்னஸ்</div>
         <input type="range" id="compassBrightnessRange" min="0.3" max="1.0" step="0.05" value="1.0" oninput="adjustCompassBrightness(this.value)">
       </div>
 
+      <!-- Distance & Close Button (Side by side) -->
       <div style="display:flex; align-items:center; gap:6px;">
         <div class="fs-info-card">
           <div style="font-size:9px; color:#aaa;">தூரம்</div>
@@ -486,7 +481,7 @@
       </div>
     </div>
 
-    <!-- Classic B&W Large Compass Dial container to apply brightness -->
+    <!-- Classic B&W Large Compass Dial container with Brightness Filter -->
     <div id="compassBrightnessWrapper" style="display:flex; flex-direction:column; align-items:center; transition: filter 0.1s ease;">
       <div class="fs-compass-dial-large">
         <span class="fs-lbl fs-lbl-n">N</span>
@@ -510,8 +505,10 @@
       </div>
     </div>
 
-    <div style="text-align:center; color:#888888; font-size:11px; margin-bottom:10px;">
-      வெள்ளை அம்பு காட்டும் நேர்கோட்டில் படகை செலுத்தினால் நேராகப் பார் அடையலாம்.
+    <!-- Live Clock at Bottom Center -->
+    <div style="background:#0d0d0d; border:1.5px solid #ffffff; border-radius:8px; padding:6px 16px; text-align:center;">
+      <div style="font-size:9px; color:#ffcc00;">நேரலை மணி (Time)</div>
+      <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
     </div>
   </div>
 
@@ -1478,7 +1475,6 @@
       document.getElementById('fsCompassModal').style.display = 'none';
     }
 
-    // Function to adjust compass dial brightness slider
     function adjustCompassBrightness(val) {
       const wrapper = document.getElementById('compassBrightnessWrapper');
       if (wrapper) {
