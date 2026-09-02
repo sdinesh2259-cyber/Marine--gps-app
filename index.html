@@ -81,54 +81,55 @@
     .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
-    /* FULLSCREEN COMPASS MODAL */
+    /* FULLSCREEN CLASSIC BLACK & WHITE COMPASS MODAL */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #010a14; z-index: 99999; display: none; flex-direction: column;
+      background: #000000; z-index: 99999; display: none; flex-direction: column;
       justify-content: space-between; padding: 18px 16px; align-items: center;
     }
     .fs-compass-top-bar {
       width: 100%; display: flex; justify-content: space-between; align-items: flex-start;
     }
     .fs-info-card {
-      background: rgba(4, 20, 36, 0.9); border: 1.5px solid #00ffcc; border-radius: 8px;
+      background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
       padding: 6px 10px; text-align: center; min-width: 90px;
     }
     .fs-close-btn {
-      background: #d90429; color: #fff; border: 2px solid #fff; border-radius: 50%;
+      background: #ffffff; color: #000000; border: 2px solid #ffffff; border-radius: 50%;
       width: 38px; height: 38px; font-size: 18px; font-weight: 900; display: flex;
-      align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(217,4,41,0.8);
+      align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
+    
+    /* Classic Black & White Dial */
     .fs-compass-dial-large {
-      width: 270px; height: 270px; border-radius: 50%; border: 4px solid #ffcc00;
-      background: radial-gradient(circle, #0a192f 0%, #00050d 100%);
+      width: 270px; height: 270px; border-radius: 50%; border: 4px solid #ffffff;
+      background: #000000;
       position: relative; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 35px rgba(0, 255, 204, 0.4);
+      box-shadow: 0 0 35px rgba(255, 255, 255, 0.2);
     }
-    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; }
-    .fs-lbl-n { top: 8px; font-size: 20px; color: #ff0044; }
-    .fs-lbl-s { bottom: 8px; font-size: 18px; color: #fff; }
-    .fs-lbl-e { right: 12px; font-size: 18px; color: #fff; }
-    .fs-lbl-w { left: 12px; font-size: 18px; color: #fff; }
+    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #ffffff; }
+    .fs-lbl-n { top: 8px; font-size: 20px; color: #ffffff; }
+    .fs-lbl-s { bottom: 8px; font-size: 18px; color: #ffffff; }
+    .fs-lbl-e { right: 12px; font-size: 18px; color: #ffffff; }
+    .fs-lbl-w { left: 12px; font-size: 18px; color: #ffffff; }
 
     .fs-compass-needle-wrapper {
       width: 8px; height: 190px; position: absolute; display: flex; flex-direction: column; align-items: center;
     }
     .fs-arrow-head {
-      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 95px solid #00ffcc;
-      filter: drop-shadow(0 0 8px #00ffcc);
+      width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 90px solid #ffffff;
     }
     .fs-arrow-tail {
-      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 95px solid #ffffff;
+      width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 90px solid #555555;
     }
 
-    /* Target Direction Needle (Strict Direction Lock) */
+    /* Single Black/White Target Arrow */
     .target-dir-needle {
       position: absolute; width: 6px; height: 230px; display: none; flex-direction: column; align-items: center; pointer-events: none;
     }
     .target-arrow-head {
-      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 45px solid #ff0055;
-      filter: drop-shadow(0 0 10px #ff0055);
+      width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 50px solid #ffffff;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
     }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
@@ -441,28 +442,29 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN COMPASS MODAL -->
+  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div class="fs-compass-top-bar">
       <div class="fs-info-card">
-        <div style="font-size:9px; color:#888;">வேகம்</div>
-        <div style="font-size:16px; font-weight:bold; color:#00ffcc; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
+        <div style="font-size:9px; color:#aaa;">வேகம்</div>
+        <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
       </div>
       
-      <div class="fs-info-card" style="border-color:#ffcc00; min-width: 110px;">
-        <div style="font-size:9px; color:#ffcc00;">மணி</div>
-        <div style="font-size:16px; font-weight:bold; color:#fff; font-family:monospace;" id="fs-time-val">--:--:--</div>
+      <div class="fs-info-card" style="border-color:#ffffff; min-width: 110px;">
+        <div style="font-size:9px; color:#aaa;">மணி</div>
+        <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
       </div>
 
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="fs-info-card">
-          <div style="font-size:9px; color:#888;">தூரம்</div>
-          <div style="font-size:16px; font-weight:bold; color:#ff0055; font-family:monospace;" id="fs-dist-val">-- NM</div>
+          <div style="font-size:9px; color:#aaa;">தூரம்</div>
+          <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-dist-val">-- NM</div>
         </div>
-        <div class="fs-close-btn" onclick="closeFullscreenCompass()">❌</div>
+        <div class="fs-close-btn" onclick="closeFullscreenCompass()">✕</div>
       </div>
     </div>
 
+    <!-- Classic B&W Large Compass Dial -->
     <div class="fs-compass-dial-large">
       <span class="fs-lbl fs-lbl-n">N</span>
       <span class="fs-lbl fs-lbl-s">S</span>
@@ -474,18 +476,19 @@
         <div class="fs-arrow-tail"></div>
       </div>
 
+      <!-- Single White Target Arrow -->
       <div class="target-dir-needle" id="fsTargetNeedle">
         <div class="target-arrow-head"></div>
       </div>
 
       <div style="position:absolute; bottom:38px; text-align:center;">
-        <div id="fs-heading-text" style="font-size:18px; font-weight:900; color:#00ffcc; font-family:monospace;">0° N</div>
-        <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#ff0055; display:none;">இலக்கு: 0°</div>
+        <div id="fs-heading-text" style="font-size:18px; font-weight:900; color:#ffffff; font-family:monospace;">0° N</div>
+        <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#cccccc; display:none;">இலக்கு திசை: 0°</div>
       </div>
     </div>
 
-    <div style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">
-      சிவப்பு அம்பு காட்டும் நேர்கோட்டில் படகை செலுத்தினால் நேராகப் பார் அடையலாம்.
+    <div style="text-align:center; color:#888888; font-size:11px; margin-bottom:10px;">
+      வெள்ளை அம்பு காட்டும் நேர்கோட்டில் படகை செலுத்தினால் நேராகப் பார் அடையலாம்.
     </div>
   </div>
 
@@ -2497,7 +2500,6 @@
         checkSpotProximity(lat, lng);
         checkAndHandleAutoSpotSave(lat, lng, speed);
 
-        // NAVIGATION LOGIC & STEP VOICE ALERTS (0.00 NM-ல் வாய்ஸ் வராது)
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
