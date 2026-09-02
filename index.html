@@ -444,19 +444,16 @@
   <!-- FULLSCREEN COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div class="fs-compass-top-bar">
-      <!-- Speed -->
       <div class="fs-info-card">
         <div style="font-size:9px; color:#888;">வேகம்</div>
         <div style="font-size:16px; font-weight:bold; color:#00ffcc; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
       </div>
       
-      <!-- Live Clock (Center) -->
       <div class="fs-info-card" style="border-color:#ffcc00; min-width: 110px;">
         <div style="font-size:9px; color:#ffcc00;">மணி</div>
         <div style="font-size:16px; font-weight:bold; color:#fff; font-family:monospace;" id="fs-time-val">--:--:--</div>
       </div>
 
-      <!-- Distance & Close Button -->
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="fs-info-card">
           <div style="font-size:9px; color:#888;">தூரம்</div>
@@ -466,20 +463,17 @@
       </div>
     </div>
 
-    <!-- Big Compass Dial -->
     <div class="fs-compass-dial-large">
       <span class="fs-lbl fs-lbl-n">N</span>
       <span class="fs-lbl fs-lbl-s">S</span>
       <span class="fs-lbl fs-lbl-e">E</span>
       <span class="fs-lbl fs-lbl-w">W</span>
 
-      <!-- Boat Heading Needle -->
       <div class="fs-compass-needle-wrapper" id="fs-compass-needle">
         <div class="fs-arrow-head"></div>
         <div class="fs-arrow-tail"></div>
       </div>
 
-      <!-- Target Navigation Needle (Red arrow strictly pointing to selected spot) -->
       <div class="target-dir-needle" id="fsTargetNeedle">
         <div class="target-arrow-head"></div>
       </div>
@@ -490,7 +484,6 @@
       </div>
     </div>
 
-    <!-- Bottom Status Text -->
     <div style="text-align:center; color:#888; font-size:11px; margin-bottom:10px;">
       சிவப்பு அம்பு காட்டும் நேர்கோட்டில் படகை செலுத்தினால் நேராகப் பார் அடையலாம்.
     </div>
@@ -556,7 +549,6 @@
       </div>
       
       <div class="dashboard-right">
-        <!-- Tap to Open Fullscreen Compass -->
         <div class="compass-container" id="compassBox" onclick="openFullscreenCompass()">
           <div class="compass-dial">
             <span class="c-label lbl-n">N</span>
@@ -662,6 +654,10 @@
           <option value="🦑">🦑 கணவா (Squid)</option>
           <option value="🐚">🐚 சங்கு (Conch)</option>
           <option value="🪼">🪼 திருக்கை (Ray)</option>
+          <option value="🚢">🚢 லாஞ்சு (Launch)</option>
+          <option value="🛳️">🛳️ கப்பல் (Ship)</option>
+          <option value="🥒">🥒 கடலட்டை (Sea Cucumber)</option>
+          <option value="⚓">⚓ நங்கூரம் (Anchor)</option>
           <option value="🕸️">🕸️ வலை (Net)</option>
           <option value="📍">📍 புள்ளி (General)</option>
         </select>
@@ -768,7 +764,7 @@
     </div>
   </div>
 
-  <!-- Spot Modal -->
+  <!-- Spot Modal (Current Boat Spot) -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">📍 பார் சேமிக்க</div>
@@ -790,9 +786,13 @@
           <option value="Island">🌴 தீவு (Island)</option>
           <option value="Crab">🦀 நண்டு (Crab)</option>
           <option value="Fish">🐟 மீன் (Fish)</option>
+          <option value="Ray">🪼 திருக்கை (Ray)</option>
+          <option value="Launch">🚢 லாஞ்சு (Launch)</option>
+          <option value="Ship">🛳️ கப்பல் (Ship)</option>
+          <option value="SeaCucumber">🥒 கடலட்டை (Sea Cucumber)</option>
+          <option value="Anchor">⚓ நங்கூரம் (Anchor)</option>
           <option value="Net">🕸️ வலை (Net)</option>
           <option value="Conch">🐚 சங்கு (Conch)</option>
-          <option value="Ray">🪼 திருக்கை (Ray)</option>
           <option value="Squid">🦑 கணவா (Squid)</option>
         </select>
       </div>
@@ -834,9 +834,13 @@
           <option value="Island">🌴 தீவு (Island)</option>
           <option value="Crab">🦀 நண்டு (Crab)</option>
           <option value="Fish">🐟 மீன் (Fish)</option>
+          <option value="Ray">🪼 திருக்கை (Ray)</option>
+          <option value="Launch">🚢 லாஞ்சு (Launch)</option>
+          <option value="Ship">🛳️ கப்பல் (Ship)</option>
+          <option value="SeaCucumber">🥒 கடலட்டை (Sea Cucumber)</option>
+          <option value="Anchor">⚓ நங்கூரம் (Anchor)</option>
           <option value="Net">🕸️ வலை (Net)</option>
           <option value="Conch">🐚 சங்கு (Conch)</option>
-          <option value="Ray">🪼 திருக்கை (Ray)</option>
           <option value="Squid">🦑 கணவா (Squid)</option>
         </select>
       </div>
@@ -873,6 +877,28 @@
       });
     }
 
+    let globalWakeLock = null;
+
+    async function keepScreenAlwaysOn() {
+      try {
+        if ('wakeLock' in navigator) {
+          globalWakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch (err) {}
+    }
+
+    window.addEventListener('load', keepScreenAlwaysOn);
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible') {
+        await keepScreenAlwaysOn();
+        checkAppActivation();
+        if (map) map.resize();
+      }
+    });
+    document.addEventListener('touchstart', () => {
+      if (!globalWakeLock) keepScreenAlwaysOn();
+    }, { once: false });
+
     let voiceAlertMasterEnabled = localStorage.getItem('dm_voice_alert_master') !== 'false';
 
     function toggleVoiceAlertMaster() {
@@ -883,7 +909,6 @@
       alert(voiceAlertMasterEnabled ? "🗣️ பாயிண்ட் குரல் அறிவிப்பு ஆன் செய்யப்பட்டது (ON)" : "🔇 குரல் அறிவிப்பு ஆஃப் செய்யப்பட்டது (OFF)");
     }
 
-    // --- TAMIL TEXT TO SPEECH (VOICE ENGINE) ---
     function speakTamil(text) {
       if (!voiceAlertMasterEnabled) return;
       try {
@@ -1386,7 +1411,6 @@
     let currentLayerType = 'satellite';
     let activeMarkers = [];
 
-    // Navigation Voice Alert Step Trackers
     let navVoiceStep = {
       spoke1_5: false,
       spoke1_0: false,
@@ -1399,31 +1423,6 @@
     let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
     let stationaryAnchorLat = parseFloat(localStorage.getItem('dm_auto_anchor_lat') || '0');
     let stationaryAnchorLng = parseFloat(localStorage.getItem('dm_auto_anchor_lng') || '0');
-    let wakeLock = null;
-
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      } catch (err) {}
-    }
-
-    document.addEventListener('visibilitychange', async () => {
-      if (document.visibilityState === 'visible') {
-        if (autoSpotSaveEnabled) await requestWakeLock();
-        checkAppActivation();
-        if (map) map.resize();
-      }
-    });
-
-    window.addEventListener('load', () => {
-      updateAutoStatusLabelUI();
-      updateMapMenuBadges();
-      if (autoSpotSaveEnabled) {
-        requestWakeLock();
-      }
-    });
 
     function updateAutoStatusLabelUI() {
       const statusLabel = document.getElementById('sonar-auto-status-label');
@@ -1445,7 +1444,6 @@
       }
     }
 
-    // FULLSCREEN COMPASS CONTROLLERS
     function openFullscreenCompass() {
       document.getElementById('fsCompassModal').style.display = 'flex';
       updateFsCompassElements();
@@ -1455,6 +1453,7 @@
       document.getElementById('fsCompassModal').style.display = 'none';
     }
 
+    // TARGET BEARING LOCK FOR FULLSCREEN COMPASS
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -1463,25 +1462,29 @@
       document.getElementById('fs-heading-text').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
       const needle = document.getElementById('fs-compass-needle');
-      if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
-
       const targetNeedle = document.getElementById('fsTargetNeedle');
       const distCard = document.getElementById('fs-dist-val');
       const targetBearingText = document.getElementById('fs-target-bearing-text');
 
       if (targetTarget) {
         let dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
-        let bear = Math.round(calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng));
+        let targetBear = Math.round(calcBearing(currentLat, currentLng, targetTarget.lat, targetTarget.lng));
+        
         distCard.innerText = `${dist} NM`;
-        targetBearingText.innerText = `இலக்கு கோணம்: ${bear}°`;
+        targetBearingText.innerText = `இலக்கு திசை: ${targetBear}°`;
         targetBearingText.style.display = 'block';
 
+        let relativeAngle = (targetBear - currentHeading + 360) % 360;
+
         targetNeedle.style.display = 'flex';
-        targetNeedle.style.transform = `rotate(${bear}deg)`;
+        targetNeedle.style.transform = `rotate(${relativeAngle}deg)`;
+
+        if (needle) needle.style.transform = `rotate(${(360 - currentHeading) % 360}deg)`;
       } else {
         distCard.innerText = `-- NM`;
         targetBearingText.style.display = 'none';
         targetNeedle.style.display = 'none';
+        if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
       }
     }
 
@@ -1494,12 +1497,10 @@
         stationaryAnchorLat = 0;
         stationaryAnchorLng = 0;
         localStorage.setItem('dm_auto_start_time', '0');
-        requestWakeLock();
         alert("⏱️ 5 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
       } else {
         stationaryStartTime = 0;
         localStorage.setItem('dm_auto_start_time', '0');
-        if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
         alert("⏸️ ஆட்டோ பதிவு நிறுத்தப்பட்டது.");
       }
       updateAutoStatusLabelUI();
@@ -1571,7 +1572,6 @@
           localStorage.setItem('dm_auto_save_active', 'false');
           stationaryStartTime = 0;
           localStorage.setItem('dm_auto_start_time', '0');
-          if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
         }
       }
       updateAutoStatusLabelUI();
@@ -2171,8 +2171,19 @@
 
     function getSpotTypeTamil(type) {
       const names = {
-        'Pin': 'பின்', 'Reef': 'பாறை', 'Island': 'தீவு', 'Crab': 'நண்டு',
-        'Fish': 'மீன்', 'Net': 'வலை', 'Conch': 'சங்கு', 'Ray': 'திருக்கை', 'Squid': 'கணவா'
+        'Pin': 'பின்',
+        'Reef': 'பாறை',
+        'Island': 'தீவு',
+        'Crab': 'நண்டு',
+        'Fish': 'மீன்',
+        'Ray': 'திருக்கை',
+        'Launch': 'லாஞ்சு',
+        'Ship': 'கப்பல்',
+        'SeaCucumber': 'கடலட்டை',
+        'Anchor': 'நங்கூரம்',
+        'Net': 'வலை',
+        'Conch': 'சங்கு',
+        'Squid': 'கணவா'
       };
       return names[type] || 'பின்';
     }
@@ -2488,7 +2499,6 @@
         checkSpotProximity(lat, lng);
         checkAndHandleAutoSpotSave(lat, lng, speed);
 
-        // NAVIGATION LOGIC & STEP VOICE ALERTS
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2498,7 +2508,6 @@
           document.getElementById('target-bearing').innerText = `${bear}°`;
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
-          // Voice Alerts based on remaining distance
           if (!navVoiceStep.spoke1_5 && dist <= 1.50 && dist > 1.00) {
             speakTamil("இன்னும் ஒன்றரை மைல் தூரம் உள்ளது");
             navVoiceStep.spoke1_5 = true;
