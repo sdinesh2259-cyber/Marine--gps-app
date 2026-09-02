@@ -85,64 +85,64 @@
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000000; z-index: 99999; display: none; flex-direction: column;
-      justify-content: space-between; padding: 16px 14px; align-items: center;
+      justify-content: space-between; padding: 12px 10px; align-items: center;
     }
     .fs-compass-top-bar {
-      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 6px;
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 4px;
     }
     .fs-info-card {
       background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 6px 10px; text-align: center; min-width: 90px;
+      padding: 4px 8px; text-align: center; min-width: 82px;
     }
     .fs-close-btn {
       background: #ffffff; color: #000000; border: 2px solid #ffffff; border-radius: 50%;
-      width: 38px; height: 38px; font-size: 18px; font-weight: 900; display: flex;
+      width: 36px; height: 36px; font-size: 16px; font-weight: 900; display: flex;
       align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5);
       flex-shrink: 0;
     }
     
     .fs-brightness-control {
       background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 4px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      padding: 3px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     }
     .fs-brightness-control input[type=range] {
-      width: 70px; accent-color: #ffffff; cursor: pointer; height: 3px;
+      width: 65px; accent-color: #ffffff; cursor: pointer; height: 3px;
     }
 
     .fs-compass-dial-large {
-      width: 260px; height: 260px; border-radius: 50%; border: 4px solid #ffffff;
+      width: 240px; height: 240px; border-radius: 50%; border: 4px solid #ffffff;
       background: #000000;
       position: relative; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 0 35px rgba(255, 255, 255, 0.2);
     }
     .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #ffffff; }
-    .fs-lbl-n { top: 8px; font-size: 20px; color: #ffffff; }
-    .fs-lbl-s { bottom: 8px; font-size: 18px; color: #ffffff; }
-    .fs-lbl-e { right: 12px; font-size: 18px; color: #ffffff; }
-    .fs-lbl-w { left: 12px; font-size: 18px; color: #ffffff; }
+    .fs-lbl-n { top: 6px; font-size: 18px; color: #ffffff; }
+    .fs-lbl-s { bottom: 6px; font-size: 16px; color: #ffffff; }
+    .fs-lbl-e { right: 10px; font-size: 16px; color: #ffffff; }
+    .fs-lbl-w { left: 10px; font-size: 16px; color: #ffffff; }
 
     .fs-compass-needle-wrapper {
-      width: 16px; height: 170px; position: absolute; display: flex; flex-direction: column; align-items: center;
+      width: 16px; height: 150px; position: absolute; display: flex; flex-direction: column; align-items: center;
     }
     .fs-arrow-head {
       width: 0; height: 0; 
-      border-left: 9px solid transparent; 
-      border-right: 9px solid transparent; 
-      border-bottom: 75px solid #ffffff;
+      border-left: 8px solid transparent; 
+      border-right: 8px solid transparent; 
+      border-bottom: 65px solid #ffffff;
       filter: drop-shadow(0 0 4px rgba(255,255,255,0.8));
     }
     .fs-arrow-tail {
-      width: 4px; height: 50px; background: #888888;
+      width: 4px; height: 45px; background: #888888;
     }
 
     .target-dir-needle {
-      position: absolute; width: 18px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      position: absolute; width: 18px; height: 190px; display: none; flex-direction: column; align-items: center; pointer-events: none;
     }
     .target-arrow-head {
       width: 0; height: 0; 
-      border-left: 11px solid transparent; 
-      border-right: 11px solid transparent; 
-      border-bottom: 80px solid #ffffff;
+      border-left: 10px solid transparent; 
+      border-right: 10px solid transparent; 
+      border-bottom: 75px solid #ffffff;
       filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
     }
 
@@ -456,10 +456,10 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL WITH FULL BRIGHTNESS WRAPPER -->
+  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     
-    <!-- Entire Compass Modal Wrapper for Global Brightness Control -->
+    <!-- Entire Compass Modal Wrapper for Global Brightness Control (Speed, Clock, Distance, Dial) -->
     <div id="compassBrightnessWrapper" style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; align-items:center; transition: filter 0.1s ease;">
       
       <div class="fs-compass-top-bar">
@@ -501,14 +501,14 @@
           <div class="target-arrow-head"></div>
         </div>
 
-        <div style="position:absolute; bottom:38px; text-align:center;">
+        <div style="position:absolute; bottom:32px; text-align:center;">
           <div id="fs-heading-text" style="font-size:18px; font-weight:900; color:#ffffff; font-family:monospace;">0° N</div>
           <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#cccccc; display:none;">இலக்கு திசை: 0°</div>
         </div>
       </div>
 
-      <!-- Live Clock at Bottom Center -->
-      <div style="background:#0d0d0d; border:1.5px solid #ffffff; border-radius:8px; padding:6px 16px; text-align:center; margin-bottom:10px;">
+      <!-- Live Clock at Bottom Center (Visible and nicely spaced) -->
+      <div style="background:#0d0d0d; border:1.5px solid #ffffff; border-radius:8px; padding:6px 16px; text-align:center; margin-bottom:8px;">
         <div style="font-size:9px; color:#ffcc00;">நேரலை மணி (Time)</div>
         <div style="font-size:16px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-time-val">--:--:--</div>
       </div>
