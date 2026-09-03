@@ -479,18 +479,15 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL (Garmin GPS 12H Style) -->
+  <!-- FULLSCREEN COMPASS -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
-    
     <div id="compassContentContainer">
       <div class="fs-compass-top-bar">
-        <!-- வேகம் -->
         <div class="fs-info-card">
           <div style="font-size:9px; color:#aaa;">வேகம்</div>
           <div style="font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
         </div>
         
-        <!-- பிரைட்னஸ் & மணி -->
         <div class="fs-center-controls">
           <div class="fs-brightness-control">
             <div style="font-size:8.5px; color:#aaa;">💡 பிரைட்னஸ்</div>
@@ -503,7 +500,6 @@
           </div>
         </div>
 
-        <!-- தூரம் & க்ளோஸ் பட்டன் -->
         <div style="display:flex; align-items:flex-start; gap:5px;">
           <div class="fs-info-card">
             <div style="font-size:9px; color:#aaa;">தூரம்</div>
@@ -513,7 +509,6 @@
         </div>
       </div>
 
-      <!-- காம்பஸ் டயல் -->
       <div class="fs-compass-center-area">
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
@@ -534,7 +529,6 @@
           <div id="fs-target-bearing-text" style="font-size:12px; font-weight:bold; color:#00ffcc; margin-top:2px;">நேரடி திசை</div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -576,7 +570,6 @@
                 <span>🗺️ மேப் வகை</span>
                 <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
               </button>
-              <!-- ஒரே சுவிட்ச்: கடல் பாறைகள், வேம்பார் கப்பல் & சீமார்க்ஸ் -->
               <button class="map-menu-item-btn" id="menuHazardsToggleBtn" onclick="toggleMarineHazards();">
                 <span>🌊 கடல் பாறைகள் & சீமார்க்ஸ்</span>
                 <span id="hazardsStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
@@ -635,7 +628,6 @@
       </div>
     </div>
 
-    <!-- STATUS BAR -->
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
@@ -819,7 +811,7 @@
     </div>
   </div>
 
-  <!-- Spot Modal (Current Boat Spot) -->
+  <!-- Spot Modal -->
   <div class="modal-overlay" id="spotModal">
     <div class="modal-content">
       <div class="modal-title" id="modalTitle">📍 பார் சேமிக்க</div>
@@ -909,12 +901,10 @@
   <!-- BOTTOM ACTIONS -->
   <div class="btn-container">
     <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
-    
     <div class="btn-round-center-save" onclick="openCurrentBoatModal()">
       <span style="font-size: 16px;">📍</span>
       <span>பார் சேமி</span>
     </div>
-
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
   </div>
@@ -1022,9 +1012,7 @@
       { name: "மிதப்பு போயா #10 (கன்னியாகுமரி கடல் போயா)", lat: 8.0710, lng: 77.5580 }
     ];
 
-    // தமிழ்நாடு முழு கடலோரப் பகுதி: பாறைகள் (2, 3, 5, 10, 15 பாவம்), மூழ்கிய கப்பல்கள் & பைப்லைன்கள்
     const TAMILNADU_MARINE_HAZARDS = [
-      // 1. தூத்துக்குடி, வேம்பார் & மணப்பாடு கரை மற்றும் ஆழ்கடல் பாறைகள்
       { name: "மணப்பாடு ஆழ்கடல் வெளிப்பார்", lat: 8.3750, lng: 78.2000, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "பெரிய ஆழ்கடல் கல் பார்" },
       { name: "தூத்துக்குடி பழையகாயல் சங்குப்பார்", lat: 8.6583, lng: 78.2167, type: "பாறை", fathoms: "3.5 பாவம் (6.5 M)", desc: "கரை முகத்துவார சங்குக்கல் பார்" },
       { name: "தூத்துக்குடி சிலுவைப்பார் (Inshore Reef)", lat: 8.7750, lng: 78.2050, type: "பாறை", fathoms: "3 பாவம் (5.5 M)", desc: "முயல் தீவு வெளிப்பகுதி கரைப்பார்" },
@@ -1035,8 +1023,6 @@
       { name: "வேம்பார் மூழ்கிய சரக்குக் கப்பல் (Vembar Wreck)", lat: 9.0350, lng: 78.4050, type: "மூழ்கிய கப்பல்", fathoms: "5 பாவம் (9 M)", desc: "வேம்பார் கடலில் உடைந்த பழைய இரும்பு கப்பல்" },
       { name: "வேம்பார் தெற்கு வெளிப்பார்", lat: 9.0400, lng: 78.4167, type: "பாறை", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் மீன்பிடி கல் பார்" },
       { name: "வேம்பார் அவுட்டர் நண்டு/மீன் பார்", lat: 9.0750, lng: 78.4667, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "ஆழ்கடல் பவளப்பாறை & நண்டு வளைவு" },
-
-      // 2. கீழக்கரை, மண்டபம், ராமேஸ்வரம் & இலங்கை எல்லை
       { name: "கீழக்கரை கரை அருகிலுள்ள பவளப்பார்", lat: 9.1750, lng: 78.8150, type: "பாறை", fathoms: "3 பாவம் (5.5 M)", desc: "கரைப்பகுதி பவளக்கல் மேடு" },
       { name: "கீழக்கரை வெளிப்பார் படுகை", lat: 9.1867, lng: 78.8417, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "ஆழ்கடல் பார் படுகை" },
       { name: "மண்டபம் தெற்கு கரைப்பார்", lat: 9.2300, lng: 79.1200, type: "பாறை", fathoms: "2 பாவம் (3.6 M)", desc: "படகு தட்டும் ஆபத்துள்ள ஆழமற்ற பாறை" },
@@ -1046,14 +1032,10 @@
       { name: "ஆதாம் பாலம் ஆழ்கடல் உடைந்த கப்பல் தளம்", lat: 9.1200, lng: 79.5200, type: "மூழ்கிய கப்பல்", fathoms: "10 பாவம் (18 M)", desc: "பழைய இரும்பு கப்பல் தளம்" },
       { name: "கச்சத்தீவு தெற்கு வெளிப்பார்", lat: 9.3800, lng: 79.5400, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "சர்வதேச கடல் எல்லை அருகேயுள்ள பார்" },
       { name: "நெடுந்தீவு வெளிப்பார் (Delft Reef - இலங்கை)", lat: 9.5100, lng: 79.6200, type: "பாறை", fathoms: "9 பாவம் (16 M)", desc: "பாக் ஜலசந்தி ஆழ்கடல் பார்" },
-
-      // 3. புதுக்கோட்டை & தஞ்சாவூர் மண்டலம் (Palk Bay)
       { name: "கோட்டைப்பட்டினம் நண்டு வெளிப்பார்", lat: 9.8700, lng: 79.3100, type: "பாறை", fathoms: "7 பாவம் (13 M)", desc: "நல்ல நண்டு & மீன்பிடி பார்" },
       { name: "மணமேல்குடி ஆழ்கடல் கல் பார்", lat: 9.9800, lng: 79.2800, type: "பாறை", fathoms: "6 பாவம் (11 M)", desc: "கற்கள் நிறைந்த தரைப்பகுதி" },
       { name: "மல்லிப்பட்டினம் வெளிப்பார்", lat: 10.2600, lng: 79.4200, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "மீன்பிடி பாறைப் படுகை" },
       { name: "அதிராம்பட்டினம் நண்டுத் திட்டு", lat: 10.3000, lng: 79.4500, type: "மணல்திட்டு", fathoms: "5 பாவம் (9 M)", desc: "ஆழ்கடல் நண்டு வளைவு" },
-
-      // 4. கோடியக்கரை, நாகப்பட்டினம் முதல் கடலூர் வரை
       { name: "கோடியக்கரை வெளிப்பார் (Point Calimere)", lat: 10.2500, lng: 79.9500, type: "பாறை", fathoms: "12 பாவம் (22 M)", desc: "ஆழ்கடல் வெளிப்பார்" },
       { name: "நாகப்பட்டினம் மூழ்கிய சரக்கு கப்பல்", lat: 10.7600, lng: 79.9200, type: "மூழ்கிய கப்பல்", fathoms: "15 பாவம் (27 M)", desc: "உடைந்த சரக்கு கப்பல் தளம்" },
       { name: "காரைக்கால் ஆழ்கடல் ஆயில் பைப்லைன்", lat: 10.8800, lng: 79.9100, type: "பைப்லைன்", fathoms: "14 பாவம் (26 M)", desc: "எண்ணெய் குழாய் எச்சரிக்கை தடம்" },
@@ -1061,8 +1043,6 @@
       { name: "பரங்கிப்பேட்டை (Porto Novo) வெளிப்பார்", lat: 11.5000, lng: 79.8600, type: "பாறை", fathoms: "16 பாவம் (29 M)", desc: "ஆழ்கடல் மீன்பிடிப் பார்" },
       { name: "கடலூர் சிப்காட் ஆழ்கடல் பைப்லைன்", lat: 11.6800, lng: 79.8200, type: "பைப்லைன்", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் குழாய் வெளிமுனை" },
       { name: "கடலூர் பழைய போர்க்கப்பல் தாந்த இடம்", lat: 11.7200, lng: 79.8900, type: "மூழ்கிய கப்பல்", fathoms: "22 பாவம் (40 M)", desc: "இரண்டாம் உலகப்போர் மூழ்கிய கப்பல்" },
-
-      // 5. புதுச்சேரி, மகாபலிபுரம் முதல் சென்னை & எண்ணூர் வரை
       { name: "புதுச்சேரி ஆழ்கடல் பவளப்பாறை", lat: 11.9100, lng: 79.8600, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "இயற்கைப் பாறைப் படுகை" },
       { name: "மரக்காணம் ஆழ்கடல் வெளிப்பார்", lat: 12.2000, lng: 80.0500, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "கல் பாறைப் படுகை" },
       { name: "கல்பாக்கம் அணுமின் நிலைய நீர் பைப்லைன்", lat: 12.5500, lng: 80.2000, type: "பைப்லைன்", fathoms: "9 பாவம் (16 M)", desc: "பாதுகாக்கப்பட்ட பைப்லைன் பாதை" },
@@ -1204,7 +1184,6 @@
       });
     }
 
-    // ஒரே சுவிட்சில் (Toggle) பாறைகள் & சீமார்க்ஸ் லேயர் மாற்றுதல்
     function toggleMarineHazards() {
       showMarineHazards = !showMarineHazards;
       localStorage.setItem('dm_show_hazards', showMarineHazards ? 'true' : 'false');
@@ -1756,7 +1735,6 @@
       updateAutoStatusLabelUI();
     }
 
-    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் செயல்பாடு
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
@@ -1781,7 +1759,6 @@
       loadSavedReefs();
       speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
 
-      // பதிந்தவுடன் ஆட்டோவை உடனடியாக OFF ஆக்குதல்
       autoSpotSaveEnabled = false;
       stationaryStartTime = 0;
       isBoatStationary = false;
@@ -2662,7 +2639,6 @@
       }
     }
 
-    // ஜிபிஎஸ் நிகழ்நேர கண்காணிப்பு
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
