@@ -516,17 +516,14 @@
 
       <!-- திரையின் மையத்தில் அமரும் பெரிய காம்பஸ் டயல் -->
       <div class="fs-compass-center-area">
-        <!-- படகின் தலைப்பகுதி காட்டி (Bow Marker) -->
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
-        <!-- சுழலும் முழு டயல் (Garmin GPS 12H போல) -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
           <span class="fs-lbl fs-lbl-e">E</span>
           <span class="fs-lbl fs-lbl-w">W</span>
 
-          <!-- ஒரே ஒரு துல்லிய வழிகாட்டி அம்பு -->
           <div class="target-dir-needle" id="fsTargetNeedle">
             <div class="target-arrow-head"></div>
             <div class="target-arrow-tail"></div>
@@ -634,10 +631,11 @@
       </div>
     </div>
 
+    <!-- STATUS BAR (சுருக்கமான ON / OFF மற்றும் கவுண்ட்டவுன் அமைப்பு) -->
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
-      <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ஆட்டோ: தயார்</span>
+      <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ON</span>
       <span id="norm-time">--:--:-- PM</span>
     </div>
 
@@ -1475,25 +1473,28 @@
     let stationaryStartTime = 0;
     let isBoatStationary = false;
 
+    // சுருக்கமான ON / OFF மற்றும் கவுண்ட்டவுன் அமைப்பு
     function updateAutoStatusLabelUI() {
       const statusLabel = document.getElementById('sonar-auto-status-label');
       if (!statusLabel) return;
 
       if (!autoSpotSaveEnabled) {
-        statusLabel.innerText = "⏱️ ஆட்டோ: OFF";
+        statusLabel.innerText = "⏱️ OFF";
         statusLabel.style.color = "#ffcc00";
         return;
       }
 
-      // 5.0 kts வரம்பு - படகு வேகமாகப் போனால் மட்டுமே ஓடுவதாகக் காட்டும்
-      if (!isBoatStationary || currentSpeedKts >= 5.0) {
-        statusLabel.innerText = "⏱️ படகு ஓடுகிறது";
-        statusLabel.style.color = "#00ffcc";
-      } else {
+      // படகு நின்றால் மட்டுமே [0], [1], [2], [3], [4] என நிமிடம் காட்டும்
+      if (isBoatStationary && stationaryStartTime > 0) {
         let elapsedMin = Math.floor((Date.now() - stationaryStartTime) / (1000 * 60));
         if (elapsedMin < 0) elapsedMin = 0;
-        statusLabel.innerText = `⏱️ நங்கூரம் [${elapsedMin}/5 நிமி]`;
-        statusLabel.style.color = "#ffcc00";
+        if (elapsedMin > 5) elapsedMin = 5;
+        statusLabel.innerText = `⏱️ ON [${elapsedMin}]`;
+        statusLabel.style.color = "#00ffcc";
+      } else {
+        // படகு ஓடும் போது இடம் அடைக்காமல் வெறும் ON என்று மட்டும் காட்டும்
+        statusLabel.innerText = "⏱️ ON";
+        statusLabel.style.color = "#00ffcc";
       }
     }
 
@@ -1530,7 +1531,6 @@
 
       headingText.innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-      // படகு செல்லும் திசைக்கு ஏற்ப டயல் எதிர்திசையில் சுழலும்
       if (dial) {
         dial.style.transform = `rotate(${-currentHeading}deg)`;
       }
@@ -1556,7 +1556,7 @@
       localStorage.setItem('dm_auto_save_active', autoSpotSaveEnabled ? 'true' : 'false');
       stationaryStartTime = 0;
       isBoatStationary = false;
-      alert(autoSpotSaveEnabled ? "⏱️ ஆட்டோ பார் பதிவு இயக்கப்பட்டது (5.0 kts-க்குள் படகு இருந்தால் 5 நிமிடத்தில் பதியும்)" : "⏸️ ஆட்டோ பதிவு நிறுத்தப்பட்டது.");
+      alert(autoSpotSaveEnabled ? "⏱️ ஆட்டோ பதிவு ஆன் செய்யப்பட்டது (ON)" : "⏸️ ஆட்டோ பதிவு ஆஃப் செய்யப்பட்டது (OFF)");
       updateAutoStatusLabelUI();
     }
 
@@ -1594,14 +1594,14 @@
       }
     }
 
-    // 5.0 kts வரை நங்கூரம் நிலை (Stationary Lock)
+    // 5.0 kts வரம்பு & 1, 2, 3, 4, 5-வது நிமிடம் பார் பதிவு
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
         return;
       }
 
-      // 5.0 kts அல்லது அதற்கு மேல் படகு வேகமாகப் போனால் கவுண்ட்டவுன் ரீசெட் ஆகும்
+      // 5.0 kts-க்கு மேல் போனால் படகு ஓடுகிறது – கவுண்ட்டவுன் ரீசெட்
       if (speed >= 5.0) {
         isBoatStationary = false;
         stationaryStartTime = 0;
@@ -1609,15 +1609,15 @@
         return;
       }
 
-      // 5.0 kts-க்குள் இருக்கும்போது படகு நின்றதாகக் கணக்கிடப்படும்
-      if (!isBoatStationary) {
+      // 5.0 kts-க்குள் படகு நின்றால் நிமிடம் தொடங்கும்
+      if (!isBoatStationary || stationaryStartTime === 0) {
         isBoatStationary = true;
         stationaryStartTime = Date.now();
       } else {
         let elapsedMin = (Date.now() - stationaryStartTime) / (1000 * 60);
         if (elapsedMin >= 5.0) {
           triggerAutoSaveSpot(lat, lng);
-          stationaryStartTime = Date.now(); // அடுத்த 5 நிமிடத்திற்குத் தொடங்கும்
+          stationaryStartTime = Date.now(); // பதிவு முடிந்ததும் அடுத்த 5 நிமிட கவுண்ட்டவுன் தொடங்கும்
         }
       }
       updateAutoStatusLabelUI();
@@ -1712,7 +1712,6 @@
         try {
           if (!map.getSource('navSource')) {
             map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-            // சிகப்பு நிறத்தில் விட்டு விட்டு வரும் கோடு
             map.addLayer({ 
               id: 'navLayer', 
               type: 'line', 
@@ -2519,7 +2518,6 @@
         let lng = pos.coords.longitude;
         let speed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
         
-        // படகு இயங்கும் போது மட்டுமே Heading மாறும்
         let heading = lastValidHeading;
         if (speed > 0.6 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
           heading = Math.round(pos.coords.heading);
