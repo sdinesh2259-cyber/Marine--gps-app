@@ -130,7 +130,16 @@
     }
 
     .fs-compass-center-area {
-      flex: 1; width: 100%; display: flex; align-items: center; justify-content: center;
+      flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative;
+    }
+
+    .fs-boat-head-marker {
+      width: 0; height: 0; 
+      border-left: 8px solid transparent; 
+      border-right: 8px solid transparent; 
+      border-bottom: 14px solid #ffcc00;
+      margin-bottom: 6px; z-index: 5;
     }
 
     .fs-compass-dial-large {
@@ -138,36 +147,27 @@
       background: #000000;
       position: relative; display: flex; align-items: center; justify-content: center;
       box-shadow: 0 0 35px rgba(255, 255, 255, 0.2);
+      transition: transform 0.15s ease-out;
     }
     .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #ffffff; }
-    .fs-lbl-n { top: 6px; font-size: 18px; color: #ffffff; }
+    .fs-lbl-n { top: 6px; font-size: 18px; color: #ff3333; }
     .fs-lbl-s { bottom: 6px; font-size: 16px; color: #ffffff; }
     .fs-lbl-e { right: 10px; font-size: 16px; color: #ffffff; }
     .fs-lbl-w { left: 10px; font-size: 16px; color: #ffffff; }
 
-    .fs-compass-needle-wrapper {
-      width: 16px; height: 160px; position: absolute; display: flex; flex-direction: column; align-items: center;
-    }
-    .fs-arrow-head {
-      width: 0; height: 0; 
-      border-left: 8px solid transparent; 
-      border-right: 8px solid transparent; 
-      border-bottom: 70px solid #ffffff;
-      filter: drop-shadow(0 0 4px rgba(255,255,255,0.8));
-    }
-    .fs-arrow-tail {
-      width: 4px; height: 50px; background: #888888;
-    }
-
     .target-dir-needle {
-      position: absolute; width: 18px; height: 200px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      position: absolute; width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      transition: transform 0.15s ease-out;
     }
     .target-arrow-head {
       width: 0; height: 0; 
-      border-left: 10px solid transparent; 
-      border-right: 10px solid transparent; 
-      border-bottom: 80px solid #ffffff;
-      filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
+      border-left: 11px solid transparent; 
+      border-right: 11px solid transparent; 
+      border-bottom: 85px solid #00ffcc;
+      filter: drop-shadow(0 0 10px rgba(0,255,204,0.9));
+    }
+    .target-arrow-tail {
+      width: 4px; height: 45px; background: #ffffff;
     }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
@@ -480,7 +480,7 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL -->
+  <!-- FULLSCREEN CLASSIC B&W COMPASS MODAL (Garmin GPS 12H Style) -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     
     <div id="compassContentContainer">
@@ -516,27 +516,26 @@
 
       <!-- திரையின் மையத்தில் அமரும் பெரிய காம்பஸ் டயல் -->
       <div class="fs-compass-center-area">
-        <div class="fs-compass-dial-large">
+        <!-- படகின் தலைப்பகுதி காட்டி (Bow Marker) -->
+        <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
+
+        <!-- சுழலும் முழு டயல் (Garmin GPS 12H போல) -->
+        <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
           <span class="fs-lbl fs-lbl-e">E</span>
           <span class="fs-lbl fs-lbl-w">W</span>
 
-          <!-- இயல்பான வடக்கு முள் -->
-          <div class="fs-compass-needle-wrapper" id="fs-compass-needle">
-            <div class="fs-arrow-head"></div>
-            <div class="fs-arrow-tail"></div>
-          </div>
-
-          <!-- வழிகாட்டும் ஒரே துல்லிய அம்பு -->
+          <!-- ஒரே ஒரு துல்லிய வழிகாட்டி அம்பு -->
           <div class="target-dir-needle" id="fsTargetNeedle">
             <div class="target-arrow-head"></div>
+            <div class="target-arrow-tail"></div>
           </div>
+        </div>
 
-          <div style="position:absolute; bottom:28px; text-align:center;">
-            <div id="fs-heading-text" style="font-size:20px; font-weight:900; color:#ffffff; font-family:monospace;">0° N</div>
-            <div id="fs-target-bearing-text" style="font-size:11px; font-weight:bold; color:#cccccc; display:none; margin-top:2px;">இலக்கு திசை: 0°</div>
-          </div>
+        <div style="margin-top: 15px; text-align:center;">
+          <div id="fs-heading-text" style="font-size:22px; font-weight:900; color:#ffffff; font-family:monospace;">0° N</div>
+          <div id="fs-target-bearing-text" style="font-size:12px; font-weight:bold; color:#00ffcc; margin-top:2px;">நேரடி திசை</div>
         </div>
       </div>
 
@@ -638,7 +637,7 @@
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
-      <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ON [0]</span>
+      <span id="sonar-auto-status-label" style="color: #00ffcc; font-weight: bold; cursor: pointer;" onclick="toggleAutoSpotSave()" title="5 நிமி பார் ஆட்டோ பதிவு ஆன்/ஆஃப்">⏱️ ஆட்டோ: தயார்</span>
       <span id="norm-time">--:--:-- PM</span>
     </div>
 
@@ -1472,10 +1471,9 @@
       spoke0_10: false
     };
 
-    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
-    let stationaryStartTime = parseFloat(localStorage.getItem('dm_auto_start_time') || '0');
-    let stationaryAnchorLat = parseFloat(localStorage.getItem('dm_auto_anchor_lat') || '0');
-    let stationaryAnchorLng = parseFloat(localStorage.getItem('dm_auto_anchor_lng') || '0');
+    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') !== 'false';
+    let stationaryStartTime = 0;
+    let isBoatStationary = false;
 
     function updateAutoStatusLabelUI() {
       const statusLabel = document.getElementById('sonar-auto-status-label');
@@ -1484,16 +1482,18 @@
       if (!autoSpotSaveEnabled) {
         statusLabel.innerText = "⏱️ ஆட்டோ: OFF";
         statusLabel.style.color = "#ffcc00";
+        return;
+      }
+
+      // 5.0 kts வரம்பு - படகு வேகமாகப் போனால் மட்டுமே ஓடுவதாகக் காட்டும்
+      if (!isBoatStationary || currentSpeedKts >= 5.0) {
+        statusLabel.innerText = "⏱️ படகு ஓடுகிறது";
+        statusLabel.style.color = "#00ffcc";
       } else {
-        if (stationaryStartTime && stationaryStartTime > 0) {
-          let elapsedMinutes = Math.floor((Date.now() - stationaryStartTime) / (1000 * 60));
-          if (elapsedMinutes < 0) elapsedMinutes = 0;
-          statusLabel.innerText = `⏱️ ON [${elapsedMinutes}]`;
-          statusLabel.style.color = "#00ffcc";
-        } else {
-          statusLabel.innerText = "⏱️ ON [0]";
-          statusLabel.style.color = "#00ffcc";
-        }
+        let elapsedMin = Math.floor((Date.now() - stationaryStartTime) / (1000 * 60));
+        if (elapsedMin < 0) elapsedMin = 0;
+        statusLabel.innerText = `⏱️ நங்கூரம் [${elapsedMin}/5 நிமி]`;
+        statusLabel.style.color = "#ffcc00";
       }
     }
 
@@ -1515,17 +1515,25 @@
       }
     }
 
+    // Garmin GPS 12H Course-Up காம்பஸ் சுழற்சி
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
 
       document.getElementById('fs-speed-val').innerText = `${currentSpeedKts.toFixed(1)} kts`;
-      document.getElementById('fs-heading-text').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-      const needle = document.getElementById('fs-compass-needle');
+      const dial = document.getElementById('fsCompassDial');
       const targetNeedle = document.getElementById('fsTargetNeedle');
       const distCard = document.getElementById('fs-dist-val');
+      const headingText = document.getElementById('fs-heading-text');
       const targetBearingText = document.getElementById('fs-target-bearing-text');
+
+      headingText.innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
+
+      // படகு செல்லும் திசைக்கு ஏற்ப டயல் எதிர்திசையில் சுழலும்
+      if (dial) {
+        dial.style.transform = `rotate(${-currentHeading}deg)`;
+      }
 
       if (targetTarget) {
         let dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
@@ -1533,38 +1541,22 @@
         
         distCard.innerText = `${dist} NM`;
         targetBearingText.innerText = `இலக்கு திசை: ${targetBear}°`;
-        targetBearingText.style.display = 'block';
 
-        // வழிகாட்டும் போது ஒரே அம்பு மட்டும் டார்கெட் நோக்கி திரும்பும்
-        if (needle) needle.style.display = 'none';
         targetNeedle.style.display = 'flex';
         targetNeedle.style.transform = `rotate(${targetBear}deg)`;
       } else {
         distCard.innerText = `-- NM`;
-        targetBearingText.style.display = 'none';
+        targetBearingText.innerText = `நேரடி திசை`;
         targetNeedle.style.display = 'none';
-        if (needle) {
-          needle.style.display = 'flex';
-          needle.style.transform = `rotate(${currentHeading}deg)`;
-        }
       }
     }
 
     function toggleAutoSpotSave() {
       autoSpotSaveEnabled = !autoSpotSaveEnabled;
       localStorage.setItem('dm_auto_save_active', autoSpotSaveEnabled ? 'true' : 'false');
-      
-      if (autoSpotSaveEnabled) {
-        stationaryStartTime = 0;
-        stationaryAnchorLat = 0;
-        stationaryAnchorLng = 0;
-        localStorage.setItem('dm_auto_start_time', '0');
-        alert("⏱️ 5 நிமி ஆட்டோ பதிவு இயக்கப்பட்டது!");
-      } else {
-        stationaryStartTime = 0;
-        localStorage.setItem('dm_auto_start_time', '0');
-        alert("⏸️ ஆட்டோ பதிவு நிறுத்தப்பட்டது.");
-      }
+      stationaryStartTime = 0;
+      isBoatStationary = false;
+      alert(autoSpotSaveEnabled ? "⏱️ ஆட்டோ பார் பதிவு இயக்கப்பட்டது (5.0 kts-க்குள் படகு இருந்தால் 5 நிமிடத்தில் பதியும்)" : "⏸️ ஆட்டோ பதிவு நிறுத்தப்பட்டது.");
       updateAutoStatusLabelUI();
     }
 
@@ -1602,38 +1594,30 @@
       }
     }
 
+    // 5.0 kts வரை நங்கூரம் நிலை (Stationary Lock)
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
         return;
       }
 
-      if (speed >= 5.1) {
-        updateAutoStatusLabelUI();
-        return;
-      }
-      
-      if (!stationaryAnchorLat || !stationaryAnchorLng || stationaryAnchorLat === 0) {
-        stationaryAnchorLat = lat; 
-        stationaryAnchorLng = lng; 
-        stationaryStartTime = Date.now();
-        localStorage.setItem('dm_auto_start_time', stationaryStartTime);
-        localStorage.setItem('dm_auto_anchor_lat', stationaryAnchorLat);
-        localStorage.setItem('dm_auto_anchor_lng', stationaryAnchorLng);
+      // 5.0 kts அல்லது அதற்கு மேல் படகு வேகமாகப் போனால் கவுண்ட்டவுன் ரீசெட் ஆகும்
+      if (speed >= 5.0) {
+        isBoatStationary = false;
+        stationaryStartTime = 0;
         updateAutoStatusLabelUI();
         return;
       }
 
-      if (stationaryStartTime && stationaryStartTime > 0) {
-        let elapsedMinutes = (Date.now() - stationaryStartTime) / (1000 * 60);
-        
-        if (elapsedMinutes >= 5) {
+      // 5.0 kts-க்குள் இருக்கும்போது படகு நின்றதாகக் கணக்கிடப்படும்
+      if (!isBoatStationary) {
+        isBoatStationary = true;
+        stationaryStartTime = Date.now();
+      } else {
+        let elapsedMin = (Date.now() - stationaryStartTime) / (1000 * 60);
+        if (elapsedMin >= 5.0) {
           triggerAutoSaveSpot(lat, lng);
-          
-          autoSpotSaveEnabled = false;
-          localStorage.setItem('dm_auto_save_active', 'false');
-          stationaryStartTime = 0;
-          localStorage.setItem('dm_auto_start_time', '0');
+          stationaryStartTime = Date.now(); // அடுத்த 5 நிமிடத்திற்குத் தொடங்கும்
         }
       }
       updateAutoStatusLabelUI();
@@ -1652,7 +1636,7 @@
 
       let newSpot = {
         id: Date.now(), seq: seqNo, lat: lat, lng: lng,
-        name: `ஆட்டோ பதிவு #${seqNo}`, type: 'Pin', time: dateTimeStr,
+        name: `ஆட்டோ பார் #${seqNo}`, type: 'Pin', time: dateTimeStr,
         latNautical: latNaut, lngNautical: lngNaut, isAutoSaved: true
       };
       saved.push(newSpot);
@@ -1661,6 +1645,7 @@
       exportSingleSpotFile(newSpot);
       playSpotBeep();
       loadSavedReefs();
+      speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
     }
 
     let map = null;
@@ -1727,7 +1712,7 @@
         try {
           if (!map.getSource('navSource')) {
             map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
-            // சிகப்பு நிறத்தில் விட்டு விட்டு வரும் கோடு (Dashed Red Line)
+            // சிகப்பு நிறத்தில் விட்டு விட்டு வரும் கோடு
             map.addLayer({ 
               id: 'navLayer', 
               type: 'line', 
@@ -2042,7 +2027,6 @@
       } catch (err) {
         document.getElementById('weatherModalBody').innerHTML = `
           <div style="color:#ffcc00; font-weight:bold; margin-bottom:6px;">📅 தேதி: ${todayDateStr}</div>
-          <div style="color:#00ffcc; margin-bottom:4px;">📡 ஆஃப்லைன் பயன்முறை (ஆழ்கடல்):</div>
           <p><b>🌤️ கடல் நிலை:</b> மிதமான அலை</p>
           <p><b>💨 காற்று:</b> 10 - 14 கி.மீ / மணி</p>
           <p><b>🌧️ மழை நிலவரம்:</b> தெளிவான வானிலை</p>
@@ -2528,16 +2512,22 @@
       }
     }
 
+    // ஜிபிஎஸ் புதுப்பிப்பு
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
         let lng = pos.coords.longitude;
         let speed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
-        let heading = pos.coords.heading !== null && !isNaN(pos.coords.heading) ? Math.round(pos.coords.heading) : lastValidHeading;
+        
+        // படகு இயங்கும் போது மட்டுமே Heading மாறும்
+        let heading = lastValidHeading;
+        if (speed > 0.6 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+          heading = Math.round(pos.coords.heading);
+          lastValidHeading = heading;
+        }
 
         currentSpeedKts = speed;
         currentLat = lat; currentLng = lng; currentHeading = heading;
-        lastValidHeading = heading;
 
         if (lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, lat, lng));
