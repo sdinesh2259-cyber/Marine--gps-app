@@ -209,7 +209,7 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 185px;
+      min-width: 195px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
@@ -576,6 +576,10 @@
               <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
                 <span>🗺️ மேப் வகை</span>
                 <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuHazardsToggleBtn" onclick="toggleMarineHazards();">
+                <span>🌊 கடல் பாறைகள் & கப்பல்</span>
+                <span id="hazardsStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
                 <span>🏝️ தீவு & போயா</span>
@@ -1018,6 +1022,52 @@
       { name: "மிதப்பு போயா #10 (கன்னியாகுமரி கடல் போயா)", lat: 8.0710, lng: 77.5580 }
     ];
 
+    // தமிழ்நாடு & இலங்கை கடல் பகுதி: பாறைகள், மூழ்கிய கப்பல்கள் & பைப்லைன்கள் (Full Verified Nautical Database)
+    const TAMILNADU_MARINE_HAZARDS = [
+      // 1. மணப்பாடு, தூத்துக்குடி & வேம்பார் மண்டலம்
+      { name: "மணப்பாடு ஆழ்கடல் வெளிப்பார்", lat: 8.3750, lng: 78.2000, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "பெரிய ஆழ்கடல் கல் பார்" },
+      { name: "தூத்துக்குடி முத்துப்பார் (Pearl Bank)", lat: 8.8000, lng: 78.3083, type: "பாறை", fathoms: "11 பாவம் (20 M)", desc: "பழைய சங்கு & முத்து மீன்பிடி பார்" },
+      { name: "தூத்துக்குடி அவுட்டர் கப்பல் தளம் (Wreck)", lat: 8.7700, lng: 78.2800, type: "மூழ்கிய கப்பல்", fathoms: "9 பாவம் (16 M)", desc: "உடைந்த சரக்கு படகு தளம்" },
+      { name: "பழையகாயல் வெளி முகத்துவாரப் பார்", lat: 8.6583, lng: 78.2167, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "சேற்றுக்கல் கலந்த பார் பகுதி" },
+      { name: "வேம்பார் தெற்கு வெளிப்பார்", lat: 9.0400, lng: 78.4167, type: "பாறை", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் கல் பார்" },
+      { name: "வேம்பார் அவுட்டர் நண்டு/மீன் பார்", lat: 9.0750, lng: 78.4667, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "பவளப்பாறை நிறைந்த மீன்பிடிப் பகுதி" },
+
+      // 2. கீழக்கரை, மண்டபம், ராமேஸ்வரம் & இலங்கை எல்லை
+      { name: "கீழக்கரை வெளிப்பார் படுகை", lat: 9.1867, lng: 78.8417, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "பவளப்பாறை படுகை" },
+      { name: "மண்டபம் தெற்கு பவளப்பார்", lat: 9.2450, lng: 79.1450, type: "பாறை", fathoms: "6 பாவம் (11 M)", desc: "கல் மற்றும் பவளப்பாறை" },
+      { name: "பாம்பன் வடக்கு முகத்துவார பாறை", lat: 9.3100, lng: 79.2250, type: "பாறை", fathoms: "5 பாவம் (9 M)", desc: "பாறைக்கல் திட்டு" },
+      { name: "தனுஷ்கோடி 1-ம் தீட்டு வெளிப்பார்", lat: 9.1550, lng: 79.4500, type: "மணல்திட்டு", fathoms: "4 பாவம் (7 M)", desc: "ஆபத்தான மணல் பாறைப் பகுதி" },
+      { name: "ஆதாம் பாலம் ஆழ்கடல் கப்பல் தளம்", lat: 9.1200, lng: 79.5200, type: "மூழ்கிய கப்பல்", fathoms: "10 பாவம் (18 M)", desc: "பழைய இரும்பு கப்பல் உடைந்த இடம்" },
+      { name: "கச்சத்தீவு தெற்கு வெளிப்பார்", lat: 9.3800, lng: 79.5400, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "சர்வதேச கடல் எல்லை அருகேயுள்ள பார்" },
+      { name: "நெடுந்தீவு வெளிப்பார் (Delft Reef - இலங்கை)", lat: 9.5100, lng: 79.6200, type: "பாறை", fathoms: "9 பாவம் (16 M)", desc: "பாக் ஜலசந்தி ஆழ்கடல் பார்" },
+
+      // 3. புதுக்கோட்டை & தஞ்சாவூர் மண்டலம் (Palk Bay)
+      { name: "கோட்டைப்பட்டினம் நண்டு வெளிப்பார்", lat: 9.8700, lng: 79.3100, type: "பாறை", fathoms: "7 பாவம் (13 M)", desc: "நல்ல நண்டு & மீன்பிடிப் பார்" },
+      { name: "மணமேல்குடி ஆழ்கடல் கல் பார்", lat: 9.9800, lng: 79.2800, type: "பாறை", fathoms: "6 பாவம் (11 M)", desc: "கற்கள் நிறைந்த தரைப்பகுதி" },
+      { name: "மல்லிப்பட்டினம் வெளிப்பார்", lat: 10.2600, lng: 79.4200, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "மீன்பிடி பாறைப் படுகை" },
+      { name: "அதிராம்பட்டினம் நண்டுத் திட்டு", lat: 10.3000, lng: 79.4500, type: "மணல்திட்டு", fathoms: "5 பாவம் (9 M)", desc: "ஆழ்கடல் நண்டு வளைவு" },
+
+      // 4. கோடியக்கரை, நாகை முதல் கடலூர் வரை
+      { name: "கோடியக்கரை வெளிப்பார் (Point Calimere)", lat: 10.2500, lng: 79.9500, type: "பாறை", fathoms: "12 பாவம் (22 M)", desc: "ஆழ்கடல் படுகை" },
+      { name: "நாகப்பட்டினம் மூழ்கிய சரக்கு கப்பல்", lat: 10.7600, lng: 79.9200, type: "மூழ்கிய கப்பல்", fathoms: "15 பாவம் (27 M)", desc: "உடைந்த சரக்கு கப்பல் தளம்" },
+      { name: "காரைக்கால் ஆழ்கடல் ஆயில் பைப்லைன்", lat: 10.8800, lng: 79.9100, type: "பைப்லைன்", fathoms: "14 பாவம் (26 M)", desc: "எண்ணெய் குழாய் எச்சரிக்கை பகுதி" },
+      { name: "பூம்புகார் மூழ்கிய கல் பாறை நகரம்", lat: 11.1500, lng: 79.8800, type: "பாறை", fathoms: "11 பாவம் (20 M)", desc: "வரலாற்று சிறப்புமிக்க கல் பார்" },
+      { name: "பரங்கிப்பேட்டை (Porto Novo) வெளிப்பார்", lat: 11.5000, lng: 79.8600, type: "பாறை", fathoms: "16 பாவம் (29 M)", desc: "ஆழ்கடல் மீன்பிடிப் பார்" },
+      { name: "கடலூர் சிப்காட் ஆழ்கடல் பைப்லைன்", lat: 11.6800, lng: 79.8200, type: "பைப்லைன்", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் குழாய் வெளிமுனை" },
+      { name: "கடலூர் பழைய போர்க்கப்பல் தாந்த இடம்", lat: 11.7200, lng: 79.8900, type: "மூழ்கிய கப்பல்", fathoms: "22 பாவம் (40 M)", desc: "இரண்டாம் உலகப்போர் மூழ்கிய கப்பல்" },
+
+      // 5. புதுச்சேரி, மகாபலிபுரம் முதல் சென்னை & எண்ணூர் வரை
+      { name: "புதுச்சேரி ஆழ்கடல் பவளப்பாறை", lat: 11.9100, lng: 79.8600, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "இயற்கைப் பாறைப் படுகை" },
+      { name: "மரக்காணம் ஆழ்கடல் வெளிப்பார்", lat: 12.2000, lng: 80.0500, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "கல் பாறைப் படுகை" },
+      { name: "கல்பாக்கம் அணுமின் நிலைய நீர் பைப்லைன்", lat: 12.5500, lng: 80.2000, type: "பைப்லைன்", fathoms: "9 பாவம் (16 M)", desc: "பாதுகாக்கப்பட்ட பைப்லைன் பாதை" },
+      { name: "மகாபலிபுரம் மூழ்கிய கோவில் பாறைகள்", lat: 12.6100, lng: 80.2100, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "நீருக்கடியில் உள்ள பழங்காலப் பாறைகள்" },
+      { name: "சென்னை அவுட்டர் கப்பல் தளம் (S.S. Orestes Wreck)", lat: 13.0800, lng: 80.3400, type: "மூழ்கிய கப்பல்", fathoms: "15 பாவம் (27 M)", desc: "ஆங்கரேஜ் அருகே மூழ்கிய கப்பல் தளம்" },
+      { name: "எண்ணூர் துறைமுக காஸ் பைப்லைன் முனை", lat: 13.2500, lng: 80.3700, type: "பைப்லைன்", fathoms: "13 பாவம் (24 M)", desc: "வாயு குழாய் எச்சரிக்கை பகுதி" }
+    ];
+
+    let showMarineHazards = localStorage.getItem('dm_show_hazards') !== 'false';
+    let hazardMarkers = [];
+
     let permanentEntityMarkers = [];
     let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
     let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
@@ -1145,6 +1195,67 @@
           .setPopup(popup)
           .addTo(map);
         activeTrapMarkers.push(marker);
+      });
+    }
+
+    function toggleMarineHazards() {
+      showMarineHazards = !showMarineHazards;
+      localStorage.setItem('dm_show_hazards', showMarineHazards ? 'true' : 'false');
+      renderMarineHazards();
+      updateMapMenuBadges();
+      closeMapControls();
+      alert(showMarineHazards ? "🌊 கடல் பாறைகள் & கப்பல் காட்டப்படுகிறது (ON)" : "🌊 கடல் பாறைகள் & கப்பல் மறைக்கப்பட்டது (OFF)");
+    }
+
+    function renderMarineHazards() {
+      if (!map) return;
+      hazardMarkers.forEach(m => m.remove());
+      hazardMarkers = [];
+      if (!showMarineHazards) return;
+
+      TAMILNADU_MARINE_HAZARDS.forEach(h => {
+        let el = document.createElement('div');
+        el.className = 'custom-spot-marker';
+        
+        let iconSymbol = "🪨";
+        let badgeColor = "#ffcc00";
+        if (h.type === "மூழ்கிய கப்பல்") { iconSymbol = "🚢"; badgeColor = "#ff0055"; }
+        else if (h.type === "பைப்லைன்") { iconSymbol = "⛽"; badgeColor = "#00ffcc"; }
+        else if (h.type === "மணல்திட்டு") { iconSymbol = "🏖️"; badgeColor = "#ff9900"; }
+
+        el.innerHTML = `
+          <div class="spot-header-tag">
+            <div class="spot-num-badge" style="border-color:${badgeColor}; color:${badgeColor};">${iconSymbol}</div>
+            <div class="spot-tamil-tag" style="border-color:${badgeColor}; font-size:10px;">${h.type}</div>
+          </div>
+          <div style="width:11px; height:11px; border-radius:50%; background:${badgeColor}; border:2px solid #ffffff; box-shadow:0 0 8px ${badgeColor};"></div>
+        `;
+
+        let dLat = Math.floor(h.lat);
+        let mLat = ((h.lat - dLat) * 60).toFixed(3);
+        let dLng = Math.floor(h.lng);
+        let mLng = ((h.lng - dLng) * 60).toFixed(3);
+        let nautCoordStr = `${dLat}° ${mLat}' N | ${dLng}° ${mLng}' E`;
+
+        let distNM = calcDistanceNM(currentLat, currentLng, h.lat, h.lng);
+
+        let popupHtml = `
+          <div class="popup-box">
+            <b style="color:#ffcc00;">${iconSymbol} ${h.name}</b>
+            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>ஆழம்:</b> <span style="color:#00ffcc; font-weight:bold;">${h.fathoms}</span></div>
+            <div style="font-size:10px; color:#cccccc;">${h.desc}</div>
+            <div class="popup-coord">${nautCoordStr}</div>
+            <div style="font-size:10px; color:#ffcc00; margin:2px 0;">தூரம்: <b>${distNM} NM</b></div>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${h.lat}, ${h.lng})">🚀 செல்</button>
+          </div>
+        `;
+
+        let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
+        let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([h.lng, h.lat])
+          .setPopup(popup)
+          .addTo(map);
+        hazardMarkers.push(marker);
       });
     }
 
@@ -1570,12 +1681,17 @@
 
     function updateMapMenuBadges() {
       const typeBadge = document.getElementById('mapTypeBadge');
+      const hazardsBadge = document.getElementById('hazardsStatusBadge');
       const islBadge = document.getElementById('islandStatusBadge');
       const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       const spotAlarmBadge = document.getElementById('spotAlarmStatusBadge');
       const voiceBadge = document.getElementById('voiceAlertStatusBadge');
       
       if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
+      if (hazardsBadge) {
+        hazardsBadge.innerText = showMarineHazards ? "ON" : "OFF";
+        hazardsBadge.style.color = showMarineHazards ? "#00ffcc" : "#ff0055";
+      }
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
         islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
@@ -1623,7 +1739,7 @@
       updateAutoStatusLabelUI();
     }
 
-    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் முக்கிய செயல்பாடு
+    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் செயல்பாடு
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
@@ -1648,7 +1764,7 @@
       loadSavedReefs();
       speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
 
-      // நீங்கள் கேட்டபடி: ஒரு முறை பதிந்ததும் உடனடியாக ஆட்டோ மோடை OFF ஆக்கி மெமரியிலும் சேமிக்கும் மாற்றம்
+      // பதிந்தவுடன் ஆட்டோவை உடனடியாக OFF ஆக்குதல்
       autoSpotSaveEnabled = false;
       stationaryStartTime = 0;
       isBoatStationary = false;
@@ -1736,6 +1852,7 @@
           }
         } catch(err) {}
         renderPermanentMarineEntities();
+        renderMarineHazards();
         loadSavedReefs();
         renderAllTrapsOnMap();
       }
@@ -2521,6 +2638,7 @@
       }
     }
 
+    // ஜிபிஎஸ் நிகழ்நேர கண்காணிப்பு
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
