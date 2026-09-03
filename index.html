@@ -1471,7 +1471,7 @@
       spoke0_10: false
     };
 
-    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
+    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') !== 'false';
     let stationaryStartTime = parseInt(localStorage.getItem('dm_stationary_start_time') || '0');
     let isBoatStationary = localStorage.getItem('dm_is_boat_stationary') === 'true';
 
@@ -1623,7 +1623,7 @@
       updateAutoStatusLabelUI();
     }
 
-    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் முக்கிய இடம்
+    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் முக்கிய செயல்பாடு
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
@@ -1648,7 +1648,7 @@
       loadSavedReefs();
       speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
 
-      // நீங்கள் கேட்டபடி: ஒரு முறை பதிந்ததும் உடனடியாக ஆட்டோ மோடை OFF ஆக்கி மெமரியிலும் சேமிக்கும் வரி
+      // நீங்கள் கேட்டபடி: ஒரு முறை பதிந்ததும் உடனடியாக ஆட்டோ மோடை OFF ஆக்கி மெமரியிலும் சேமிக்கும் மாற்றம்
       autoSpotSaveEnabled = false;
       stationaryStartTime = 0;
       isBoatStationary = false;
