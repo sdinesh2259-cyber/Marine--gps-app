@@ -631,7 +631,7 @@
       </div>
     </div>
 
-    <!-- STATUS BAR (சுருக்கமான ON / OFF மற்றும் கவுண்ட்டவுன் அமைப்பு) -->
+    <!-- STATUS BAR -->
     <div class="status-bar">
       <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
@@ -939,11 +939,15 @@
     }
 
     window.addEventListener('load', keepScreenAlwaysOn);
+    
+    // ஸ்கிரீன் விழித்தெழும் போது டைமர் மற்றும் ஜிபிஎஸ்-ஐ உடனே புதுப்பிக்கும் Watchdog
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
         await keepScreenAlwaysOn();
         checkAppActivation();
         if (map) map.resize();
+        // ஸ்கிரீன் ஆஃப் ஆகித் திறந்தால் உடனடியாக நேரத்தைக் கணக்கிட்டு ஆட்டோ பாயிண்ட் பதிய வைத்தல்
+        checkAndHandleAutoSpotSave(currentLat, currentLng, currentSpeedKts);
       }
     });
     document.addEventListener('touchstart', () => {
@@ -1470,8 +1474,9 @@
     };
 
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') !== 'false';
-    let stationaryStartTime = 0;
-    let isBoatStationary = false;
+    // போன் ஸ்டோரேஜில் நிலையான நேரத்தைப் பதிவு செய்து கொள்ளுதல் (Persistence)
+    let stationaryStartTime = parseInt(localStorage.getItem('dm_stationary_start_time') || '0');
+    let isBoatStationary = localStorage.getItem('dm_is_boat_stationary') === 'true';
 
     // சுருக்கமான ON / OFF மற்றும் கவுண்ட்டவுன் அமைப்பு
     function updateAutoStatusLabelUI() {
@@ -1484,7 +1489,6 @@
         return;
       }
 
-      // படகு நின்றால் மட்டுமே [0], [1], [2], [3], [4] என நிமிடம் காட்டும்
       if (isBoatStationary && stationaryStartTime > 0) {
         let elapsedMin = Math.floor((Date.now() - stationaryStartTime) / (1000 * 60));
         if (elapsedMin < 0) elapsedMin = 0;
@@ -1492,7 +1496,6 @@
         statusLabel.innerText = `⏱️ ON [${elapsedMin}]`;
         statusLabel.style.color = "#00ffcc";
       } else {
-        // படகு ஓடும் போது இடம் அடைக்காமல் வெறும் ON என்று மட்டும் காட்டும்
         statusLabel.innerText = "⏱️ ON";
         statusLabel.style.color = "#00ffcc";
       }
@@ -1556,6 +1559,8 @@
       localStorage.setItem('dm_auto_save_active', autoSpotSaveEnabled ? 'true' : 'false');
       stationaryStartTime = 0;
       isBoatStationary = false;
+      localStorage.removeItem('dm_stationary_start_time');
+      localStorage.removeItem('dm_is_boat_stationary');
       alert(autoSpotSaveEnabled ? "⏱️ ஆட்டோ பதிவு ஆன் செய்யப்பட்டது (ON)" : "⏸️ ஆட்டோ பதிவு ஆஃப் செய்யப்பட்டது (OFF)");
       updateAutoStatusLabelUI();
     }
@@ -1594,30 +1599,35 @@
       }
     }
 
-    // 5.0 kts வரம்பு & 1, 2, 3, 4, 5-வது நிமிடம் பார் பதிவு
+    // ஸ்கிரீன் ஆஃப் ஆனாலும் நேரம் கடந்துவிட்டால் பாயிண்ட் பதியும் திருத்தப்பட்ட முறை
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
         return;
       }
 
-      // 5.0 kts-க்கு மேல் போனால் படகு ஓடுகிறது – கவுண்ட்டவுன் ரீசெட்
+      // 5.0 kts-க்கு மேல் படகு ஓடினால் கவுண்ட்டவுன் ரீசெட்
       if (speed >= 5.0) {
         isBoatStationary = false;
         stationaryStartTime = 0;
+        localStorage.removeItem('dm_stationary_start_time');
+        localStorage.setItem('dm_is_boat_stationary', 'false');
         updateAutoStatusLabelUI();
         return;
       }
 
-      // 5.0 kts-க்குள் படகு நின்றால் நிமிடம் தொடங்கும்
+      // 5.0 kts-க்குள் படகு நின்றால் ஆரம்ப நேரத்தைக் குறித்துக் கொள்ளுதல்
       if (!isBoatStationary || stationaryStartTime === 0) {
         isBoatStationary = true;
         stationaryStartTime = Date.now();
+        localStorage.setItem('dm_stationary_start_time', stationaryStartTime.toString());
+        localStorage.setItem('dm_is_boat_stationary', 'true');
       } else {
         let elapsedMin = (Date.now() - stationaryStartTime) / (1000 * 60);
         if (elapsedMin >= 5.0) {
           triggerAutoSaveSpot(lat, lng);
-          stationaryStartTime = Date.now(); // பதிவு முடிந்ததும் அடுத்த 5 நிமிட கவுண்ட்டவுன் தொடங்கும்
+          stationaryStartTime = Date.now(); // பதிவு முடிந்ததும் அடுத்த 5 நிமிடத்திற்கு ரீசெட்
+          localStorage.setItem('dm_stationary_start_time', stationaryStartTime.toString());
         }
       }
       updateAutoStatusLabelUI();
@@ -2600,7 +2610,8 @@
       const fsTime = document.getElementById('fs-time-val');
       if (fsTime) fsTime.innerText = timeString;
 
-      updateAutoStatusLabelUI();
+      // கடிகார விநாடிகளின் அடிப்படையிலும் ஆட்டோ பார் சோதித்தல்
+      checkAndHandleAutoSpotSave(currentLat, currentLng, currentSpeedKts);
       checkAppActivation();
     }, 1000);
 
