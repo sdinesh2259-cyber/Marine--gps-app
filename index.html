@@ -940,7 +940,6 @@
 
     window.addEventListener('load', keepScreenAlwaysOn);
     
-    // ஸ்கிரீன் விழித்தெழும் போது டைமர் மற்றும் ஜிபிஎஸ்-ஐ உடனே புதுப்பிக்கும் Watchdog
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'visible') {
         await keepScreenAlwaysOn();
@@ -1472,11 +1471,10 @@
       spoke0_10: false
     };
 
-    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') !== 'false';
+    let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') === 'true';
     let stationaryStartTime = parseInt(localStorage.getItem('dm_stationary_start_time') || '0');
     let isBoatStationary = localStorage.getItem('dm_is_boat_stationary') === 'true';
 
-    // சுருக்கமான ON / OFF மற்றும் கவுண்ட்டவுன் அமைப்பு
     function updateAutoStatusLabelUI() {
       const statusLabel = document.getElementById('sonar-auto-status-label');
       if (!statusLabel) return;
@@ -1517,7 +1515,6 @@
       }
     }
 
-    // Garmin GPS 12H Course-Up காம்பஸ் சுழற்சி
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -1597,14 +1594,12 @@
       }
     }
 
-    // 5.0 kts வரம்பு & 1, 2, 3, 4, 5-வது நிமிடம் பார் பதிவு
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
         return;
       }
 
-      // 5.0 kts-க்கு மேல் படகு ஓடினால் கவுண்ட்டவுன் ரீசெட்
       if (speed >= 5.0) {
         isBoatStationary = false;
         stationaryStartTime = 0;
@@ -1614,7 +1609,6 @@
         return;
       }
 
-      // 5.0 kts-க்குள் படகு நின்றால் ஆரம்ப நேரத்தைக் குறித்துக் கொள்ளுதல்
       if (!isBoatStationary || stationaryStartTime === 0) {
         isBoatStationary = true;
         stationaryStartTime = Date.now();
@@ -1629,7 +1623,7 @@
       updateAutoStatusLabelUI();
     }
 
-    // பார் பதிவானதும் தானாகவே ஆஃப் (OFF) ஆகும் முறை
+    // 5 நிமிடம் முடிந்ததும் பாய்ண்ட் பதிவாகி உடனே ஆட்டோவை ஆஃப் (OFF) செய்யும் முக்கிய இடம்
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
@@ -1654,7 +1648,7 @@
       loadSavedReefs();
       speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
 
-      // பதிந்தவுடன் ஆட்டோ மோடை நிரந்தரமாக ஆஃப் செய்யும் திருத்தம்
+      // நீங்கள் கேட்டபடி: ஒரு முறை பதிந்ததும் உடனடியாக ஆட்டோ மோடை OFF ஆக்கி மெமரியிலும் சேமிக்கும் வரி
       autoSpotSaveEnabled = false;
       stationaryStartTime = 0;
       isBoatStationary = false;
@@ -2527,7 +2521,6 @@
       }
     }
 
-    // ஜிபிஎஸ் புதுப்பிப்பு
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
