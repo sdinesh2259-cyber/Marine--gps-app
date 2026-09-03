@@ -155,7 +155,7 @@
     .fs-lbl-w { left: 10px; font-size: 16px; color: #ffffff; }
 
     .target-dir-needle {
-      position: absolute; width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      position: absolute width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
       transition: transform 0.15s ease-out;
     }
     .target-arrow-head {
@@ -371,8 +371,9 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
+    /* தீவு மற்றும் போயா போன்று சிறிய வட்ட வடிவ புள்ளிகள் (Micro Dots) */
     .micro-dot-wrapper {
-      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto !important;
     }
     .micro-island-dot {
@@ -385,6 +386,16 @@
       border: 1.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 5px #ff007f, 0 0 8px rgba(255, 0, 127, 0.9);
     }
+
+    /* பாறை, கப்பல், மணல் மற்றும் பைப்லைன்களுக்கான வண்ணக் குட்டிப் புள்ளிகள் */
+    .micro-reef-dot {
+      width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #ffffff;
+      box-shadow: 0 0 6px rgba(0,0,0,0.9);
+    }
+    .dot-reef { background: #ffcc00; box-shadow: 0 0 5px #ffcc00; }     /* பாறை: மஞ்சள் */
+    .dot-wreck { background: #ff0033; box-shadow: 0 0 6px #ff0033; }    /* கப்பல்: சிவப்பு */
+    .dot-shoal { background: #ff8800; box-shadow: 0 0 5px #ff8800; }    /* மணல்திட்டு: ஆரஞ்சு */
+    .dot-pipe { background: #00e5ff; box-shadow: 0 0 5px #00e5ff; }     /* பைப்லைன்: நீலம் */
 
     .maplibregl-popup-content {
       background: rgba(5, 15, 30, 0.98) !important;
@@ -1203,6 +1214,7 @@
       } catch(e) {}
     }
 
+    /* மேப்பில் பெரிய பேட்ஜ் இல்லாமல் சின்னக் குட்டிப் புள்ளிகளாக (Micro Dots) வரைதல் */
     function renderMarineHazards() {
       if (!map) return;
       hazardMarkers.forEach(m => m.remove());
@@ -1211,21 +1223,16 @@
 
       TAMILNADU_MARINE_HAZARDS.forEach(h => {
         let el = document.createElement('div');
-        el.className = 'custom-spot-marker';
+        el.className = 'micro-dot-wrapper';
         
+        let dotClass = "dot-reef";
         let iconSymbol = "🪨";
-        let badgeColor = "#ffcc00";
-        if (h.type === "மூழ்கிய கப்பல்") { iconSymbol = "🚢"; badgeColor = "#ff0055"; }
-        else if (h.type === "பைப்லைன்") { iconSymbol = "⛽"; badgeColor = "#00ffcc"; }
-        else if (h.type === "மணல்திட்டு") { iconSymbol = "🏖️"; badgeColor = "#ff9900"; }
+        if (h.type === "மூழ்கிய கப்பல்") { dotClass = "dot-wreck"; iconSymbol = "🚢"; }
+        else if (h.type === "பைப்லைன்") { dotClass = "dot-pipe"; iconSymbol = "⛽"; }
+        else if (h.type === "மணல்திட்டு") { dotClass = "dot-shoal"; iconSymbol = "🏖️"; }
 
-        el.innerHTML = `
-          <div class="spot-header-tag">
-            <div class="spot-num-badge" style="border-color:${badgeColor}; color:${badgeColor};">${iconSymbol}</div>
-            <div class="spot-tamil-tag" style="border-color:${badgeColor}; font-size:10px;">${h.type}</div>
-          </div>
-          <div style="width:12px; height:12px; border-radius:50%; background:${badgeColor}; border:2px solid #ffffff; box-shadow:0 0 8px ${badgeColor};"></div>
-        `;
+        // சிறிய வட்ட வடிவ புள்ளி மட்டுமே வைக்கப்படுகிறது
+        el.innerHTML = `<div class="micro-reef-dot ${dotClass}"></div>`;
 
         let dLat = Math.floor(h.lat);
         let mLat = ((h.lat - dLat) * 60).toFixed(3);
@@ -1237,8 +1244,9 @@
 
         let popupHtml = `
           <div class="popup-box">
-            <b style="color:#ffcc00;">${iconSymbol} ${h.name}</b>
-            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>ஆழம்:</b> <span style="color:#00ffcc; font-weight:bold;">${h.fathoms}</span></div>
+            <b style="color:#ffcc00; font-size:13px;">${iconSymbol} ${h.name}</b>
+            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>வகை:</b> <span style="color:#00ffcc; font-weight:bold;">${h.type}</span></div>
+            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>ஆழம்:</b> <span style="color:#ffcc00; font-weight:bold;">${h.fathoms}</span></div>
             <div style="font-size:10px; color:#cccccc;">${h.desc}</div>
             <div class="popup-coord">${nautCoordStr}</div>
             <div style="font-size:10px; color:#ffcc00; margin:2px 0;">தூரம்: <b>${distNM} NM</b></div>
@@ -1246,8 +1254,8 @@
           </div>
         `;
 
-        let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
-        let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        let popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true }).setHTML(popupHtml);
+        let marker = new maplibregl.Marker({ element: el, anchor: 'center' })
           .setLngLat([h.lng, h.lat])
           .setPopup(popup)
           .addTo(map);
