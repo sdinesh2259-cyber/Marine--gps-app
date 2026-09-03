@@ -1008,6 +1008,136 @@
       { name: "மிதப்பு போயா #10 (கன்னியாகுமரி கடல் போயா)", lat: 8.0710, lng: 77.5580 }
     ];
 
+    let permanentEntityMarkers = [];
+    let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
+    let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
+    let spotAlarmMasterEnabled = localStorage.getItem('dm_spot_alarm_master') !== 'false';
+
+    let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
+    let activeTrapMarkers = [];
+
+    function updateTrapCounters() {
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      const badge = document.getElementById('trapInlineCounterBadge');
+      const seqEl = document.getElementById('nextTrapSeqNum');
+      if (badge) badge.innerText = traps.length;
+      if (seqEl) seqEl.innerText = traps.length + 1;
+    }
+
+    function openTrapManagerModal() {
+      document.getElementById('masterTrapToggleCheckbox').checked = showAllTrapsOnMapFlag;
+      updateTrapCounters();
+      loadTrapsListUI();
+      document.getElementById('trapManagerModal').style.display = 'flex';
+    }
+
+    function toggleMasterTrapsDisplay(checkbox) {
+      showAllTrapsOnMapFlag = checkbox.checked;
+      localStorage.setItem('dm_show_traps_master', showAllTrapsOnMapFlag ? 'true' : 'false');
+      renderAllTrapsOnMap();
+      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
+    }
+
+    function addNewTrapAtCurrentLocation() {
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      if (traps.length >= 100) { alert("அதிகபட்சம் 100 கூண்டுகள் மட்டுமே சேர்க்க முடியும்!"); return; }
+      let seq = traps.length + 1;
+      let dLat = Math.floor(currentLat);
+      let minLat = (currentLat - dLat) * 60.0;
+      let dLng = Math.floor(currentLng);
+      let minLng = (currentLng - dLng) * 60.0;
+
+      let newTrap = {
+        id: Date.now(), seq: seq, name: `கூண்டு #${seq}`,
+        lat: currentLat, lng: currentLng,
+        latNautical: `${dLat}° ${minLat.toFixed(3)}' N`,
+        lngNautical: `${dLng}° ${minLng.toFixed(3)}' E`,
+        time: getCurrentFormattedDateTime()
+      };
+      traps.push(newTrap);
+      localStorage.setItem('marineTrapsList', JSON.stringify(traps));
+      updateTrapCounters();
+      loadTrapsListUI();
+      renderAllTrapsOnMap();
+      exitedSpotIds.add('trap_' + newTrap.id);
+      playSpotBeep();
+      alert(`🕸️ கூண்டு #${seq} சேமிக்கப்பட்டது!`);
+    }
+
+    function loadTrapsListUI() {
+      const container = document.getElementById('trapsListContainer');
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      updateTrapCounters();
+      if (traps.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#888; font-size:11px; padding:10px;">கூண்டுகள் எதுவும் இல்லை!</div>';
+        return;
+      }
+      container.innerHTML = '';
+      traps.forEach(t => {
+        let div = document.createElement('div');
+        div.className = 'spot-item';
+        div.innerHTML = `
+          <div class="spot-left-group">
+            <div class="list-item-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
+            <div class="spot-info">
+              <div>🕸️ ${t.name}</div>
+              <div style="color:#ffcc00; font-size:10px;">📅 ${t.time}</div>
+              <div style="color:#00ffcc; font-family:monospace; font-size:10px;">${t.latNautical} | ${t.lngNautical}</div>
+            </div>
+          </div>
+          <button class="del-spot-btn" onclick="deleteTrapItem(${t.id})">நீக்கு</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteTrapItem(id) {
+      if (confirm("இந்த கூண்டை நீக்கவா?")) {
+        let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+        traps = traps.filter(t => t.id != id);
+        traps.forEach((t, i) => { t.seq = i + 1; });
+        localStorage.setItem('marineTrapsList', JSON.stringify(traps));
+        updateTrapCounters();
+        loadTrapsListUI();
+        renderAllTrapsOnMap();
+      }
+    }
+
+    function renderAllTrapsOnMap() {
+      if (!map) return;
+      activeTrapMarkers.forEach(m => m.remove());
+      activeTrapMarkers = [];
+      if (!showAllTrapsOnMapFlag) return;
+
+      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
+      traps.forEach(t => {
+        let el = document.createElement('div');
+        el.className = 'custom-spot-marker';
+        el.innerHTML = `
+          <div class="spot-header-tag">
+            <div class="spot-num-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
+            <div class="spot-tamil-tag" style="border-color:#00ffcc; color:#00ffcc;">கூண்டு</div>
+          </div>
+          <div class="trap-marker-dot"></div>
+        `;
+        let popupHtml = `
+          <div class="popup-box">
+            <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
+            <div style="font-size:10px; color:#ffcc00;">📅 ${t.time}</div>
+            <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
+            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
+            <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
+          </div>
+        `;
+        let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
+        let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([t.lng, t.lat])
+          .setPopup(popup)
+          .addTo(map);
+        activeTrapMarkers.push(marker);
+      });
+    }
+
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
     let dieselConsumePerNM = parseFloat(localStorage.getItem('marine_diesel_per_nm') || '0.5');
     let totalDistanceTraveledNM = parseFloat(localStorage.getItem('marine_total_dist_nm') || '0');
@@ -1483,6 +1613,7 @@
       updateAutoStatusLabelUI();
     }
 
+    // 5 நிமிடம் கழித்து பாயிண்ட் பதிவானதும் ஆட்டோவை உடனே OFF செய்யும் செயல்பாடு
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
