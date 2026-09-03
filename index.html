@@ -155,7 +155,7 @@
     .fs-lbl-w { left: 10px; font-size: 16px; color: #ffffff; }
 
     .target-dir-needle {
-      position: absolute width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
+      position: absolute; width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
       transition: transform 0.15s ease-out;
     }
     .target-arrow-head {
@@ -208,7 +208,7 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 215px;
+      min-width: 185px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
@@ -298,7 +298,7 @@
     }
     .btn-round-center-save:active { transform: translateY(-5px) scale(0.95) !important; }
 
-    .popup-box { text-align: center; font-size: 12px; min-width: 175px; padding: 2px; }
+    .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
     .popup-btn { color: white; border: none; padding: 6px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 3px; width: 100%; display: block; }
     .popup-nav-btn { background: #e63946; }
@@ -371,9 +371,8 @@
       box-shadow: 0 0 8px #ff0044, 0 0 14px rgba(255, 0, 68, 0.9);
     }
 
-    /* தீவு மற்றும் போயா போன்று சிறிய வட்ட வடிவ புள்ளிகள் (Micro Dots) */
     .micro-dot-wrapper {
-      width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; pointer-events: auto !important;
     }
     .micro-island-dot {
@@ -386,16 +385,6 @@
       border: 1.5px solid #ffffff; border-radius: 50%;
       box-shadow: 0 0 5px #ff007f, 0 0 8px rgba(255, 0, 127, 0.9);
     }
-
-    /* பாறை, கப்பல், மணல் மற்றும் பைப்லைன்களுக்கான வண்ணக் குட்டிப் புள்ளிகள் */
-    .micro-reef-dot {
-      width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #ffffff;
-      box-shadow: 0 0 6px rgba(0,0,0,0.9);
-    }
-    .dot-reef { background: #ffcc00; box-shadow: 0 0 5px #ffcc00; }     /* பாறை: மஞ்சள் */
-    .dot-wreck { background: #ff0033; box-shadow: 0 0 6px #ff0033; }    /* கப்பல்: சிவப்பு */
-    .dot-shoal { background: #ff8800; box-shadow: 0 0 5px #ff8800; }    /* மணல்திட்டு: ஆரஞ்சு */
-    .dot-pipe { background: #00e5ff; box-shadow: 0 0 5px #00e5ff; }     /* பைப்லைன்: நீலம் */
 
     .maplibregl-popup-content {
       background: rgba(5, 15, 30, 0.98) !important;
@@ -580,10 +569,6 @@
               <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
                 <span>🗺️ மேப் வகை</span>
                 <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
-              </button>
-              <button class="map-menu-item-btn" id="menuHazardsToggleBtn" onclick="toggleMarineHazards();">
-                <span>🌊 கடல் பாறைகள் & சீமார்க்ஸ்</span>
-                <span id="hazardsStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
                 <span>🏝️ தீவு & போயா</span>
@@ -1023,246 +1008,6 @@
       { name: "மிதப்பு போயா #10 (கன்னியாகுமரி கடல் போயா)", lat: 8.0710, lng: 77.5580 }
     ];
 
-    const TAMILNADU_MARINE_HAZARDS = [
-      { name: "மணப்பாடு ஆழ்கடல் வெளிப்பார்", lat: 8.3750, lng: 78.2000, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "பெரிய ஆழ்கடல் கல் பார்" },
-      { name: "தூத்துக்குடி பழையகாயல் சங்குப்பார்", lat: 8.6583, lng: 78.2167, type: "பாறை", fathoms: "3.5 பாவம் (6.5 M)", desc: "கரை முகத்துவார சங்குக்கல் பார்" },
-      { name: "தூத்துக்குடி சிலுவைப்பார் (Inshore Reef)", lat: 8.7750, lng: 78.2050, type: "பாறை", fathoms: "3 பாவம் (5.5 M)", desc: "முயல் தீவு வெளிப்பகுதி கரைப்பார்" },
-      { name: "தூத்துக்குடி தொண்டிப்பார்", lat: 8.7900, lng: 78.2400, type: "பாறை", fathoms: "5 பாவம் (9 M)", desc: "கல் மற்றும் சங்கு நிறைந்த பார்" },
-      { name: "தூத்துக்குடி அவுட்டர் கப்பல் தளம் (Wreck)", lat: 8.7700, lng: 78.2800, type: "மூழ்கிய கப்பல்", fathoms: "9 பாவம் (16 M)", desc: "உடைந்த பழைய சரக்கு படகு தளம்" },
-      { name: "தூத்துக்குடி முத்துப்பார் (Pearl Bank)", lat: 8.8000, lng: 78.3083, type: "பாறை", fathoms: "11 பாவம் (20 M)", desc: "பிரசித்தி பெற்ற முத்து மீன்பிடி வெளிப்பார்" },
-      { name: "வேம்பார் கரைப்பார் (Inshore Rock)", lat: 9.0300, lng: 78.3850, type: "பாறை", fathoms: "2.5 பாவம் (4.5 M)", desc: "கரைக்கு மிக அருகில் உள்ள ஆபத்தான பாறை" },
-      { name: "வேம்பார் மூழ்கிய சரக்குக் கப்பல் (Vembar Wreck)", lat: 9.0350, lng: 78.4050, type: "மூழ்கிய கப்பல்", fathoms: "5 பாவம் (9 M)", desc: "வேம்பார் கடலில் உடைந்த பழைய இரும்பு கப்பல்" },
-      { name: "வேம்பார் தெற்கு வெளிப்பார்", lat: 9.0400, lng: 78.4167, type: "பாறை", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் மீன்பிடி கல் பார்" },
-      { name: "வேம்பார் அவுட்டர் நண்டு/மீன் பார்", lat: 9.0750, lng: 78.4667, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "ஆழ்கடல் பவளப்பாறை & நண்டு வளைவு" },
-      { name: "கீழக்கரை கரை அருகிலுள்ள பவளப்பார்", lat: 9.1750, lng: 78.8150, type: "பாறை", fathoms: "3 பாவம் (5.5 M)", desc: "கரைப்பகுதி பவளக்கல் மேடு" },
-      { name: "கீழக்கரை வெளிப்பார் படுகை", lat: 9.1867, lng: 78.8417, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "ஆழ்கடல் பார் படுகை" },
-      { name: "மண்டபம் தெற்கு கரைப்பார்", lat: 9.2300, lng: 79.1200, type: "பாறை", fathoms: "2 பாவம் (3.6 M)", desc: "படகு தட்டும் ஆபத்துள்ள ஆழமற்ற பாறை" },
-      { name: "மண்டபம் தெற்கு வெளிப்பார்", lat: 9.2450, lng: 79.1450, type: "பாறை", fathoms: "6 பாவம் (11 M)", desc: "கல் மற்றும் பவளப்பார்" },
-      { name: "பாம்பன் வடக்கு முகத்துவார பாறை", lat: 9.3100, lng: 79.2250, type: "பாறை", fathoms: "5 பாவம் (9 M)", desc: "முகத்துவார பாறைக்கல் திட்டு" },
-      { name: "தனுஷ்கோடி 1-ம் தீட்டு மணல் பாறை", lat: 9.1550, lng: 79.4500, type: "மணல்திட்டு", fathoms: "4 பாவம் (7 M)", desc: "ஆபத்தான ஆழமற்ற மணல்திட்டு" },
-      { name: "ஆதாம் பாலம் ஆழ்கடல் உடைந்த கப்பல் தளம்", lat: 9.1200, lng: 79.5200, type: "மூழ்கிய கப்பல்", fathoms: "10 பாவம் (18 M)", desc: "பழைய இரும்பு கப்பல் தளம்" },
-      { name: "கச்சத்தீவு தெற்கு வெளிப்பார்", lat: 9.3800, lng: 79.5400, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "சர்வதேச கடல் எல்லை அருகேயுள்ள பார்" },
-      { name: "நெடுந்தீவு வெளிப்பார் (Delft Reef - இலங்கை)", lat: 9.5100, lng: 79.6200, type: "பாறை", fathoms: "9 பாவம் (16 M)", desc: "பாக் ஜலசந்தி ஆழ்கடல் பார்" },
-      { name: "கோட்டைப்பட்டினம் நண்டு வெளிப்பார்", lat: 9.8700, lng: 79.3100, type: "பாறை", fathoms: "7 பாவம் (13 M)", desc: "நல்ல நண்டு & மீன்பிடி பார்" },
-      { name: "மணமேல்குடி ஆழ்கடல் கல் பார்", lat: 9.9800, lng: 79.2800, type: "பாறை", fathoms: "6 பாவம் (11 M)", desc: "கற்கள் நிறைந்த தரைப்பகுதி" },
-      { name: "மல்லிப்பட்டினம் வெளிப்பார்", lat: 10.2600, lng: 79.4200, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "மீன்பிடி பாறைப் படுகை" },
-      { name: "அதிராம்பட்டினம் நண்டுத் திட்டு", lat: 10.3000, lng: 79.4500, type: "மணல்திட்டு", fathoms: "5 பாவம் (9 M)", desc: "ஆழ்கடல் நண்டு வளைவு" },
-      { name: "கோடியக்கரை வெளிப்பார் (Point Calimere)", lat: 10.2500, lng: 79.9500, type: "பாறை", fathoms: "12 பாவம் (22 M)", desc: "ஆழ்கடல் வெளிப்பார்" },
-      { name: "நாகப்பட்டினம் மூழ்கிய சரக்கு கப்பல்", lat: 10.7600, lng: 79.9200, type: "மூழ்கிய கப்பல்", fathoms: "15 பாவம் (27 M)", desc: "உடைந்த சரக்கு கப்பல் தளம்" },
-      { name: "காரைக்கால் ஆழ்கடல் ஆயில் பைப்லைன்", lat: 10.8800, lng: 79.9100, type: "பைப்லைன்", fathoms: "14 பாவம் (26 M)", desc: "எண்ணெய் குழாய் எச்சரிக்கை தடம்" },
-      { name: "பூம்புகார் மூழ்கிய கல் பாறை நகரம்", lat: 11.1500, lng: 79.8800, type: "பாறை", fathoms: "11 பாவம் (20 M)", desc: "வரலாற்று சிறப்புமிக்க கல் பார்" },
-      { name: "பரங்கிப்பேட்டை (Porto Novo) வெளிப்பார்", lat: 11.5000, lng: 79.8600, type: "பாறை", fathoms: "16 பாவம் (29 M)", desc: "ஆழ்கடல் மீன்பிடிப் பார்" },
-      { name: "கடலூர் சிப்காட் ஆழ்கடல் பைப்லைன்", lat: 11.6800, lng: 79.8200, type: "பைப்லைன்", fathoms: "10 பாவம் (18 M)", desc: "ஆழ்கடல் குழாய் வெளிமுனை" },
-      { name: "கடலூர் பழைய போர்க்கப்பல் தாந்த இடம்", lat: 11.7200, lng: 79.8900, type: "மூழ்கிய கப்பல்", fathoms: "22 பாவம் (40 M)", desc: "இரண்டாம் உலகப்போர் மூழ்கிய கப்பல்" },
-      { name: "புதுச்சேரி ஆழ்கடல் பவளப்பாறை", lat: 11.9100, lng: 79.8600, type: "பாறை", fathoms: "14 பாவம் (25 M)", desc: "இயற்கைப் பாறைப் படுகை" },
-      { name: "மரக்காணம் ஆழ்கடல் வெளிப்பார்", lat: 12.2000, lng: 80.0500, type: "பாறை", fathoms: "15 பாவம் (27 M)", desc: "கல் பாறைப் படுகை" },
-      { name: "கல்பாக்கம் அணுமின் நிலைய நீர் பைப்லைன்", lat: 12.5500, lng: 80.2000, type: "பைப்லைன்", fathoms: "9 பாவம் (16 M)", desc: "பாதுகாக்கப்பட்ட பைப்லைன் பாதை" },
-      { name: "மகாபலிபுரம் மூழ்கிய கோவில் பாறைகள்", lat: 12.6100, lng: 80.2100, type: "பாறை", fathoms: "8 பாவம் (15 M)", desc: "நீருக்கடியில் உள்ள பழங்காலப் பாறைகள்" },
-      { name: "சென்னை அவுட்டர் கப்பல் தளம் (S.S. Orestes Wreck)", lat: 13.0800, lng: 80.3400, type: "மூழ்கிய கப்பல்", fathoms: "15 பாவம் (27 M)", desc: "ஆங்கரேஜ் அருகே மூழ்கிய கப்பல்" },
-      { name: "எண்ணூர் துறைமுக காஸ் பைப்லைன் முனை", lat: 13.2500, lng: 80.3700, type: "பைப்லைன்", fathoms: "13 பாவம் (24 M)", desc: "வாயு குழாய் எச்சரிக்கை பகுதி" }
-    ];
-
-    let showMarineHazards = localStorage.getItem('dm_show_hazards') !== 'false';
-    let hazardMarkers = [];
-
-    let permanentEntityMarkers = [];
-    let showIslandsAndBuoys = localStorage.getItem('dm_show_islands') !== 'false';
-    let autoSonarReefSaveEnabled = localStorage.getItem('dm_auto_sonar_reef') !== 'false';
-    let spotAlarmMasterEnabled = localStorage.getItem('dm_spot_alarm_master') !== 'false';
-
-    let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
-    let activeTrapMarkers = [];
-
-    function updateTrapCounters() {
-      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-      const badge = document.getElementById('trapInlineCounterBadge');
-      const seqEl = document.getElementById('nextTrapSeqNum');
-      if (badge) badge.innerText = traps.length;
-      if (seqEl) seqEl.innerText = traps.length + 1;
-    }
-
-    function openTrapManagerModal() {
-      document.getElementById('masterTrapToggleCheckbox').checked = showAllTrapsOnMapFlag;
-      updateTrapCounters();
-      loadTrapsListUI();
-      document.getElementById('trapManagerModal').style.display = 'flex';
-    }
-
-    function toggleMasterTrapsDisplay(checkbox) {
-      showAllTrapsOnMapFlag = checkbox.checked;
-      localStorage.setItem('dm_show_traps_master', showAllTrapsOnMapFlag ? 'true' : 'false');
-      renderAllTrapsOnMap();
-      alert(showAllTrapsOnMapFlag ? "🕸️ அனைத்து கூண்டுகளையும் மேப்பில் காட்டு (ON)" : "🕸️ கூண்டுகள் மறைக்கப்பட்டன.");
-    }
-
-    function addNewTrapAtCurrentLocation() {
-      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-      if (traps.length >= 100) { alert("அதிகபட்சம் 100 கூண்டுகள் மட்டுமே சேர்க்க முடியும்!"); return; }
-      let seq = traps.length + 1;
-      let dLat = Math.floor(currentLat);
-      let minLat = (currentLat - dLat) * 60.0;
-      let dLng = Math.floor(currentLng);
-      let minLng = (currentLng - dLng) * 60.0;
-
-      let newTrap = {
-        id: Date.now(), seq: seq, name: `கூண்டு #${seq}`,
-        lat: currentLat, lng: currentLng,
-        latNautical: `${dLat}° ${minLat.toFixed(3)}' N`,
-        lngNautical: `${dLng}° ${minLng.toFixed(3)}' E`,
-        time: getCurrentFormattedDateTime()
-      };
-      traps.push(newTrap);
-      localStorage.setItem('marineTrapsList', JSON.stringify(traps));
-      updateTrapCounters();
-      loadTrapsListUI();
-      renderAllTrapsOnMap();
-      exitedSpotIds.add('trap_' + newTrap.id);
-      playSpotBeep();
-      alert(`🕸️ கூண்டு #${seq} சேமிக்கப்பட்டது!`);
-    }
-
-    function loadTrapsListUI() {
-      const container = document.getElementById('trapsListContainer');
-      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-      updateTrapCounters();
-      if (traps.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#888; font-size:11px; padding:10px;">கூண்டுகள் எதுவும் இல்லை!</div>';
-        return;
-      }
-      container.innerHTML = '';
-      traps.forEach(t => {
-        let div = document.createElement('div');
-        div.className = 'spot-item';
-        div.innerHTML = `
-          <div class="spot-left-group">
-            <div class="list-item-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
-            <div class="spot-info">
-              <div>🕸️ ${t.name}</div>
-              <div style="color:#ffcc00; font-size:10px;">📅 ${t.time}</div>
-              <div style="color:#00ffcc; font-family:monospace; font-size:10px;">${t.latNautical} | ${t.lngNautical}</div>
-            </div>
-          </div>
-          <button class="del-spot-btn" onclick="deleteTrapItem(${t.id})">நீக்கு</button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    function deleteTrapItem(id) {
-      if (confirm("இந்த கூண்டை நீக்கவா?")) {
-        let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-        traps = traps.filter(t => t.id != id);
-        traps.forEach((t, i) => { t.seq = i + 1; });
-        localStorage.setItem('marineTrapsList', JSON.stringify(traps));
-        updateTrapCounters();
-        loadTrapsListUI();
-        renderAllTrapsOnMap();
-      }
-    }
-
-    function renderAllTrapsOnMap() {
-      if (!map) return;
-      activeTrapMarkers.forEach(m => m.remove());
-      activeTrapMarkers = [];
-      if (!showAllTrapsOnMapFlag) return;
-
-      let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
-      traps.forEach(t => {
-        let el = document.createElement('div');
-        el.className = 'custom-spot-marker';
-        el.innerHTML = `
-          <div class="spot-header-tag">
-            <div class="spot-num-badge" style="border-color:#00ffcc; color:#00ffcc;">${t.seq}</div>
-            <div class="spot-tamil-tag" style="border-color:#00ffcc; color:#00ffcc;">கூண்டு</div>
-          </div>
-          <div class="trap-marker-dot"></div>
-        `;
-        let popupHtml = `
-          <div class="popup-box">
-            <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
-            <div style="font-size:10px; color:#ffcc00;">📅 ${t.time}</div>
-            <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
-            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
-            <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
-          </div>
-        `;
-        let popup = new maplibregl.Popup({ offset: 15 }).setHTML(popupHtml);
-        let marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([t.lng, t.lat])
-          .setPopup(popup)
-          .addTo(map);
-        activeTrapMarkers.push(marker);
-      });
-    }
-
-    function toggleMarineHazards() {
-      showMarineHazards = !showMarineHazards;
-      localStorage.setItem('dm_show_hazards', showMarineHazards ? 'true' : 'false');
-      renderMarineHazards();
-      toggleOpenSeaMapSeamarksLayer(showMarineHazards);
-      updateMapMenuBadges();
-      closeMapControls();
-      alert(showMarineHazards ? "🌊 கடல் பாறைகள், வேம்பார் கப்பல் & சீமார்க்ஸ் காட்டப்படுகிறது (ON)" : "🌊 கடல் பாறைகள் & சீமார்க்ஸ் மறைக்கப்பட்டது (OFF)");
-    }
-
-    function toggleOpenSeaMapSeamarksLayer(visible) {
-      if (!map) return;
-      try {
-        if (map.getLayer('openseamap-seamarks-layer')) {
-          map.setLayoutProperty('openseamap-seamarks-layer', 'visibility', visible ? 'visible' : 'none');
-        }
-      } catch(e) {}
-    }
-
-    /* மேப்பில் பெரிய பேட்ஜ் இல்லாமல் சின்னக் குட்டிப் புள்ளிகளாக (Micro Dots) வரைதல் */
-    function renderMarineHazards() {
-      if (!map) return;
-      hazardMarkers.forEach(m => m.remove());
-      hazardMarkers = [];
-      if (!showMarineHazards) return;
-
-      TAMILNADU_MARINE_HAZARDS.forEach(h => {
-        let el = document.createElement('div');
-        el.className = 'micro-dot-wrapper';
-        
-        let dotClass = "dot-reef";
-        let iconSymbol = "🪨";
-        if (h.type === "மூழ்கிய கப்பல்") { dotClass = "dot-wreck"; iconSymbol = "🚢"; }
-        else if (h.type === "பைப்லைன்") { dotClass = "dot-pipe"; iconSymbol = "⛽"; }
-        else if (h.type === "மணல்திட்டு") { dotClass = "dot-shoal"; iconSymbol = "🏖️"; }
-
-        // சிறிய வட்ட வடிவ புள்ளி மட்டுமே வைக்கப்படுகிறது
-        el.innerHTML = `<div class="micro-reef-dot ${dotClass}"></div>`;
-
-        let dLat = Math.floor(h.lat);
-        let mLat = ((h.lat - dLat) * 60).toFixed(3);
-        let dLng = Math.floor(h.lng);
-        let mLng = ((h.lng - dLng) * 60).toFixed(3);
-        let nautCoordStr = `${dLat}° ${mLat}' N | ${dLng}° ${mLng}' E`;
-
-        let distNM = calcDistanceNM(currentLat, currentLng, h.lat, h.lng);
-
-        let popupHtml = `
-          <div class="popup-box">
-            <b style="color:#ffcc00; font-size:13px;">${iconSymbol} ${h.name}</b>
-            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>வகை:</b> <span style="color:#00ffcc; font-weight:bold;">${h.type}</span></div>
-            <div style="font-size:11px; color:#ffffff; margin:3px 0;"><b>ஆழம்:</b> <span style="color:#ffcc00; font-weight:bold;">${h.fathoms}</span></div>
-            <div style="font-size:10px; color:#cccccc;">${h.desc}</div>
-            <div class="popup-coord">${nautCoordStr}</div>
-            <div style="font-size:10px; color:#ffcc00; margin:2px 0;">தூரம்: <b>${distNM} NM</b></div>
-            <button class="popup-btn popup-nav-btn" onclick="startNavigation(${h.lat}, ${h.lng})">🚀 செல்</button>
-          </div>
-        `;
-
-        let popup = new maplibregl.Popup({ offset: 10, closeButton: true, closeOnClick: true }).setHTML(popupHtml);
-        let marker = new maplibregl.Marker({ element: el, anchor: 'center' })
-          .setLngLat([h.lng, h.lat])
-          .setPopup(popup)
-          .addTo(map);
-        hazardMarkers.push(marker);
-      });
-    }
-
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
     let dieselConsumePerNM = parseFloat(localStorage.getItem('marine_diesel_per_nm') || '0.5');
     let totalDistanceTraveledNM = parseFloat(localStorage.getItem('marine_total_dist_nm') || '0');
@@ -1685,17 +1430,12 @@
 
     function updateMapMenuBadges() {
       const typeBadge = document.getElementById('mapTypeBadge');
-      const hazardsBadge = document.getElementById('hazardsStatusBadge');
       const islBadge = document.getElementById('islandStatusBadge');
       const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       const spotAlarmBadge = document.getElementById('spotAlarmStatusBadge');
       const voiceBadge = document.getElementById('voiceAlertStatusBadge');
       
       if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
-      if (hazardsBadge) {
-        hazardsBadge.innerText = showMarineHazards ? "ON" : "OFF";
-        hazardsBadge.style.color = showMarineHazards ? "#00ffcc" : "#ff0055";
-      }
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
         islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
@@ -1794,18 +1534,12 @@
                 type: 'raster', 
                 tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], 
                 tileSize: 256, maxzoom: 19, attribution: '' 
-              },
-              'openseamap-tiles': {
-                type: 'raster',
-                tiles: ['https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'],
-                tileSize: 256, maxzoom: 18, attribution: ''
               }
             },
             layers: [
               { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
               { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-              { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } },
-              { id: 'openseamap-seamarks-layer', type: 'raster', source: 'openseamap-tiles', minzoom: 0, maxzoom: 18, layout: { 'visibility': 'visible' } }
+              { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
             ]
           },
           center: [currentLng, currentLat],
@@ -1860,8 +1594,6 @@
           }
         } catch(err) {}
         renderPermanentMarineEntities();
-        renderMarineHazards();
-        toggleOpenSeaMapSeamarksLayer(showMarineHazards);
         loadSavedReefs();
         renderAllTrapsOnMap();
       }
