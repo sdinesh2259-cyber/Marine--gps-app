@@ -81,6 +81,7 @@
     .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
+    /* FULLSCREEN CLASSIC BLACK & WHITE COMPASS MODAL */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: #000000; z-index: 99999; display: none; flex-direction: column;
@@ -1613,7 +1614,7 @@
       updateAutoStatusLabelUI();
     }
 
-    // 5 நிமிடம் கழித்து பாயிண்ட் பதிவானதும் ஆட்டோவை உடனே OFF செய்யும் செயல்பாடு
+    // பதிந்தவுடன் ஆட்டோ மோடை உடனடியாக OFF செய்யும் மாற்றம்
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
