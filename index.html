@@ -946,7 +946,6 @@
         await keepScreenAlwaysOn();
         checkAppActivation();
         if (map) map.resize();
-        // ஸ்கிரீன் ஆஃப் ஆகித் திறந்தால் உடனடியாக நேரத்தைக் கணக்கிட்டு ஆட்டோ பாயிண்ட் பதிய வைத்தல்
         checkAndHandleAutoSpotSave(currentLat, currentLng, currentSpeedKts);
       }
     });
@@ -1474,7 +1473,6 @@
     };
 
     let autoSpotSaveEnabled = localStorage.getItem('dm_auto_save_active') !== 'false';
-    // போன் ஸ்டோரேஜில் நிலையான நேரத்தைப் பதிவு செய்து கொள்ளுதல் (Persistence)
     let stationaryStartTime = parseInt(localStorage.getItem('dm_stationary_start_time') || '0');
     let isBoatStationary = localStorage.getItem('dm_is_boat_stationary') === 'true';
 
@@ -1599,7 +1597,7 @@
       }
     }
 
-    // ஸ்கிரீன் ஆஃப் ஆனாலும் நேரம் கடந்துவிட்டால் பாயிண்ட் பதியும் திருத்தப்பட்ட முறை
+    // 5.0 kts வரம்பு & 1, 2, 3, 4, 5-வது நிமிடம் பார் பதிவு
     function checkAndHandleAutoSpotSave(lat, lng, speed) {
       if (!autoSpotSaveEnabled) {
         updateAutoStatusLabelUI();
@@ -1626,13 +1624,12 @@
         let elapsedMin = (Date.now() - stationaryStartTime) / (1000 * 60);
         if (elapsedMin >= 5.0) {
           triggerAutoSaveSpot(lat, lng);
-          stationaryStartTime = Date.now(); // பதிவு முடிந்ததும் அடுத்த 5 நிமிடத்திற்கு ரீசெட்
-          localStorage.setItem('dm_stationary_start_time', stationaryStartTime.toString());
         }
       }
       updateAutoStatusLabelUI();
     }
 
+    // பார் பதிவானதும் தானாகவே ஆஃப் (OFF) ஆகும் முறை
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
@@ -1656,6 +1653,15 @@
       playSpotBeep();
       loadSavedReefs();
       speakTamil(`ஆட்டோ பார் எண் ${seqNo} சேமிக்கப்பட்டது`);
+
+      // பதிந்தவுடன் ஆட்டோ மோடை நிரந்தரமாக ஆஃப் செய்யும் திருத்தம்
+      autoSpotSaveEnabled = false;
+      stationaryStartTime = 0;
+      isBoatStationary = false;
+      localStorage.setItem('dm_auto_save_active', 'false');
+      localStorage.removeItem('dm_stationary_start_time');
+      localStorage.removeItem('dm_is_boat_stationary');
+      updateAutoStatusLabelUI();
     }
 
     let map = null;
@@ -2610,7 +2616,6 @@
       const fsTime = document.getElementById('fs-time-val');
       if (fsTime) fsTime.innerText = timeString;
 
-      // கடிகார விநாடிகளின் அடிப்படையிலும் ஆட்டோ பார் சோதித்தல்
       checkAndHandleAutoSpotSave(currentLat, currentLng, currentSpeedKts);
       checkAppActivation();
     }, 1000);
