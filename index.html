@@ -48,7 +48,7 @@
     
     .validity-tag-top {
       font-size: 9px; font-weight: bold; color: #00ffcc; background: rgba(0,255,204,0.15);
-      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap; cursor: pointer;
+      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
     }
     
     .coord-row-with-layer { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -461,12 +461,13 @@
       <p style="font-size: 11px; color: #ccc; margin: 0 0 8px 0;" id="lockSubtitle">இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.</p>
       
       <div style="font-size: 11px; color: #aaa;">உங்கள் சாதன எண் (Device ID):</div>
-      <div class="device-tag" id="displayDeviceId">DM-XXXXX</div>
+      <div class="device-tag" id="displayDeviceId">DM-XXXXX-1</div>
 
-      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
+      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
         <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
-        <div>🔹 <b>1 மாதம் (30 நாட்கள்):</b> ₹299 (GPay: 6381634610)</div>
-        <div>🔹 <b>3 மாதம் (90 நாட்கள்):</b> சிறப்பு விலை!</div>
+        <div>🔹 <b>முதல் முறை (30 நாட்கள்):</b> ₹299 (GPay: 6381634610)</div>
+        <div>🔹 <b>மாதாந்திர புதுப்பித்தல்:</b> ₹99 (30 நாட்களுக்கு)</div>
+        <div>🔹 <b>3 மாதத் திட்டம் (90 நாட்கள்):</b> சிறப்புச் சலுகை</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -488,7 +489,7 @@
       
       <div style="background: #030d1a; padding: 8px; border-radius: 6px; border: 1px solid #1a3a5a; margin-bottom: 10px; text-align: center;">
         <div style="font-size: 10px; color: #aaa;">சாதன எண் (Device ID):</div>
-        <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX</div>
+        <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX-1</div>
       </div>
 
       <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; text-align: center;">தற்போதைய வேலிடிட்டி: <br><span id="current-expiry-display" style="color: #38bdf8; font-weight: bold; font-size: 13px;">கணக்கிடப்படுகிறது...</span></p>
@@ -1300,7 +1301,7 @@
       }
     }
 
-    // எளிமையான Device ID லாஜிக் (சுழற்சிகள் நீக்கப்பட்டது)
+    // சைக்கிள் மேலாண்மை: முதல் முறை -1, இரண்டாவது முறை -2, அதன்பிறகு சாதாரண ID
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -1310,18 +1311,27 @@
       return base;
     }
 
+    function getActivationCycle() {
+      let cycle = parseInt(localStorage.getItem('dm_marine_cycle') || '1');
+      if (isNaN(cycle) || cycle < 1) cycle = 1;
+      return cycle;
+    }
+
     function getFullDeviceId() {
       let base = getOrGenerateDeviceBase();
+      let cycle = getActivationCycle();
+      if (cycle === 1) return `DM-${base}-1`;
+      if (cycle === 2) return `DM-${base}-2`;
       return `DM-${base}`;
     }
 
-    // 1 மாதத்திற்கான கீ (base + 7351)
+    // 1 மாத கீ (base + 7351)
     function calculateExpectedKey1Month() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
       return 'PASS-' + (base + 7351);
     }
 
-    // 3 மாதத்திற்கான கீ (base + 4829)
+    // 3 மாத கீ (base + 4829)
     function calculateExpectedKey3Months() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
       return 'PASS-' + (base + 4829);
@@ -1333,6 +1343,9 @@
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
       const validityLabel = document.getElementById('validity-status-label');
+      const priceBox = document.getElementById('priceDetailBox');
+      const lockHeader = document.getElementById('lockHeaderTitle');
+      const lockSub = document.getElementById('lockSubtitle');
       
       const now = Date.now();
 
@@ -1353,19 +1366,54 @@
         }
         if (lockEl) lockEl.style.display = 'none';
       } else {
+        if (expiryTimestamp > 0 && expiryTimestamp <= now) {
+          let hasRotated = localStorage.getItem('dm_cycle_rotated');
+          if (!hasRotated) {
+            let cycle = getActivationCycle() + 1;
+            localStorage.setItem('dm_marine_cycle', cycle.toString());
+            localStorage.setItem('dm_cycle_rotated', 'true');
+          }
+        }
+
         let fullDevId = getFullDeviceId();
+        let cycle = getActivationCycle();
         if (devIdEl) devIdEl.innerText = fullDevId;
         if (lockEl) lockEl.style.display = 'flex';
         if (validityLabel) {
           validityLabel.innerText = `⏳ 0 நாட்கள்`;
           validityLabel.style.color = "#ff0055";
         }
+
+        if (cycle >= 2) {
+          if (lockHeader) lockHeader.innerText = "⚠️ வேலிடிட்டி முடிந்துவிட்டது!";
+          if (lockSub) lockSub.innerText = "மாதாந்திர புதுப்பித்தல் (Renewal) கட்டணம் செலுத்தவும்.";
+          if (priceBox) {
+            priceBox.innerHTML = `
+              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
+              <div>🔹 <b>மாதாந்திர புதுப்பித்தல்:</b> ₹99 (30 நாட்களுக்கு)</div>
+              <div>🔹 <b>3 மாதத் திட்டம் (90 நாட்கள்):</b> சிறப்புச் சலுகை</div>
+              <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
+            `;
+          }
+        } else {
+          if (lockHeader) lockHeader.innerText = "DM Marine GPS - ஆக்டிவேஷன்";
+          if (lockSub) lockSub.innerText = "இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.";
+          if (priceBox) {
+            priceBox.innerHTML = `
+              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
+              <div>🔹 <b>முதல் முறை (30 நாட்கள்):</b> ₹299 (GPay: 6381634610)</div>
+              <div>🔹 <b>3 மாதத் திட்டம் (90 நாட்கள்):</b> சிறப்புச் சலுகை</div>
+            `;
+          }
+        }
       }
     }
 
     function sendDeviceIdToAdmin() {
       const fullDevId = getFullDeviceId();
-      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${fullDevId}. எனக்கு Pass Key அனுப்பவும்.`);
+      const cycle = getActivationCycle();
+      let planType = (cycle >= 2) ? "₹99 மாதாந்திர புதுப்பித்தல்" : "₹299 முதல் முறை கட்டணம்";
+      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${fullDevId}. நான் ${planType} செலுத்திவிட்டேன். Pass Key அனுப்பவும்.`);
       window.open(`https://api.whatsapp.com/send?phone=916381634610&text=${msg}`, '_blank');
     }
 
@@ -1386,18 +1434,18 @@
 
       let addDays = 0;
       if (enteredKey === key1Month) {
-        addDays = 30; // 1 மாதம்
+        addDays = 30;
       } else if (enteredKey === key3Months) {
-        addDays = 90; // 3 மாதம்
+        addDays = 90;
       }
 
       if (addDays > 0) {
         let now = Date.now();
-        let existingExpiry = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
-        let baseTime = (existingExpiry > now) ? existingExpiry : now;
-        let newExpiry = baseTime + (addDays * 24 * 60 * 60 * 1000);
+        let newExpiry = now + (addDays * 24 * 60 * 60 * 1000);
 
         localStorage.setItem('dm_marine_expiry', newExpiry.toString());
+        localStorage.removeItem('dm_is_admin');
+        localStorage.removeItem('dm_cycle_rotated');
         alert(`✅ வெற்றிகரமாக ${addDays} நாட்களுக்கு ஆக்டிவேட் செய்யப்பட்டது!`);
         document.getElementById('activationLock').style.display = 'none';
         checkAppActivation();
@@ -1411,7 +1459,7 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
-      let savedName = localStorage.getItem('marine_walkie_name') || '';
+      let savedName = localStorage.getItem('marine_walkie_name'] || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
@@ -1460,12 +1508,11 @@
       }
 
       if (addDays > 0) {
-        let now = new Date().getTime();
-        let existingExpiry = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
-        let baseTime = (existingExpiry > now) ? existingExpiry : now;
-        let newExpiryTime = baseTime + (addDays * 24 * 60 * 60 * 1000);
+        let now = Date.now();
+        let newExpiryTime = now + (addDays * 24 * 60 * 60 * 1000);
 
         localStorage.setItem('dm_marine_expiry', newExpiryTime.toString());
+        localStorage.removeItem('dm_cycle_rotated');
         let newRemainingDays = Math.ceil((newExpiryTime - now) / (1000 * 60 * 60 * 24));
         
         msgElement.style.color = "#4ade80";
