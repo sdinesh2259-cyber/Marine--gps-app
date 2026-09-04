@@ -511,7 +511,6 @@
       <div class="fs-compass-center-area">
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
-        <!-- Garmin eTrex Style Compass Dial with Rotating Single Orange Arrow -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
@@ -522,7 +521,6 @@
           <span class="fs-lbl fs-lbl-se">SE</span>
           <span class="fs-lbl fs-lbl-sw">SW</span>
 
-          <!-- Single Orange Direction Arrow -->
           <div class="garmin-orange-arrow" id="garminOrangeArrow"></div>
         </div>
 
@@ -905,6 +903,17 @@
     </div>
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
+  </div>
+
+  <!-- Pass Key Extend Settings UI Section -->
+  <div style="background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px; max-width: 400px; color: #fff; position: relative; z-index: 9999;">
+    <h3 style="margin-bottom: 5px; font-size: 16px;">🔑 Pass Key நீட்டிப்பு (Extend Subscription)</h3>
+    <p style="font-size: 14px;">தற்போதைய வேலிடிட்டி: <span id="current-expiry-display" style="color: #38bdf8; font-weight: bold;">கணக்கிடப்படுகிறது...</span></p>
+    <div style="margin-top: 10px;">
+      <input type="text" id="advance-pass-key-input" placeholder="புதிய Pass Key" style="padding: 8px; width: 60%; border-radius: 4px; border: 1px solid #ccc; color:#000;">
+      <button onclick="applyAdvanceKey()" style="padding: 8px 12px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">சேமி</button>
+    </div>
+    <p id="key-msg" style="font-size: 14px; margin-top: 8px;"></p>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -1424,11 +1433,53 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
+      updateExpiryDisplay();
       let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
     });
+
+    // Advance Pass Key / Subscription Extension Logic
+    function updateExpiryDisplay() {
+      let currentExpiry = localStorage.getItem('dm_marine_expiry') || localStorage.getItem('app_expiry_date');
+      let displaySpan = document.getElementById('current-expiry-display');
+      if (!displaySpan) return;
+      if (currentExpiry) {
+        let expDate = new Date(parseInt(currentExpiry));
+        let now = new Date().getTime();
+        displaySpan.innerText = (parseInt(currentExpiry) > now) ? expDate.toLocaleDateString() : "காலாவதியாகிவிட்டது";
+      } else {
+        displaySpan.innerText = "செயலில் இல்லை";
+      }
+    }
+
+    function applyAdvanceKey() {
+      let userKeyInput = document.getElementById('advance-pass-key-input');
+      let msgElement = document.getElementById('key-msg');
+      if (!userKeyInput) return;
+      let userKey = userKeyInput.value.trim().toUpperCase();
+      let expectedKey = calculateExpectedKey();
+
+      if (userKey === expectedKey || userKey === "MARINE30" || userKey === "DM-BOSS-6381") { 
+        let now = new Date().getTime();
+        let existingExpiry = localStorage.getItem('dm_marine_expiry') || localStorage.getItem('app_expiry_date');
+        let baseTime = (existingExpiry && parseInt(existingExpiry) > now) ? parseInt(existingExpiry) : now;
+        let newExpiryTime = baseTime + (30 * 24 * 60 * 60 * 1000);
+
+        localStorage.setItem('dm_marine_expiry', newExpiryTime.toString());
+        localStorage.setItem('app_expiry_date', newExpiryTime.toString());
+        
+        msgElement.style.color = "#4ade80";
+        msgElement.innerText = `வெற்றி! புதிய தேதி: ${new Date(newExpiryTime).toLocaleDateString()}`;
+        userKeyInput.value = "";
+        updateExpiryDisplay();
+        checkAppActivation();
+      } else {
+        msgElement.style.color = "#f87171";
+        msgElement.innerText = "தவறான Pass Key!";
+      }
+    }
 
     function saveMyWalkieName() {
       let nameVal = document.getElementById('myWalkieNameInput').value.trim();
