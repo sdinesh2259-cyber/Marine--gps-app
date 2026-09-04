@@ -48,7 +48,7 @@
     
     .validity-tag-top {
       font-size: 9px; font-weight: bold; color: #00ffcc; background: rgba(0,255,204,0.15);
-      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap; cursor: pointer;
+      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
     }
     
     .coord-row-with-layer { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -482,32 +482,6 @@
     </div>
   </div>
 
-  <!-- Pass Key Extend Settings Modal Popup (எந்த அட்வான்ஸ் ரோல்ஓவர் தொந்தரவும் இல்லாமல் சுத்தமான மோடல்) -->
-  <div class="modal-overlay" id="passKeySettingsModal">
-    <div class="modal-content">
-      <div class="modal-title">🔑 Pass Key நீட்டிப்பு (1 மாதம் / 3 மாதம்)</div>
-      
-      <div style="background: #030d1a; padding: 8px; border-radius: 6px; border: 1px solid #1a3a5a; margin-bottom: 10px; text-align: center;">
-        <div style="font-size: 10px; color: #aaa;">சாதன எண் (Device ID):</div>
-        <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX-1</div>
-      </div>
-
-      <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; text-align: center;">தற்போதைய வேலிடிட்டி நிலை: <br><span id="current-expiry-display" style="color: #38bdf8; font-weight: bold; font-size: 13px;">கணக்கிடப்படுகிறது...</span></p>
-      
-      <div class="input-group">
-        <label>Pass Key உள்ளிடவும்:</label>
-        <input type="text" id="advance-pass-key-input" class="input-name" placeholder="PASS-XXXXX" style="color:#ffcc00; font-family:monospace; font-weight:bold; font-size:14px; text-align:center;">
-      </div>
-      
-      <p id="key-msg" style="font-size: 11px; margin-top: 6px; text-align:center; font-weight:bold;"></p>
-
-      <div class="modal-btn-row">
-        <button class="modal-btn btn-save" onclick="applyAdvanceKey()">💾 கீ-யைச் சேமி</button>
-        <button class="modal-btn btn-cancel" onclick="document.getElementById('passKeySettingsModal').style.display='none'">மூடு</button>
-      </div>
-    </div>
-  </div>
-
   <!-- FULLSCREEN GARMIN eTrex STYLE COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div id="compassContentContainer">
@@ -581,7 +555,7 @@
       <div class="coord-section">
         <div class="title-bar">
           <span>🛰️ DM Marine GPS Live</span>
-          <span id="validity-status-label" class="validity-tag-top" onclick="openPassKeySettingsModal()" title="பாஸ் கீ மாற்ற கிளிக் செய்யவும்">👑 ADMIN LIFETIME</span>
+          <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
         </div>
         <div class="coord-row-with-layer">
           <div class="coord-container-step">
@@ -615,10 +589,6 @@
               <button class="map-menu-item-btn" id="menuSpotAlarmToggleBtn" onclick="toggleSpotAlarmMaster();">
                 <span>🔔 பார்/கூண்டு அலாரம்</span>
                 <span id="spotAlarmStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
-              </button>
-              <button class="map-menu-item-btn" onclick="openPassKeySettingsModal(); closeMapControls();" style="background:#0f2c4a; border-color:#38bdf8;">
-                <span>🔑 Pass Key மாற்று</span>
-                <span style="color:#38bdf8; font-size:9.5px;">⚙️</span>
               </button>
             </div>
           </div>
@@ -1301,7 +1271,7 @@
       }
     }
 
-    // 1-வது முறை -1, 2-வது முறை -2 காட்டும் சைக்கிள் லாஜிக்
+    // சுழற்சி முறை: 1st time -1, 2nd time -2, அதன்பிறகு சாதாரண ID
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -1325,13 +1295,13 @@
       return `DM-${base}`;
     }
 
-    // 1 மாத கீ (base + 7351)
+    // 1 மாத கீ (30 நாட்கள்)
     function calculateExpectedKey1Month() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
       return 'PASS-' + (base + 7351);
     }
 
-    // 3 மாத கீ (base + 4829)
+    // 3 மாத கீ (90 நாட்கள்)
     function calculateExpectedKey3Months() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
       return 'PASS-' + (base + 4829);
@@ -1434,9 +1404,9 @@
 
       let addDays = 0;
       if (enteredKey === key1Month) {
-        addDays = 30;
+        addDays = 30; // 1 மாதம்
       } else if (enteredKey === key3Months) {
-        addDays = 90;
+        addDays = 90; // 3 மாதம்
       }
 
       if (addDays > 0) {
@@ -1464,73 +1434,6 @@
         document.getElementById('myWalkieNameInput').value = savedName;
       }
     });
-
-    // Pass Key Extend Settings Modal Functions
-    function openPassKeySettingsModal() {
-      updateExpiryDisplay();
-      let devIdEl = document.getElementById('settingsModalDeviceId');
-      if (devIdEl) devIdEl.innerText = getFullDeviceId();
-      document.getElementById('passKeySettingsModal').style.display = 'flex';
-    }
-
-    function updateExpiryDisplay() {
-      let currentExpiry = localStorage.getItem('dm_marine_expiry');
-      let displaySpan = document.getElementById('current-expiry-display');
-      if (!displaySpan) return;
-
-      let now = new Date().getTime();
-      if (currentExpiry && parseInt(currentExpiry) > now) {
-        let expTime = parseInt(currentExpiry);
-        let remainingDays = Math.ceil((expTime - now) / (1000 * 60 * 60 * 24));
-        let expDateStr = new Date(expTime).toLocaleDateString();
-        displaySpan.innerText = `${expDateStr} (இன்னும் ${remainingDays} நாட்கள் பாக்கி)`;
-      } else {
-        displaySpan.innerText = "வேலிடிட்டி முடிந்துவிட்டது / புதிய கீ தேவை";
-      }
-    }
-
-    function applyAdvanceKey() {
-      let userKeyInput = document.getElementById('advance-pass-key-input');
-      let msgElement = document.getElementById('key-msg');
-      if (!userKeyInput) return;
-      let userKey = userKeyInput.value.trim().toUpperCase();
-      
-      const key1Month = calculateExpectedKey1Month();
-      const key3Months = calculateExpectedKey3Months();
-
-      let addDays = 0;
-      if (userKey === key1Month || userKey === "MARINE30") {
-        addDays = 30;
-      } else if (userKey === key3Months) {
-        addDays = 90;
-      } else if (userKey === "DM-BOSS-6381") {
-        addDays = 30;
-      }
-
-      if (addDays > 0) {
-        let now = Date.now();
-        let newExpiryTime = now + (addDays * 24 * 60 * 60 * 1000);
-
-        localStorage.setItem('dm_marine_expiry', newExpiryTime.toString());
-        localStorage.removeItem('dm_cycle_rotated');
-        let newRemainingDays = Math.ceil((newExpiryTime - now) / (1000 * 60 * 60 * 24));
-        
-        msgElement.style.color = "#4ade80";
-        msgElement.innerText = `வெற்றி! புதிய வேலிடிட்டி: இன்னும் ${newRemainingDays} நாட்கள் (${new Date(newExpiryTime).toLocaleDateString()} வரை) நீட்டிக்கப்பட்டுள்ளது.`;
-        
-        userKeyInput.value = "";
-        updateExpiryDisplay();
-        checkAppActivation();
-        
-        setTimeout(() => {
-          document.getElementById('passKeySettingsModal').style.display = 'none';
-          msgElement.innerText = "";
-        }, 2000);
-      } else {
-        msgElement.style.color = "#f87171";
-        msgElement.innerText = "தவறான Pass Key!";
-      }
-    }
 
     function saveMyWalkieName() {
       let nameVal = document.getElementById('myWalkieNameInput').value.trim();
