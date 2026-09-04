@@ -1271,7 +1271,7 @@
       }
     }
 
-    // சைக்கிள் மேலாண்மை: முதல் முறை -1, இரண்டாவது முறை -2, அதன்பிறகு சாதாரண ID
+    // சுழற்சி முறை: 1st time -1, 2nd time -2, அதன்பிறகு சாதாரண ID
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -2576,7 +2576,7 @@
           if (!navVoiceStep.spoke1_5 && dist <= 1.50 && dist > 1.00) {
             speakTamil("இன்னும் ஒன்றரை மைல் தூரம் உள்ளது");
             navVoiceStep.spoke1_5 = true;
-          } else if (!navVoiceStep.spoke1_0 && dist <= 1.00 && dist > 0.50) {
+          } else the if (!navVoiceStep.spoke1_0 && dist <= 1.00 && dist > 0.50) {
             speakTamil("இன்னும் ஒரு மைல் தூரம் உள்ளது");
             navVoiceStep.spoke1_0 = true;
           } else if (!navVoiceStep.spoke0_50 && dist <= 0.50 && dist > 0.10) {
