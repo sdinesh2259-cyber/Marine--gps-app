@@ -48,7 +48,7 @@
     
     .validity-tag-top {
       font-size: 9px; font-weight: bold; color: #00ffcc; background: rgba(0,255,204,0.15);
-      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+      border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap; cursor: pointer;
     }
     
     .coord-row-with-layer { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -482,7 +482,7 @@
     </div>
   </div>
 
-  <!-- Pass Key Extend Settings Modal Popup -->
+  <!-- Pass Key Extend Settings Modal Popup (எந்த அட்வான்ஸ் ரோல்ஓவர் தொந்தரவும் இல்லாமல் சுத்தமான மோடல்) -->
   <div class="modal-overlay" id="passKeySettingsModal">
     <div class="modal-content">
       <div class="modal-title">🔑 Pass Key நீட்டிப்பு (1 மாதம் / 3 மாதம்)</div>
@@ -492,7 +492,7 @@
         <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX-1</div>
       </div>
 
-      <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; text-align: center;">தற்போதைய வேலிடிட்டி: <br><span id="current-expiry-display" style="color: #38bdf8; font-weight: bold; font-size: 13px;">கணக்கிடப்படுகிறது...</span></p>
+      <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; text-align: center;">தற்போதைய வேலிடிட்டி நிலை: <br><span id="current-expiry-display" style="color: #38bdf8; font-weight: bold; font-size: 13px;">கணக்கிடப்படுகிறது...</span></p>
       
       <div class="input-group">
         <label>Pass Key உள்ளிடவும்:</label>
@@ -1301,7 +1301,7 @@
       }
     }
 
-    // சைக்கிள் மேலாண்மை: முதல் முறை -1, இரண்டாவது முறை -2, அதன்பிறகு சாதாரண ID
+    // 1-வது முறை -1, 2-வது முறை -2 காட்டும் சைக்கிள் லாஜிக்
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -1459,7 +1459,7 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
-      let savedName = localStorage.getItem('marine_walkie_name'] || '';
+      let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
