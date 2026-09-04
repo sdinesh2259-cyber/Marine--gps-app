@@ -464,9 +464,8 @@
       <div class="device-tag" id="displayDeviceId">DM-XXXXX-1</div>
 
       <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
-        <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
-        <div>🔹 GPay / PhonePe: <b>6381634610</b></div>
-        <div>🔹 பணம் செலுத்தி Pass Key பெறுக</div>
+        <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;" id="priceTitleText">💳 கட்டண விவரங்கள்:</div>
+        <div id="priceDescText">🔹 <b>₹299 செலுத்தி Pass Key பெறுக</b> (GPay: 6381634610)</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
@@ -1312,7 +1311,8 @@
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
       const validityLabel = document.getElementById('validity-status-label');
-      const priceBox = document.getElementById('priceDetailBox');
+      const priceTitle = document.getElementById('priceTitleText');
+      const priceDesc = document.getElementById('priceDescText');
       const lockHeader = document.getElementById('lockHeaderTitle');
       const lockSub = document.getElementById('lockSubtitle');
       
@@ -1355,24 +1355,14 @@
 
         if (cycle >= 2) {
           if (lockHeader) lockHeader.innerText = "⚠️ வேலிடிட்டி முடிந்துவிட்டது!";
-          if (lockSub) lockSub.innerText = "மாதாந்திர புதுப்பித்தல் (Renewal) கட்டணம் செலுத்தவும்.";
-          if (priceBox) {
-            priceBox.innerHTML = `
-              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
-              <div>🔹 GPay / PhonePe: <b>6381634610</b></div>
-              <div>🔹 பணம் செலுத்தி Pass Key பெறுக</div>
-            `;
-          }
+          if (lockSub) lockSub.innerText = "இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த பாஸ் கீ பெறுக.";
+          if (priceTitle) priceTitle.innerText = "💳 கட்டண விவரங்கள்:";
+          if (priceDesc) priceDesc.innerHTML = `🔹 <b>₹99 செலுத்தி Pass Key பெறவும்</b><br>🔹 GPay / PhonePe: <b>6381634610</b>`;
         } else {
           if (lockHeader) lockHeader.innerText = "DM Marine GPS - ஆக்டிவேஷன்";
           if (lockSub) lockSub.innerText = "இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.";
-          if (priceBox) {
-            priceBox.innerHTML = `
-              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
-              <div>🔹 GPay / PhonePe: <b>6381634610</b></div>
-              <div>🔹 பணம் செலுத்தி Pass Key பெறுக</div>
-            `;
-          }
+          if (priceTitle) priceTitle.innerText = "💳 கட்டண விவரங்கள்:";
+          if (priceDesc) priceDesc.innerHTML = `🔹 <b>₹299 செலுத்தி Pass Key பெறவும்</b><br>🔹 GPay / PhonePe: <b>6381634610</b>`;
         }
       }
     }
