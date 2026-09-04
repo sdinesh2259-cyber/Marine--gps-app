@@ -478,6 +478,26 @@
     </div>
   </div>
 
+  <!-- Pass Key Extend Settings Modal Popup -->
+  <div class="modal-overlay" id="passKeySettingsModal">
+    <div class="modal-content">
+      <div class="modal-title">🔑 Pass Key நீட்டிப்பு (Extend Subscription)</div>
+      <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px;">தற்போதைய வேலிடிட்டி: <span id="current-expiry-display" style="color: #38bdf8; font-weight: bold;">கணக்கிடப்படுகிறது...</span></p>
+      
+      <div class="input-group">
+        <label>புதிய Pass Key உள்ளிடவும்:</label>
+        <input type="text" id="advance-pass-key-input" class="input-name" placeholder="எ.கா. PASS-XXXXX" style="color:#ffcc00; font-family:monospace; font-weight:bold; font-size:14px; text-align:center;">
+      </div>
+      
+      <p id="key-msg" style="font-size: 11px; margin-top: 6px; text-align:center; font-weight:bold;"></p>
+
+      <div class="modal-btn-row">
+        <button class="modal-btn btn-save" onclick="applyAdvanceKey()">💾 கீ-யைச் சேமி</button>
+        <button class="modal-btn btn-cancel" onclick="document.getElementById('passKeySettingsModal').style.display='none'">மூடு</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FULLSCREEN GARMIN eTrex STYLE COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div id="compassContentContainer">
@@ -551,7 +571,7 @@
       <div class="coord-section">
         <div class="title-bar">
           <span>🛰️ DM Marine GPS Live</span>
-          <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
+          <span id="validity-status-label" class="validity-tag-top" onclick="openPassKeySettingsModal()" style="cursor:pointer;" title="பாஸ் கீ மாற்ற கிளிக் செய்யவும்">👑 ADMIN LIFETIME</span>
         </div>
         <div class="coord-row-with-layer">
           <div class="coord-container-step">
@@ -585,6 +605,10 @@
               <button class="map-menu-item-btn" id="menuSpotAlarmToggleBtn" onclick="toggleSpotAlarmMaster();">
                 <span>🔔 பார்/கூண்டு அலாரம்</span>
                 <span id="spotAlarmStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
+              <button class="map-menu-item-btn" onclick="openPassKeySettingsModal(); closeMapControls();" style="background:#0f2c4a; border-color:#38bdf8;">
+                <span>🔑 Pass Key மாற்று</span>
+                <span style="color:#38bdf8; font-size:9.5px;">⚙️</span>
               </button>
             </div>
           </div>
@@ -903,17 +927,6 @@
     </div>
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
-  </div>
-
-  <!-- Pass Key Extend Settings UI Section -->
-  <div style="background: #1e293b; padding: 15px; border-radius: 8px; margin: 15px; max-width: 400px; color: #fff; position: relative; z-index: 9999;">
-    <h3 style="margin-bottom: 5px; font-size: 16px;">🔑 Pass Key நீட்டிப்பு (Extend Subscription)</h3>
-    <p style="font-size: 14px;">தற்போதைய வேலிடிட்டி: <span id="current-expiry-display" style="color: #38bdf8; font-weight: bold;">கணக்கிடப்படுகிறது...</span></p>
-    <div style="margin-top: 10px;">
-      <input type="text" id="advance-pass-key-input" placeholder="புதிய Pass Key" style="padding: 8px; width: 60%; border-radius: 4px; border: 1px solid #ccc; color:#000;">
-      <button onclick="applyAdvanceKey()" style="padding: 8px 12px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">சேமி</button>
-    </div>
-    <p id="key-msg" style="font-size: 14px; margin-top: 8px;"></p>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -1440,7 +1453,12 @@
       }
     });
 
-    // Advance Pass Key / Subscription Extension Logic
+    // Pass Key Extend Settings Modal Functions
+    function openPassKeySettingsModal() {
+      updateExpiryDisplay();
+      document.getElementById('passKeySettingsModal').style.display = 'flex';
+    }
+
     function updateExpiryDisplay() {
       let currentExpiry = localStorage.getItem('dm_marine_expiry') || localStorage.getItem('app_expiry_date');
       let displaySpan = document.getElementById('current-expiry-display');
@@ -1475,6 +1493,10 @@
         userKeyInput.value = "";
         updateExpiryDisplay();
         checkAppActivation();
+        setTimeout(() => {
+          document.getElementById('passKeySettingsModal').style.display = 'none';
+          msgElement.innerText = "";
+        }, 1500);
       } else {
         msgElement.style.color = "#f87171";
         msgElement.innerText = "தவறான Pass Key!";
