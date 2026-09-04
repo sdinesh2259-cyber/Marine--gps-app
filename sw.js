@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dm-marine-offline-v46';
+const CACHE_NAME = 'dm-marine-offline-v49';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
