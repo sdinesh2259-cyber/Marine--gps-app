@@ -158,7 +158,6 @@
     .fs-lbl-se { bottom: 32px; right: 38px; font-size: 11px; color: #333333; }
     .fs-lbl-sw { bottom: 32px; left: 38px; font-size: 11px; color: #333333; }
 
-    /* Single Orange Arrow (Rotates based on heading) */
     .garmin-orange-arrow {
       position: absolute; width: 0; height: 0;
       border-left: 28px solid transparent;
@@ -512,7 +511,7 @@
       <div class="fs-compass-center-area">
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
-        <!-- Garmin eTrex Style Compass Dial with Rotating Orange Arrow -->
+        <!-- Garmin eTrex Style Compass Dial with Rotating Single Orange Arrow -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
@@ -523,7 +522,7 @@
           <span class="fs-lbl fs-lbl-se">SE</span>
           <span class="fs-lbl fs-lbl-sw">SW</span>
 
-          <!-- Single Orange Arrow -->
+          <!-- Single Orange Direction Arrow -->
           <div class="garmin-orange-arrow" id="garminOrangeArrow"></div>
         </div>
 
@@ -1522,7 +1521,6 @@
 
       headingText.innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
-      // Garmin Style: Dial stays fixed, Orange Arrow rotates to heading
       if (dial) {
         dial.style.transform = `rotate(0deg)`;
       }
