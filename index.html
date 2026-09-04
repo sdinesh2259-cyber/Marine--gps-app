@@ -76,15 +76,15 @@
       width: 4px; height: 26px; position: absolute; display: flex; flex-direction: column; align-items: center;
     }
     .arrow-head {
-      width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #00ffcc;
+      width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #ff6600;
     }
-    .arrow-tail { width: 2px; height: 14px; background: #ffffff; }
+    .arrow-tail { width: 2px; height: 14px; background: #333; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
-    /* FULLSCREEN CLASSIC BLACK & WHITE COMPASS MODAL */
+    /* FULLSCREEN GARMIN eTrex STYLE COMPASS MODAL */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #000000; z-index: 99999; display: none; flex-direction: column;
+      background: #3b2a22; z-index: 99999; display: none; flex-direction: column;
       padding: 0; margin: 0; overflow: hidden;
     }
 
@@ -99,8 +99,8 @@
       padding: 6px 8px 0 8px; gap: 5px; z-index: 2;
     }
     .fs-info-card {
-      background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 4px 6px; text-align: center; min-width: 75px;
+      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      padding: 4px 6px; text-align: center; min-width: 75px; color: #fff;
     }
     
     .fs-center-controls {
@@ -109,23 +109,23 @@
     }
 
     .fs-brightness-control {
-      background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
+      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
       padding: 3px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-      width: 100%; max-width: 125px;
+      width: 100%; max-width: 125px; color: #fff;
     }
     .fs-brightness-control input[type=range] {
-      width: 100%; accent-color: #ffffff; cursor: pointer; height: 3px;
+      width: 100%; accent-color: #ffaa44; cursor: pointer; height: 3px;
     }
 
     .fs-clock-card {
-      background: #0d0d0d; border: 1.5px solid #ffffff; border-radius: 8px;
-      padding: 2px 8px; text-align: center; width: 100%; max-width: 125px;
+      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      padding: 2px 8px; text-align: center; width: 100%; max-width: 125px; color: #fff;
     }
 
     .fs-close-btn {
-      background: #ffffff; color: #000000; border: 2px solid #ffffff; border-radius: 50%;
+      background: #ff6600; color: #ffffff; border: 2px solid #ffffff; border-radius: 50%;
       width: 34px; height: 34px; font-size: 16px; font-weight: 900; display: flex;
-      align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(255,255,255,0.5);
+      align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(255,102,0,0.5);
       flex-shrink: 0;
     }
 
@@ -142,22 +142,37 @@
       margin-bottom: 6px; z-index: 5;
     }
 
+    /* Garmin eTrex Style Compass Dial: White Background, Black Text */
     .fs-compass-dial-large {
-      width: 260px; height: 260px; border-radius: 50%; border: 4px solid #ffffff;
-      background: #000000;
+      width: 260px; height: 260px; border-radius: 50%; border: 6px solid #888888;
+      background: #ffffff;
       position: relative; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 35px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
       transition: transform 0.15s ease-out;
     }
-    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #ffffff; }
-    .fs-lbl-n { top: 6px; font-size: 18px; color: #ff3333; }
-    .fs-lbl-s { bottom: 6px; font-size: 16px; color: #ffffff; }
-    .fs-lbl-e { right: 10px; font-size: 16px; color: #ffffff; }
-    .fs-lbl-w { left: 10px; font-size: 16px; color: #ffffff; }
+    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #000000; }
+    .fs-lbl-n { top: 8px; font-size: 18px; color: #ff0000; }
+    .fs-lbl-s { bottom: 8px; font-size: 16px; color: #000000; }
+    .fs-lbl-e { right: 12px; font-size: 16px; color: #000000; }
+    .fs-lbl-w { left: 12px; font-size: 16px; color: #000000; }
+    .fs-lbl-ne { top: 32px; right: 38px; font-size: 11px; color: #333333; }
+    .fs-lbl-nw { top: 32px; left: 38px; font-size: 11px; color: #333333; }
+    .fs-lbl-se { bottom: 32px; right: 38px; font-size: 11px; color: #333333; }
+    .fs-lbl-sw { bottom: 32px; left: 38px; font-size: 11px; color: #333333; }
+
+    /* Orange Direction Arrow in Center */
+    .garmin-orange-arrow {
+      position: absolute; width: 0; height: 0;
+      border-left: 28px solid transparent;
+      border-right: 28px solid transparent;
+      border-bottom: 90px solid #ff6600;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      z-index: 4;
+    }
 
     .target-dir-needle {
       position: absolute; width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
-      transition: transform 0.15s ease-out;
+      transition: transform 0.15s ease-out; z-index: 6;
     }
     .target-arrow-head {
       width: 0; height: 0; 
@@ -480,18 +495,18 @@
     </div>
   </div>
 
-  <!-- FULLSCREEN COMPASS -->
+  <!-- FULLSCREEN GARMIN eTrex STYLE COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div id="compassContentContainer">
       <div class="fs-compass-top-bar">
         <div class="fs-info-card">
-          <div style="font-size:9px; color:#aaa;">வேகம்</div>
+          <div style="font-size:9px; color:#ffaa44;">வேகம்</div>
           <div style="font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
         </div>
         
         <div class="fs-center-controls">
           <div class="fs-brightness-control">
-            <div style="font-size:8.5px; color:#aaa;">💡 பிரைட்னஸ்</div>
+            <div style="font-size:8.5px; color:#ffaa44;">💡 பிரைட்னஸ்</div>
             <input type="range" id="compassBrightnessRange" min="0.15" max="1.0" step="0.05" value="1.0" oninput="adjustCompassBrightness(this.value)">
           </div>
 
@@ -503,7 +518,7 @@
 
         <div style="display:flex; align-items:flex-start; gap:5px;">
           <div class="fs-info-card">
-            <div style="font-size:9px; color:#aaa;">தூரம்</div>
+            <div style="font-size:9px; color:#ffaa44;">தூரம்</div>
             <div style="font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-dist-val">-- NM</div>
           </div>
           <div class="fs-close-btn" onclick="closeFullscreenCompass()">✕</div>
@@ -513,11 +528,19 @@
       <div class="fs-compass-center-area">
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
+        <!-- Garmin eTrex Style Compass Dial -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
           <span class="fs-lbl fs-lbl-e">E</span>
           <span class="fs-lbl fs-lbl-w">W</span>
+          <span class="fs-lbl fs-lbl-ne">NE</span>
+          <span class="fs-lbl fs-lbl-nw">NW</span>
+          <span class="fs-lbl fs-lbl-se">SE</span>
+          <span class="fs-lbl fs-lbl-sw">SW</span>
+
+          <!-- Orange Center Arrow -->
+          <div class="garmin-orange-arrow"></div>
 
           <div class="target-dir-needle" id="fsTargetNeedle">
             <div class="target-arrow-head"></div>
@@ -527,7 +550,7 @@
 
         <div style="margin-top: 15px; text-align:center;">
           <div id="fs-heading-text" style="font-size:22px; font-weight:900; color:#ffffff; font-family:monospace;">0° N</div>
-          <div id="fs-target-bearing-text" style="font-size:12px; font-weight:bold; color:#00ffcc; margin-top:2px;">நேரடி திசை</div>
+          <div id="fs-target-bearing-text" style="font-size:12px; font-weight:bold; color:#ffaa44; margin-top:2px;">நேரடி திசை</div>
         </div>
       </div>
     </div>
@@ -1614,7 +1637,6 @@
       updateAutoStatusLabelUI();
     }
 
-    // பதிந்தவுடன் ஆட்டோ மோடை உடனடியாக OFF செய்யும் மாற்றம்
     function triggerAutoSaveSpot(lat, lng) {
       let saved = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       let seqNo = saved.length + 1;
