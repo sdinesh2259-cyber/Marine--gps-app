@@ -461,16 +461,19 @@
       <p style="font-size: 11px; color: #ccc; margin: 0 0 8px 0;" id="lockSubtitle">இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.</p>
       
       <div style="font-size: 11px; color: #aaa;">உங்கள் சாதன எண் (Device ID):</div>
-      <div class="device-tag" id="displayDeviceId">DM-XXXXX-1</div>
+      <div class="device-tag" id="displayDeviceId">DM-XXXXX</div>
 
-      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;" id="priceDetailBox">
+      <div style="background: #030d1a; padding: 10px; border-radius: 8px; border: 1px solid #1a3a5a; font-size: 11px; text-align: left; line-height: 1.5; margin-bottom: 8px;">
+        <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 கட்டண விவரங்கள்:</div>
+        <div>🔹 <b>1 மாதம் (30 நாட்கள்):</b> ₹299 (GPay: 6381634610)</div>
+        <div>🔹 <b>3 மாதம் (90 நாட்கள்):</b> சிறப்பு விலை!</div>
       </div>
 
       <button class="modal-btn" style="background:#25D366; color:#fff; width:100%; margin-bottom:10px; padding:8px;" onclick="sendDeviceIdToAdmin()">
         💬 WhatsApp-ல் Device ID அனுப்பி Key பெறுக
       </button>
 
-      <input type="text" id="activationKeyInput" class="lock-input" placeholder="ஆக்டிவேஷன் KEY உள்ளிடவும்">
+      <input type="text" id="activationKeyInput" class="lock-input" placeholder="PASS-XXXXX">
       
       <button class="modal-btn btn-save" onclick="verifyActivationKey()" style="width: 100%; padding: 10px; font-size: 12px;">
         🔓 ஆப்பைத் திற (Activate Now)
@@ -478,20 +481,20 @@
     </div>
   </div>
 
-  <!-- Pass Key Extend Settings Modal Popup with Device ID Display -->
+  <!-- Pass Key Extend Settings Modal Popup -->
   <div class="modal-overlay" id="passKeySettingsModal">
     <div class="modal-content">
-      <div class="modal-title">🔑 Pass Key நீட்டிப்பு (Extend Subscription)</div>
+      <div class="modal-title">🔑 Pass Key நீட்டிப்பு (1 மாதம் / 3 மாதம்)</div>
       
       <div style="background: #030d1a; padding: 8px; border-radius: 6px; border: 1px solid #1a3a5a; margin-bottom: 10px; text-align: center;">
         <div style="font-size: 10px; color: #aaa;">சாதன எண் (Device ID):</div>
-        <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX-1</div>
+        <div style="color: #00ffcc; font-family: monospace; font-size: 13px; font-weight: bold; margin: 2px 0;" id="settingsModalDeviceId">DM-XXXXX</div>
       </div>
 
       <p style="font-size: 12px; color: #cbd5e1; margin-bottom: 10px; text-align: center;">தற்போதைய வேலிடிட்டி: <br><span id="current-expiry-display" style="color: #38bdf8; font-weight: bold; font-size: 13px;">கணக்கிடப்படுகிறது...</span></p>
       
       <div class="input-group">
-        <label>புதிய Pass Key உள்ளிடவும்:</label>
+        <label>Pass Key உள்ளிடவும்:</label>
         <input type="text" id="advance-pass-key-input" class="input-name" placeholder="PASS-XXXXX" style="color:#ffcc00; font-family:monospace; font-weight:bold; font-size:14px; text-align:center;">
       </div>
       
@@ -1297,6 +1300,7 @@
       }
     }
 
+    // எளிமையான Device ID லாஜிக் (சுழற்சிகள் நீக்கப்பட்டது)
     function getOrGenerateDeviceBase() {
       let base = localStorage.getItem('dm_marine_device_base');
       if (!base) {
@@ -1306,30 +1310,21 @@
       return base;
     }
 
-    function generateNewDeviceBase() {
-      let base = Math.floor(10000 + Math.random() * 90000).toString();
-      localStorage.setItem('dm_marine_device_base', base);
-      return base;
-    }
-
-    function getActivationCycle() {
-      let cycle = parseInt(localStorage.getItem('dm_marine_cycle') || '1');
-      if (isNaN(cycle) || cycle < 1) cycle = 1;
-      return cycle;
-    }
-
     function getFullDeviceId() {
       let base = getOrGenerateDeviceBase();
-      let cycle = getActivationCycle();
-      if (cycle === 1) return `DM-${base}-1`;
-      if (cycle === 2) return `DM-${base}-2`;
       return `DM-${base}`;
     }
 
-    function calculateExpectedKey() {
+    // 1 மாதத்திற்கான கீ (base + 7351)
+    function calculateExpectedKey1Month() {
       let base = parseInt(getOrGenerateDeviceBase(), 10);
-      let keyVal = base + 7351;
-      return 'PASS-' + keyVal;
+      return 'PASS-' + (base + 7351);
+    }
+
+    // 3 மாதத்திற்கான கீ (base + 4829)
+    function calculateExpectedKey3Months() {
+      let base = parseInt(getOrGenerateDeviceBase(), 10);
+      return 'PASS-' + (base + 4829);
     }
 
     function checkAppActivation() {
@@ -1338,9 +1333,6 @@
       const lockEl = document.getElementById('activationLock');
       const devIdEl = document.getElementById('displayDeviceId');
       const validityLabel = document.getElementById('validity-status-label');
-      const lockHeader = document.getElementById('lockHeaderTitle');
-      const lockSub = document.getElementById('lockSubtitle');
-      const priceBox = document.getElementById('priceDetailBox');
       
       const now = Date.now();
 
@@ -1348,7 +1340,6 @@
         if (validityLabel) {
           validityLabel.innerText = "👑 ADMIN LIFETIME";
           validityLabel.style.color = "#00ffcc";
-          validityLabel.style.borderColor = "#00ffcc";
         }
         if (lockEl) lockEl.style.display = 'none';
         return;
@@ -1359,91 +1350,59 @@
         if (validityLabel) {
           validityLabel.innerText = `⏳ ${remainingDays} நாட்கள்`;
           validityLabel.style.color = "#ffcc00";
-          validityLabel.style.borderColor = "#ffcc00";
         }
         if (lockEl) lockEl.style.display = 'none';
       } else {
-        if (expiryTimestamp > 0 && expiryTimestamp <= now) {
-          let hasRotated = localStorage.getItem('dm_cycle_rotated');
-          if (!hasRotated) {
-            let cycle = getActivationCycle() + 1;
-            localStorage.setItem('dm_marine_cycle', cycle.toString());
-            generateNewDeviceBase();
-            localStorage.setItem('dm_cycle_rotated', 'true');
-          }
-        }
-
         let fullDevId = getFullDeviceId();
-        let cycle = getActivationCycle();
         if (devIdEl) devIdEl.innerText = fullDevId;
-
         if (lockEl) lockEl.style.display = 'flex';
         if (validityLabel) {
           validityLabel.innerText = `⏳ 0 நாட்கள்`;
           validityLabel.style.color = "#ff0055";
-          validityLabel.style.borderColor = "#ff0055";
-        }
-
-        if (cycle > 1) {
-          if (lockHeader) lockHeader.innerText = "⚠️ வேலிடிட்டி முடிந்துவிட்டது!";
-          if (lockSub) lockSub.innerText = "உங்கள் 30 நாட்கள் முடிந்துவிட்டது. அடுத்த மாதத்திற்குப் புதுப்பிக்கவும்.";
-          if (priceBox) {
-            priceBox.innerHTML = `
-              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 மாதாந்திர புதுப்பித்தல் (Renewal):</div>
-              <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-              <div>🔹 <b>கட்டணம்:</b> ₹99 மட்டும் (30 நாட்களுக்கு)</div>
-            `;
-          }
-        } else {
-          if (lockHeader) lockHeader.innerText = "DM Marine GPS - ஆக்டிவேஷன்";
-          if (lockSub) lockSub.innerText = "இந்த ஆப்பைத் தொடர்ந்து பயன்படுத்த உங்கள் சாதனத்தை ஆக்டிவேட் செய்யவும்.";
-          if (priceBox) {
-            priceBox.innerHTML = `
-              <div style="color: #ffcc00; font-weight: bold; margin-bottom: 2px;">💳 தொடக்கக் கட்டணம்:</div>
-              <div>🔹 <b>GPay / PhonePe:</b> 6381634610</div>
-              <div>🔹 <b>கட்டணம்:</b> ₹299 செலுத்தி Pass Key பெற்றுக்கொள்ளவும்</div>
-            `;
-          }
         }
       }
     }
 
     function sendDeviceIdToAdmin() {
       const fullDevId = getFullDeviceId();
-      const cycle = getActivationCycle();
-      let amountMsg = (cycle > 1) 
-        ? "₹99 மாதாந்திர புதுப்பித்தல் (Renewal) கட்டணம்" 
-        : "₹299 தொடக்கக் கட்டணம்";
-
-      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${fullDevId}. நான் ${amountMsg} செலுத்திவிட்டேன். எனக்கு Activation Key அனுப்பவும்.`);
+      const msg = encodeURIComponent(`வணக்கம், எனது DM Marine GPS சாதன எண்: ${fullDevId}. எனக்கு Pass Key அனுப்பவும்.`);
       window.open(`https://api.whatsapp.com/send?phone=916381634610&text=${msg}`, '_blank');
     }
 
     function verifyActivationKey() {
       const enteredKey = document.getElementById('activationKeyInput').value.trim().toUpperCase();
-      const expectedKey = calculateExpectedKey();
+      const key1Month = calculateExpectedKey1Month();
+      const key3Months = calculateExpectedKey3Months();
 
       if (enteredKey === 'DM-BOSS-6381') {
         let lifetimeMs = 100 * 365 * 24 * 60 * 60 * 1000;
         localStorage.setItem('dm_marine_expiry', (Date.now() + lifetimeMs).toString());
         localStorage.setItem('dm_is_admin', 'true');
-        alert('👑 அட்மின் வாழ்நாள் உரிமை (Lifetime Access) இயக்கப்பட்டது!');
+        alert('👑 அட்மின் வாழ்நாள் உரிமை இயக்கப்பட்டது!');
         document.getElementById('activationLock').style.display = 'none';
         checkAppActivation();
         return;
       }
 
-      if (enteredKey === expectedKey) {
-        let thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
-        let newExpiry = Date.now() + thirtyDaysMs;
+      let addDays = 0;
+      if (enteredKey === key1Month) {
+        addDays = 30; // 1 மாதம்
+      } else if (enteredKey === key3Months) {
+        addDays = 90; // 3 மாதம்
+      }
+
+      if (addDays > 0) {
+        let now = Date.now();
+        let existingExpiry = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
+        let baseTime = (existingExpiry > now) ? existingExpiry : now;
+        let newExpiry = baseTime + (addDays * 24 * 60 * 60 * 1000);
+
         localStorage.setItem('dm_marine_expiry', newExpiry.toString());
-        localStorage.removeItem('dm_is_admin');
-        localStorage.removeItem('dm_cycle_rotated');
-        alert('✅ 30 நாட்களுக்கு ஆக்டிவேஷன் வெற்றிகரமாக முடிந்தது!');
+        alert(`✅ வெற்றிகரமாக ${addDays} நாட்களுக்கு ஆக்டிவேட் செய்யப்பட்டது!`);
         document.getElementById('activationLock').style.display = 'none';
         checkAppActivation();
       } else {
-        alert('❌ தவறான Key! இந்த மாதத்திற்கான சரியான Pass Key-ஐ உள்ளிடவும்.');
+        alert('❌ தவறான Pass Key! சரியாக உள்ளிடவும்.');
       }
     }
 
@@ -1452,14 +1411,13 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
-      updateExpiryDisplay();
       let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
     });
 
-    // Pass Key Extend Settings Modal Functions with Advance Rollover Logic
+    // Pass Key Extend Settings Modal Functions
     function openPassKeySettingsModal() {
       updateExpiryDisplay();
       let devIdEl = document.getElementById('settingsModalDeviceId');
@@ -1468,7 +1426,7 @@
     }
 
     function updateExpiryDisplay() {
-      let currentExpiry = localStorage.getItem('dm_marine_expiry') || localStorage.getItem('app_expiry_date');
+      let currentExpiry = localStorage.getItem('dm_marine_expiry');
       let displaySpan = document.getElementById('current-expiry-display');
       if (!displaySpan) return;
 
@@ -1488,20 +1446,26 @@
       let msgElement = document.getElementById('key-msg');
       if (!userKeyInput) return;
       let userKey = userKeyInput.value.trim().toUpperCase();
-      let expectedKey = calculateExpectedKey();
+      
+      const key1Month = calculateExpectedKey1Month();
+      const key3Months = calculateExpectedKey3Months();
 
-      if (userKey === expectedKey || userKey === "MARINE30" || userKey === "DM-BOSS-6381") { 
+      let addDays = 0;
+      if (userKey === key1Month || userKey === "MARINE30") {
+        addDays = 30;
+      } else if (userKey === key3Months) {
+        addDays = 90;
+      } else if (userKey === "DM-BOSS-6381") {
+        addDays = 30;
+      }
+
+      if (addDays > 0) {
         let now = new Date().getTime();
-        let existingExpiry = localStorage.getItem('dm_marine_expiry') || localStorage.getItem('app_expiry_date');
-        
-        // அட்வான்ஸ் ரோல்ஓவர் லாஜிக்: இன்னும் நாட்கள் மீதமிருந்தால், அதனுடன் 30 நாளைக் கூட்டுவது
-        let baseTime = (existingExpiry && parseInt(existingExpiry) > now) ? parseInt(existingExpiry) : now;
-        let thirtyDaysInMillis = 30 * 24 * 60 * 60 * 1000;
-        let newExpiryTime = baseTime + thirtyDaysInMillis;
+        let existingExpiry = parseInt(localStorage.getItem('dm_marine_expiry') || '0');
+        let baseTime = (existingExpiry > now) ? existingExpiry : now;
+        let newExpiryTime = baseTime + (addDays * 24 * 60 * 60 * 1000);
 
         localStorage.setItem('dm_marine_expiry', newExpiryTime.toString());
-        localStorage.setItem('app_expiry_date', newExpiryTime.toString());
-        
         let newRemainingDays = Math.ceil((newExpiryTime - now) / (1000 * 60 * 60 * 24));
         
         msgElement.style.color = "#4ade80";
@@ -1517,7 +1481,7 @@
         }, 2000);
       } else {
         msgElement.style.color = "#f87171";
-        msgElement.innerText = "தவறான Pass Key! சரியாக உள்ளிடவும்.";
+        msgElement.innerText = "தவறான Pass Key!";
       }
     }
 
