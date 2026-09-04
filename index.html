@@ -158,6 +158,7 @@
     .fs-lbl-se { bottom: 32px; right: 38px; font-size: 11px; color: #333333; }
     .fs-lbl-sw { bottom: 32px; left: 38px; font-size: 11px; color: #333333; }
 
+    /* Single Orange Arrow (Rotates based on heading) */
     .garmin-orange-arrow {
       position: absolute; width: 0; height: 0;
       border-left: 28px solid transparent;
@@ -165,21 +166,7 @@
       border-bottom: 90px solid #ff6600;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
       z-index: 4;
-    }
-
-    .target-dir-needle {
-      position: absolute; width: 20px; height: 210px; display: none; flex-direction: column; align-items: center; pointer-events: none;
-      transition: transform 0.15s ease-out; z-index: 6;
-    }
-    .target-arrow-head {
-      width: 0; height: 0; 
-      border-left: 11px solid transparent; 
-      border-right: 11px solid transparent; 
-      border-bottom: 85px solid #00ffcc;
-      filter: drop-shadow(0 0 10px rgba(0,255,204,0.9));
-    }
-    .target-arrow-tail {
-      width: 4px; height: 45px; background: #ffffff;
+      transform-origin: center center;
     }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
@@ -525,7 +512,7 @@
       <div class="fs-compass-center-area">
         <div class="fs-boat-head-marker" title="படகு செல்லும் தலைப்பகுதி"></div>
 
-        <!-- Garmin eTrex Style Compass Dial -->
+        <!-- Garmin eTrex Style Compass Dial with Rotating Orange Arrow -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
@@ -536,13 +523,8 @@
           <span class="fs-lbl fs-lbl-se">SE</span>
           <span class="fs-lbl fs-lbl-sw">SW</span>
 
-          <!-- Orange Center Arrow -->
-          <div class="garmin-orange-arrow"></div>
-
-          <div class="target-dir-needle" id="fsTargetNeedle">
-            <div class="target-arrow-head"></div>
-            <div class="target-arrow-tail"></div>
-          </div>
+          <!-- Single Orange Arrow -->
+          <div class="garmin-orange-arrow" id="garminOrangeArrow"></div>
         </div>
 
         <div style="margin-top: 15px; text-align:center;">
@@ -1533,15 +1515,20 @@
       document.getElementById('fs-speed-val').innerText = `${currentSpeedKts.toFixed(1)} kts`;
 
       const dial = document.getElementById('fsCompassDial');
-      const targetNeedle = document.getElementById('fsTargetNeedle');
+      const orangeArrow = document.getElementById('garminOrangeArrow');
       const distCard = document.getElementById('fs-dist-val');
       const headingText = document.getElementById('fs-heading-text');
       const targetBearingText = document.getElementById('fs-target-bearing-text');
 
       headingText.innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
 
+      // Garmin Style: Dial stays fixed, Orange Arrow rotates to heading
       if (dial) {
-        dial.style.transform = `rotate(${-currentHeading}deg)`;
+        dial.style.transform = `rotate(0deg)`;
+      }
+      if (orangeArrow) {
+        orangeArrow.style.transform = `rotate(${currentHeading}deg)`;
+        orangeArrow.style.transformOrigin = `center center`;
       }
 
       if (targetTarget) {
@@ -1550,13 +1537,9 @@
         
         distCard.innerText = `${dist} NM`;
         targetBearingText.innerText = `இலக்கு திசை: ${targetBear}°`;
-
-        targetNeedle.style.display = 'flex';
-        targetNeedle.style.transform = `rotate(${targetBear}deg)`;
       } else {
         distCard.innerText = `-- NM`;
         targetBearingText.innerText = `நேரடி திசை`;
-        targetNeedle.style.display = 'none';
       }
     }
 
