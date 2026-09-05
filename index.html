@@ -47,9 +47,9 @@
     }
     
     .dashboard.collapsed {
-      padding: 6px 12px;
-      width: max-content;
-      max-width: 220px;
+      padding: 8px 14px;
+      width: auto;
+      display: inline-block;
       background: #08162b !important;
       border: 1.5px solid #ffcc00 !important;
       cursor: pointer;
@@ -67,11 +67,12 @@
     .dashboard.collapsed .title-bar {
       margin-bottom: 0;
       justify-content: flex-start;
+      padding-right: 0;
     }
     
     .dashboard.collapsed .title-bar span.collapsed-title-text {
       color: #ffcc00 !important;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: bold;
       white-space: nowrap;
       display: inline-block;
@@ -83,7 +84,7 @@
     }
 
     .dashboard.collapsed .collapse-toggle-icon {
-      margin-left: 6px;
+      display: none !important;
     }
 
     .validity-tag-top {
@@ -91,6 +92,10 @@
       border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
     }
     
+    .dashboard.collapsed .validity-tag-top {
+      display: none !important;
+    }
+
     .coord-row-with-layer { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
     .coord-container-step { display: flex; flex-direction: column; gap: 2px; }
     .coord-val { font-size: 12px; font-weight: bold; color: #00ffcc; font-family: monospace; white-space: nowrap; }
@@ -619,16 +624,16 @@
     </div>
   </div>
 
-  <div class="dashboard" id="mainDashboardBox" onclick="handleDashboardClick(event)">
+  <div class="dashboard" id="mainDashboardBox">
     <div class="dash-main">
       <div class="coord-section">
-        <div class="title-bar">
+        <div class="title-bar" onclick="toggleDashboardCollapse()" style="cursor: pointer;">
           <span style="display:flex; align-items:center; gap:4px;">
             🛰️ DM Marine GPS Live
           </span>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div style="display:flex; align-items:center; gap:6px;" onclick="event.stopPropagation()">
             <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
-            <span class="collapse-toggle-icon" id="collapseToggleSymbol">✕</span>
+            <span class="collapse-toggle-icon" id="collapseToggleSymbol" onclick="toggleDashboardCollapse()">✕</span>
           </div>
         </div>
         <div class="coord-row-with-layer">
@@ -983,7 +988,7 @@
     <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
   </div>
 
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -1063,14 +1068,6 @@
         symbol.innerText = "✕";
       }
       setTimeout(() => { if (map) map.resize(); }, 300);
-    }
-
-    function handleDashboardClick(event) {
-      const dashboard = document.getElementById('mainDashboardBox');
-      if (dashboard.classList.contains('collapsed')) {
-        // If it's collapsed, clicking anywhere on the small box should expand it
-        toggleDashboardCollapse();
-      }
     }
 
     let isSonarExpanded = false;
