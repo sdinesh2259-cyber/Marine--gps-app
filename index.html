@@ -1852,7 +1852,7 @@
       const latStr = formatCoord(currentLat, true);
       const lngStr = formatCoord(currentLng, false);
       document.getElementById('sosLocationText').innerText = `Lat: ${latStr} | Lng: ${lngStr}`;
-      const savedPhone = localStorage.getItem('marineEmergencyPhone'] || '';
+      const savedPhone = localStorage.getItem('marineEmergencyPhone') || '';
       document.getElementById('emergencyPhoneInput').value = savedPhone;
       document.getElementById('sosModal').style.display = 'flex';
     }
@@ -1935,7 +1935,7 @@
     function scanNearbyBoats() {
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
-      const myName = localStorage.getItem('marine_walkie_name'] || 'என் படகு';
+      const myName = localStorage.getItem('marine_walkie_name') || 'என் படகு';
       scanBtn.innerText = "⏳ அருகிலுள்ள படகுகளைத் தேடுகிறது...";
       listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் & வைஃபை மூலம் அருகில் உள்ளவர்கள் தேடப்படுகிறார்கள்...</div>';
 
