@@ -1577,7 +1577,7 @@
         else if (targetBear >= 112.5 && targetBear < 157.5) directionDesc = "தென்கிழக்கில் (South-East)";
         else if (targetBear >= 157.5 && targetBear < 202.5) directionDesc = "தெற்கில் (South)";
         else if (targetBear >= 202.5 && targetBear < 247.5) directionDesc = "தென்மேற்கில் (South-West)";
-        else if (targetBear >= 247.5 && targetBear < 292.5) directionDesc = "மேற்கில் (West)";
+        else if (targetBear >= 247.5 && targetBearing < 292.5) directionDesc = "மேற்கில் (West)";
         else directionDesc = "வடமேற்கில் (North-West)";
 
         targetBearingText.innerText = `${dist} NM | ${directionDesc}`;
