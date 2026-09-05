@@ -47,9 +47,9 @@
     }
     
     .dashboard.collapsed {
-      padding: 6px 10px;
+      padding: 6px 12px;
       width: max-content;
-      max-width: 200px;
+      max-width: 220px;
       background: #08162b !important;
       border: 1.5px solid #ffcc00 !important;
       cursor: pointer;
@@ -69,11 +69,12 @@
       justify-content: flex-start;
     }
     
-    .dashboard.collapsed .title-bar span {
+    .dashboard.collapsed .title-bar span.collapsed-title-text {
       color: #ffcc00 !important;
       font-size: 11px;
       font-weight: bold;
       white-space: nowrap;
+      display: inline-block;
     }
 
     .collapse-toggle-icon {
@@ -2661,7 +2662,7 @@
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 2.5;
       ctx.moveTo(0, canvas.height);
-      let bottomOffset = isSonarExpanded ? 28 : 22;
+      let bottomOffset = isSonarExpanded ? 22 : 22;
       for(let x = 0; x <= canvas.width; x += 3) {
         ctx.lineTo(x, canvas.height - bottomOffset + Math.sin((x + Date.now()/20)/40) * 8);
       }
