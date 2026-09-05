@@ -619,7 +619,7 @@
     </div>
   </div>
 
-  <div class="dashboard" id="mainDashboardBox">
+  <div class="dashboard" id="mainDashboardBox" onclick="handleDashboardClick(event)">
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
@@ -628,7 +628,7 @@
           </span>
           <div style="display:flex; align-items:center; gap:6px;">
             <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
-            <span class="collapse-toggle-icon" id="collapseToggleSymbol" onclick="toggleDashboardCollapse()">✕</span>
+            <span class="collapse-toggle-icon" id="collapseToggleSymbol">✕</span>
           </div>
         </div>
         <div class="coord-row-with-layer">
@@ -1063,6 +1063,14 @@
         symbol.innerText = "✕";
       }
       setTimeout(() => { if (map) map.resize(); }, 300);
+    }
+
+    function handleDashboardClick(event) {
+      const dashboard = document.getElementById('mainDashboardBox');
+      if (dashboard.classList.contains('collapsed')) {
+        // If it's collapsed, clicking anywhere on the small box should expand it
+        toggleDashboardCollapse();
+      }
     }
 
     let isSonarExpanded = false;
@@ -2651,7 +2659,7 @@
       {x: 290, y: 45, s: 1.5, size: 12, color: '#ff5722'}
     ];
 
-    function drawsonar() {
+    function drawSonar() {
       if (!canvas || !ctx) return;
       canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
@@ -2685,9 +2693,9 @@
         ctx.fill();
       });
 
-      requestAnimationFrame(drawsonar);
+      requestAnimationFrame(drawSonar);
     }
-    drawsonar();
+    drawSonar();
     loadSavedReefs();
   </script>
 </body>
