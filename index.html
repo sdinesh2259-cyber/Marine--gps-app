@@ -1497,8 +1497,8 @@
         let directionDesc = "";
         if (targetBear >= 337.5 || targetBear < 22.5) directionDesc = "வடக்கில் (North)";
         else if (targetBear >= 22.5 && targetBear < 67.5) directionDesc = "வடகிழக்கில் (North-East)";
-        else if (targetBear >= 67.5 && targetBearing < 112.5) directionDesc = "கிழக்கில் (East)";
-        else if (targetBear >= 112.5 && targetBearing < 157.5) directionDesc = "தென்கிழக்கில் (South-East)";
+        else if (targetBear >= 67.5 && targetBear < 112.5) directionDesc = "கிழக்கில் (East)";
+        else if (targetBear >= 112.5 && targetBear < 157.5) directionDesc = "தென்கிழக்கில் (South-East)";
         else if (targetBear >= 157.5 && targetBearing < 202.5) directionDesc = "தெற்கில் (South)";
         else if (targetBear >= 202.5 && targetBearing < 247.5) directionDesc = "தென்மேற்கில் (South-West)";
         else if (targetBear >= 247.5 && targetBearing < 292.5) directionDesc = "மேற்கில் (West)";
@@ -1511,7 +1511,7 @@
         if (orangeArrow) {
           orangeArrow.style.transform = `rotate(0deg)`;
         }
-        targetBearingText.innerText = `வழிகாட்டுதல் தேர்வு செய்யப்படவில்லை`;
+        targetBearingText.innerText = `இலக்கு தேர்ந்தெடுக்கப்படவில்லை`;
       }
     }
 
