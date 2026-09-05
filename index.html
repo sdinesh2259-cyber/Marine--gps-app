@@ -21,6 +21,7 @@
       z-index: 1;
       background: #001220;
       pointer-events: auto !important;
+      transition: height 0.3s ease;
     }
     
     body.mode-night-red #map { filter: invert(0.9) hue-rotate(330deg) brightness(0.6) contrast(1.4); }
@@ -36,7 +37,20 @@
       color: white; padding: 8px 10px; border-radius: 10px;
       z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
       pointer-events: auto !important;
+      transition: all 0.3s ease;
     }
+    
+    .dashboard.collapsed .dash-main,
+    .dashboard.collapsed .status-bar,
+    .dashboard.collapsed .nav-bar {
+      display: none !important;
+    }
+    .dashboard.collapsed {
+      padding: 6px 10px;
+      width: auto;
+      display: inline-block;
+    }
+
     .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
     .coord-section { flex: 1; text-align: left; }
     
@@ -44,8 +58,13 @@
       font-size: 11px; font-weight: bold; color: #ffcc00; margin-bottom: 3px;
       display: flex; align-items: center; justify-content: space-between; gap: 4px;
       padding-right: 4px;
+      cursor: pointer;
     }
     
+    .collapse-toggle-icon {
+      font-size: 13px; font-weight: bold; color: #00ffcc; padding: 0 4px;
+    }
+
     .validity-tag-top {
       font-size: 9px; font-weight: bold; color: #00ffcc; background: rgba(0,255,204,0.15);
       border: 1px solid #00ffcc; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
@@ -271,8 +290,21 @@
     .sonar-panel {
       position: absolute; bottom: 62px; left: 0; right: 0; height: 105px;
       background: #020b14; border-top: 2px solid #00ffcc; z-index: 9999; display: flex;
-      pointer-events: auto !important;
+      pointer-events: auto !important; cursor: pointer;
+      transition: height 0.3s ease;
     }
+    .sonar-panel.expanded {
+      height: calc(100vh - 225px) !important;
+    }
+    
+    .sonar-close-btn {
+      position: absolute; top: 6px; right: 8px; background: #d90429; color: #fff;
+      border: 1px solid #fff; border-radius: 50%; width: 24px; height: 24px;
+      font-size: 12px; font-weight: bold; display: none; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10000;
+    }
+    .sonar-panel.expanded .sonar-close-btn { display: flex; }
+
     .sonar-info {
       width: 115px; background: #051422; padding: 6px; border-right: 1px solid #1a3a5a;
       display: flex; flex-direction: column; justify-content: space-around;
@@ -298,15 +330,15 @@
     .btn-darkblue-export { background: #14213d !important; border: 1px solid #33415c !important; }
 
     .btn-round-center-save {
-      width: 62px !important; height: 62px !important; border-radius: 50% !important;
+      width: 52px !important; height: 52px !important; border-radius: 50% !important;
       background: radial-gradient(circle, #ff1a40 0%, #a0001e 100%) !important;
-      border: 3px solid #ffcc00 !important; color: #ffffff !important; font-size: 10px !important; font-weight: 900 !important;
+      border: 2.5px solid #ffcc00 !important; color: #ffffff !important; font-size: 9px !important; font-weight: 900 !important;
       display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
-      cursor: pointer !important; box-shadow: 0 4px 15px rgba(255, 0, 68, 0.8) !important;
-      margin: 0 4px !important; flex-shrink: 0 !important; line-height: 1.1 !important; text-align: center !important;
-      transform: translateY(-10px) !important;
+      cursor: pointer !important; box-shadow: 0 3px 12px rgba(255, 0, 68, 0.8) !important;
+      margin: 0 4px !important; flex-shrink: 0 !important; line-height: 1.0 !important; text-align: center !important;
+      transform: translateY(-6px) !important;
     }
-    .btn-round-center-save:active { transform: translateY(-5px) scale(0.95) !important; }
+    .btn-round-center-save:active { transform: translateY(-3px) scale(0.95) !important; }
 
     .popup-box { text-align: center; font-size: 12px; min-width: 165px; padding: 2px; }
     .popup-coord { font-family: monospace; font-weight: bold; color: #00ffcc; background:#111; padding:3px; border-radius:4px; font-size: 11px; margin: 3px 0; }
@@ -566,11 +598,13 @@
     </div>
   </div>
 
-  <div class="dashboard">
+  <div class="dashboard" id="mainDashboardBox">
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
-          <span>🛰️ DM Marine GPS Live</span>
+          <span onclick="toggleDashboardCollapse()" style="cursor:pointer; display:flex; align-items:center; gap:4px;">
+            🛰️ DM Marine GPS Live <span class="collapse-toggle-icon" id="collapseToggleSymbol">✕</span>
+          </span>
           <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
         </div>
         <div class="coord-row-with-layer">
@@ -658,8 +692,9 @@
 
   <div id="map"></div>
 
-  <div class="sonar-panel">
-    <div class="sonar-info">
+  <div class="sonar-panel" id="sonarPanelBox">
+    <div class="sonar-close-btn" onclick="collapseSonarPanel(event)">✕</div>
+    <div class="sonar-info" onclick="toggleExpandSonar()">
       <div>
         <div style="font-size: 8px; color: #888;">ஆழம்:</div>
         <div class="sonar-depth-val" id="live-depth">12.4 பாவம்</div>
@@ -670,7 +705,7 @@
         <div class="sonar-bottom-type" id="live-bottom">🪨 பாறை (Reef)</div>
       </div>
     </div>
-    <canvas id="sonarCanvas"></canvas>
+    <canvas id="sonarCanvas" onclick="toggleExpandSonar()"></canvas>
   </div>
 
   <!-- Trap Manager Modal -->
@@ -917,7 +952,7 @@
   <div class="btn-container">
     <button class="btn-action btn-green-save" onclick="openCoordModal()">💾 சேமி</button>
     <div class="btn-round-center-save" onclick="openCurrentBoatModal()">
-      <span style="font-size: 16px;">📍</span>
+      <span style="font-size: 14px;">📍</span>
       <span>பார் சேமி</span>
     </div>
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
@@ -992,6 +1027,44 @@
       } else {
         modal.style.display = 'flex';
       }
+    }
+
+    function toggleDashboardCollapse() {
+      const dashboard = document.getElementById('mainDashboardBox');
+      const symbol = document.getElementById('collapseToggleSymbol');
+      dashboard.classList.toggle('collapsed');
+      if (dashboard.classList.contains('collapsed')) {
+        symbol.innerText = "+";
+      } else {
+        symbol.innerText = "✕";
+      }
+      setTimeout(() => { if (map) map.resize(); }, 300);
+    }
+
+    let isSonarExpanded = false;
+
+    function toggleExpandSonar() {
+      const panel = document.getElementById('sonarPanelBox');
+      const mapEl = document.getElementById('map');
+      isSonarExpanded = !isSonarExpanded;
+      if (isSonarExpanded) {
+        panel.classList.add('expanded');
+        mapEl.style.height = `calc(100vh - 340px)`;
+      } else {
+        panel.classList.remove('expanded');
+        mapEl.style.height = `calc(100vh - 165px)`;
+      }
+      setTimeout(() => { if (map) map.resize(); }, 300);
+    }
+
+    function collapseSonarPanel(event) {
+      event.stopPropagation();
+      const panel = document.getElementById('sonarPanelBox');
+      const mapEl = document.getElementById('map');
+      isSonarExpanded = false;
+      panel.classList.remove('expanded');
+      mapEl.style.height = `calc(100vh - 165px)`;
+      setTimeout(() => { if (map) map.resize(); }, 300);
     }
 
     function getCurrentFormattedDateTime() {
@@ -1423,7 +1496,7 @@
         let now = Date.now();
         let newExpiry = now + (addDays * 24 * 60 * 60 * 1000);
 
-        localStorage.setItem('dm_marine_expiry', newExpiry.toString());
+        localStorage.setItem('marine_expiry', newExpiry.toString());
         localStorage.removeItem('dm_is_admin');
         localStorage.removeItem('dm_cycle_rotated');
         alert(`✅ வெற்றிகரமாக ${addDays} நாட்களுக்கு ஆக்டிவேட் செய்யப்பட்டது!`);
@@ -1779,7 +1852,7 @@
       const latStr = formatCoord(currentLat, true);
       const lngStr = formatCoord(currentLng, false);
       document.getElementById('sosLocationText').innerText = `Lat: ${latStr} | Lng: ${lngStr}`;
-      const savedPhone = localStorage.getItem('marineEmergencyPhone') || '';
+      const savedPhone = localStorage.getItem('marineEmergencyPhone'] || '';
       document.getElementById('emergencyPhoneInput').value = savedPhone;
       document.getElementById('sosModal').style.display = 'flex';
     }
@@ -1862,7 +1935,7 @@
     function scanNearbyBoats() {
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
-      const myName = localStorage.getItem('marine_walkie_name') || 'என் படகு';
+      const myName = localStorage.getItem('marine_walkie_name'] || 'என் படகு';
       scanBtn.innerText = "⏳ அருகிலுள்ள படகுகளைத் தேடுகிறது...";
       listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் & வைஃபை மூலம் அருகில் உள்ளவர்கள் தேடப்படுகிறார்கள்...</div>';
 
@@ -2572,7 +2645,7 @@
       ctx.fill();
       ctx.stroke();
 
-      fishList.get ? null : fishList.forEach(f => {
+      fishList.forEach(f => {
         f.x -= f.s;
         if (f.x < -30) f.x = canvas.width + 30;
         ctx.fillStyle = f.color;
