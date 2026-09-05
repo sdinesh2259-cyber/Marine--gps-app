@@ -233,7 +233,6 @@
       font-weight: bold;
     }
     
-    /* Big Clock Modal / Overlay Styling */
     .big-clock-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.92); z-index: 999999; display: none;
@@ -1473,9 +1472,13 @@
     let activeMarkers = [];
 
     let navVoiceStep = {
+      spoke3_0: false,
+      spoke2_5: false,
+      spoke2_0: false,
       spoke1_5: false,
       spoke1_0: false,
       spoke0_50: false,
+      spoke0_20: false,
       spoke0_10: false
     };
 
@@ -1859,7 +1862,7 @@
     function scanNearbyBoats() {
       const listContainer = document.getElementById('discoveredBoatsList');
       const scanBtn = document.getElementById('scanBoatsBtn');
-      const myName = localStorage.getItem('marine_walkie_name'] || 'என் படகு';
+      const myName = localStorage.getItem('marine_walkie_name') || 'என் படகு';
       scanBtn.innerText = "⏳ அருகிலுள்ள படகுகளைத் தேடுகிறது...";
       listContainer.innerHTML = '<div style="color:#ffcc00; font-size:11px; text-align:center; padding:8px;">ப்ளூடூத் & வைஃபை மூலம் அருகில் உள்ளவர்கள் தேடப்படுகிறார்கள்...</div>';
 
@@ -2412,7 +2415,7 @@
 
     function startNavigation(lat, lng) {
       targetTarget = { lat, lng };
-      navVoiceStep = { spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false };
+      navVoiceStep = { spoke3_0: false, spoke2_5: false, spoke2_0: false, spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_20: false, spoke0_10: false };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
       updateFsCompassElements();
@@ -2495,8 +2498,7 @@
           document.getElementById('target-bearing').innerText = `${bear}°`;
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
-          // Voice Announce Logic (Every 0.50 NM and specific 0.10 NM approach)
-          if (dist <= 3.50 && dist > 3.00 && !navVoiceStep.spoke3_0) {
+          if (dist <= 3.00 && dist > 2.50 && !navVoiceStep.spoke3_0) {
             speakTamil("இன்னும் மூன்று மைல் தூரம் உள்ளது");
             navVoiceStep.spoke3_0 = true;
           } else if (dist <= 2.50 && dist > 2.00 && !navVoiceStep.spoke2_5) {
@@ -2511,7 +2513,7 @@
           } else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
             speakTamil("இன்னும் ஒரு மைல் தூரம் உள்ளது");
             navVoiceStep.spoke1_0 = true;
-          } else if (dist <= 0.50 && dist > 0.10 && !navVoiceStep.spoke0_50) {
+          } else if (dist <= 0.50 && dist > 0.20 && !navVoiceStep.spoke0_50) {
             speakTamil("இன்னும் 50 பாயிண்ட் தூரம் உள்ளது");
             navVoiceStep.spoke0_50 = true;
           } else if (dist <= 0.20 && dist > 0.10 && !navVoiceStep.spoke0_20) {
@@ -2570,7 +2572,7 @@
       ctx.fill();
       ctx.stroke();
 
-      fishList.forEach(f => {
+      fishList.get ? null : fishList.forEach(f => {
         f.x -= f.s;
         if (f.x < -30) f.x = canvas.width + 30;
         ctx.fillStyle = f.color;
