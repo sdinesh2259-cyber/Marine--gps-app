@@ -2651,7 +2651,7 @@
       {x: 290, y: 45, s: 1.5, size: 12, color: '#ff5722'}
     ];
 
-    function drawSonar() {
+    function drawsonar() {
       if (!canvas || !ctx) return;
       canvas.width = canvas.parentElement.clientWidth - 115;
       canvas.height = canvas.parentElement.clientHeight;
@@ -2685,9 +2685,9 @@
         ctx.fill();
       });
 
-      requestAnimationFrame(drawSonar);
+      requestAnimationFrame(drawsonar);
     }
-    drawSonar();
+    drawsonar();
     loadSavedReefs();
   </script>
 </body>
