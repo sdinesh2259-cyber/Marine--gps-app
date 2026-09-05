@@ -46,11 +46,12 @@
       display: none !important;
     }
     .dashboard.collapsed {
-      padding: 6px 10px;
+      padding: 6px 12px;
       width: auto;
       display: inline-block;
       background: #020b14 !important;
       border: 1.5px solid #ffcc00 !important;
+      cursor: pointer;
     }
 
     .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -64,7 +65,7 @@
     }
     
     .collapse-toggle-icon {
-      font-size: 12px; font-weight: bold; color: #00ffcc; padding: 1px 5px; background: rgba(0,255,204,0.1); border-radius: 4px; border: 1px solid #00ffcc;
+      font-size: 11px; font-weight: bold; color: #00ffcc; padding: 1px 5px; background: rgba(0,255,204,0.1); border-radius: 4px; border: 1px solid #00ffcc;
     }
 
     .validity-tag-top {
@@ -300,10 +301,10 @@
     }
     
     .sonar-close-btn {
-      position: absolute; top: 5px; left: 8px; background: #d90429; color: #fff;
-      border: 1px solid #fff; border-radius: 50%; width: 20px; height: 20px;
-      font-size: 10px; font-weight: bold; display: none; align-items: center; justify-content: center;
-      cursor: pointer; z-index: 10000; box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      position: absolute; top: 4px; left: 6px; background: #d90429; color: #fff;
+      border: 1px solid #fff; border-radius: 50%; width: 18px; height: 18px;
+      font-size: 9px; font-weight: bold; display: none; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 10000; box-shadow: 0 1px 4px rgba(0,0,0,0.6);
     }
     .sonar-panel.expanded .sonar-close-btn { display: flex; }
 
@@ -604,10 +605,13 @@
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
-          <span onclick="toggleDashboardCollapse()" style="cursor:pointer; display:flex; align-items:center; gap:4px;">
-            🛰️ DM Marine GPS Live <span class="collapse-toggle-icon" id="collapseToggleSymbol">✕</span>
+          <span style="display:flex; align-items:center; gap:4px;">
+            🛰️ DM Marine GPS Live
           </span>
-          <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span id="validity-status-label" class="validity-tag-top">👑 ADMIN LIFETIME</span>
+            <span class="collapse-toggle-icon" id="collapseToggleSymbol" onclick="toggleDashboardCollapse()">✕</span>
+          </div>
         </div>
         <div class="coord-row-with-layer">
           <div class="coord-container-step">
@@ -1036,7 +1040,7 @@
       const symbol = document.getElementById('collapseToggleSymbol');
       dashboard.classList.toggle('collapsed');
       if (dashboard.classList.contains('collapsed')) {
-        symbol.innerText = "+";
+        symbol.innerText = "＋";
       } else {
         symbol.innerText = "✕";
       }
@@ -1514,7 +1518,7 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
-      let savedName = localStorage.getItem('marine_walkie_name') || '';
+      let savedName = localStorage.getItem('marine_walkie_name'] || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
@@ -2641,7 +2645,7 @@
       ctx.lineWidth = 2.5;
       ctx.moveTo(0, canvas.height);
       for(let x = 0; x <= canvas.width; x += 3) {
-        ctx.lineTo(x, canvas.height - 25 + Math.sin((x + Date.now()/20)/40) * 8);
+        ctx.lineTo(x, canvas.height - 45 + Math.sin((x + Date.now()/20)/40) * 12);
       }
       ctx.lineTo(canvas.width, canvas.height);
       ctx.fill();
