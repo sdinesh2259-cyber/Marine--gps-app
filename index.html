@@ -1496,7 +1496,7 @@
         let now = Date.now();
         let newExpiry = now + (addDays * 24 * 60 * 60 * 1000);
 
-        localStorage.setItem('marine_expiry', newExpiry.toString());
+        localStorage.setItem('dm_marine_expiry', newExpiry.toString());
         localStorage.removeItem('dm_is_admin');
         localStorage.removeItem('dm_cycle_rotated');
         alert(`✅ வெற்றிகரமாக ${addDays} நாட்களுக்கு ஆக்டிவேட் செய்யப்பட்டது!`);
