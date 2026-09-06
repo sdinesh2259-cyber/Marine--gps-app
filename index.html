@@ -1485,7 +1485,7 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
-      let savedName = localStorage.getItem('marine_walkie_name'] || '';
+      let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
       }
@@ -2494,7 +2494,6 @@
         let lng = pos.coords.longitude;
         let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
         
-        // படகு நின்றிருந்தால் (0.5 kts க்கும் குறைவாக இருந்தால்) வேகம் மற்றும் நகர்வு முற்றிலும் 0 எனக் கொள்ளப்படும்
         let speed = rawSpeed > 0.5 ? rawSpeed : 0;
         
         let heading = lastValidHeading;
@@ -2506,7 +2505,6 @@
         currentSpeedKts = speed;
         currentLat = lat; currentLng = lng; currentHeading = heading;
 
-        // படகு உண்மையில் நகர்ந்தால் மட்டுமே (Speed > 0.5 kts) டீசல் மைலேஜ் குறையும்
         if (speed > 0.5 && lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, lat, lng));
           if (stepNM > 0.001 && stepNM < 5.0) {
