@@ -41,15 +41,14 @@
     }
 
     .dashboard.slide-hidden {
-      transform: translateX(-110%);
-      opacity: 0.2;
+      transform: translateX(-108%);
     }
 
     .dash-slide-toggle-btn {
-      position: absolute; top: 50%; right: -14px; transform: translateY(-50%);
-      background: #ffcc00; color: #000; font-size: 11px; font-weight: bold;
-      width: 22px; height: 32px; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 10000;
-      display: flex; align-items: center; justify-content: center; box-shadow: 2px 0 6px rgba(0,0,0,0.5);
+      position: fixed; top: 35px; left: 5px;
+      background: #ffcc00; color: #000; font-size: 14px; font-weight: bold;
+      width: 26px; height: 38px; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 10005;
+      display: flex; align-items: center; justify-content: center; box-shadow: 2px 2px 8px rgba(0,0,0,0.7);
     }
 
     .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -594,8 +593,9 @@
     </div>
   </div>
 
+  <div class="dash-slide-toggle-btn" id="dashToggleBtn" onclick="toggleDashboardSlide()" title="ஸ்லைடு செய்து மறை / காட்டு">◀</div>
+
   <div class="dashboard" id="mainDashboardBox">
-    <div class="dash-slide-toggle-btn" onclick="toggleDashboardSlide()" title="ஸ்லைடு செய்து மறை / காட்டு">◀</div>
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
@@ -996,7 +996,7 @@
 
     function toggleDashboardSlide() {
       const dashboard = document.getElementById('mainDashboardBox');
-      const toggleBtn = dashboard.querySelector('.dash-slide-toggle-btn');
+      const toggleBtn = document.getElementById('dashToggleBtn');
       dashboard.classList.toggle('slide-hidden');
       if (dashboard.classList.contains('slide-hidden')) {
         toggleBtn.innerHTML = "▶";
@@ -2648,7 +2648,7 @@
 
       fishList.forEach(f => {
         f.x -= f.s;
-        f.x < -30 ? f.x = canvas.width + 30 : null;
+        if (f.x < -30) f.x = canvas.width + 30;
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2, 0, 0, Math.PI * 2);
