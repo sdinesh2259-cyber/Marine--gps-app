@@ -37,19 +37,19 @@
       color: white; padding: 8px 10px; border-radius: 10px;
       z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
       pointer-events: auto !important;
-      transition: transform 0.3s ease, max-height 0.3s ease;
-      overflow: hidden;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
-    .dashboard.collapsed {
-      transform: translateY(-82%);
+    .dashboard.slide-hidden {
+      transform: translateX(-110%);
+      opacity: 0.2;
     }
 
-    .dash-toggle-handle {
-      position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-      background: #ffcc00; color: #000; font-size: 8px; font-weight: bold;
-      padding: 1px 12px; border-radius: 4px; cursor: pointer; z-index: 10000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    .dash-slide-toggle-btn {
+      position: absolute; top: 50%; right: -14px; transform: translateY(-50%);
+      background: #ffcc00; color: #000; font-size: 11px; font-weight: bold;
+      width: 22px; height: 32px; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 10000;
+      display: flex; align-items: center; justify-content: center; box-shadow: 2px 0 6px rgba(0,0,0,0.5);
     }
 
     .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -595,7 +595,7 @@
   </div>
 
   <div class="dashboard" id="mainDashboardBox">
-    <div class="dash-toggle-handle" onclick="toggleDashboardCollapse()">▲/▼ மறை/காட்டு</div>
+    <div class="dash-slide-toggle-btn" onclick="toggleDashboardSlide()" title="ஸ்லைடு செய்து மறை / காட்டு">◀</div>
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
@@ -994,10 +994,15 @@
       if (!globalWakeLock) keepScreenAlwaysOn();
     }, { once: false });
 
-    function toggleDashboardCollapse() {
+    function toggleDashboardSlide() {
       const dashboard = document.getElementById('mainDashboardBox');
-      dashboard.classList.toggle('collapsed');
-      setTimeout(() => { if (map) map.resize(); }, 300);
+      const toggleBtn = dashboard.querySelector('.dash-slide-toggle-btn');
+      dashboard.classList.toggle('slide-hidden');
+      if (dashboard.classList.contains('slide-hidden')) {
+        toggleBtn.innerHTML = "▶";
+      } else {
+        toggleBtn.innerHTML = "◀";
+      }
     }
 
     let voiceAlertMasterEnabled = localStorage.getItem('dm_voice_alert_master') !== 'false';
@@ -2643,7 +2648,7 @@
 
       fishList.forEach(f => {
         f.x -= f.s;
-        if (f.x < -30) f.x = canvas.width + 30;
+        f.x < -30 ? f.x = canvas.width + 30 : null;
         ctx.fillStyle = f.color;
         ctx.beginPath();
         ctx.ellipse(f.x, f.y, f.size, f.size/2, 0, 0, Math.PI * 2);
