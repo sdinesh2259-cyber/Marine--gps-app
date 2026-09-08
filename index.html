@@ -37,6 +37,19 @@
       color: white; padding: 8px 10px; border-radius: 10px;
       z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.6); border: 1px solid #333;
       pointer-events: auto !important;
+      transition: transform 0.3s ease, max-height 0.3s ease;
+      overflow: hidden;
+    }
+
+    .dashboard.collapsed {
+      transform: translateY(-82%);
+    }
+
+    .dash-toggle-handle {
+      position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+      background: #ffcc00; color: #000; font-size: 8px; font-weight: bold;
+      padding: 1px 12px; border-radius: 4px; cursor: pointer; z-index: 10000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .dash-main { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
@@ -582,6 +595,7 @@
   </div>
 
   <div class="dashboard" id="mainDashboardBox">
+    <div class="dash-toggle-handle" onclick="toggleDashboardCollapse()">▲/▼ மறை/காட்டு</div>
     <div class="dash-main">
       <div class="coord-section">
         <div class="title-bar">
@@ -979,6 +993,12 @@
     document.addEventListener('touchstart', () => {
       if (!globalWakeLock) keepScreenAlwaysOn();
     }, { once: false });
+
+    function toggleDashboardCollapse() {
+      const dashboard = document.getElementById('mainDashboardBox');
+      dashboard.classList.toggle('collapsed');
+      setTimeout(() => { if (map) map.resize(); }, 300);
+    }
 
     let voiceAlertMasterEnabled = localStorage.getItem('dm_voice_alert_master') !== 'false';
 
@@ -1460,9 +1480,9 @@
 
       let addDays = 0;
       if (enteredKey === key1Month) {
-        addDays = 30; // 1 மாதம்
+        addDays = 30;
       } else if (enteredKey === key3Months) {
-        addDays = 90; // 3 மாதம்
+        addDays = 90;
       }
 
       if (addDays > 0) {
