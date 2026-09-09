@@ -88,6 +88,7 @@
 
     .compass-needle {
       width: 4px; height: 26px; position: absolute; display: flex; flex-direction: column; align-items: center;
+      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
     .arrow-head {
       width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #ff6600;
@@ -97,7 +98,7 @@
 
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #3b2a22; z-index: 99999; display: none; flex-direction: column;
+      background: #1c2631; z-index: 99999; display: none; flex-direction: column;
       padding: 0; margin: 0; overflow: hidden;
     }
 
@@ -109,35 +110,35 @@
 
     .fs-compass-top-bar {
       width: 100%; display: flex; justify-content: space-between; align-items: flex-start;
-      padding: 6px 8px 0 8px; gap: 5px; z-index: 2;
+      padding: 8px 10px 0 10px; gap: 6px; z-index: 2;
     }
     .fs-info-card {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
-      padding: 4px 6px; text-align: center; min-width: 75px; color: #fff;
+      background: #0d151e; border: 1.5px solid #ffcc00; border-radius: 8px;
+      padding: 5px 8px; text-align: center; min-width: 85px; color: #fff;
     }
     
     .fs-center-controls {
       display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-      gap: 3px; flex: 1; margin-top: 0;
+      gap: 4px; flex: 1; margin-top: 0;
     }
 
     .fs-brightness-control {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      background: #0d151e; border: 1.5px solid #ffaa44; border-radius: 8px;
       padding: 3px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-      width: 100%; max-width: 125px; color: #fff;
+      width: 100%; max-width: 130px; color: #fff;
     }
     .fs-brightness-control input[type=range] {
       width: 100%; accent-color: #ffaa44; cursor: pointer; height: 3px;
     }
 
     .fs-clock-card {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
-      padding: 2px 8px; text-align: center; width: 100%; max-width: 125px; color: #fff;
+      background: #0d151e; border: 1.5px solid #00ffcc; border-radius: 8px;
+      padding: 3px 8px; text-align: center; width: 100%; max-width: 130px; color: #fff;
     }
 
     .fs-close-btn {
       background: #ff6600; color: #ffffff; border: 2px solid #ffffff; border-radius: 50%;
-      width: 34px; height: 34px; font-size: 16px; font-weight: 900; display: flex;
+      width: 36px; height: 36px; font-size: 18px; font-weight: 900; display: flex;
       align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 10px rgba(255,102,0,0.5);
       flex-shrink: 0;
     }
@@ -149,37 +150,39 @@
 
     .fs-boat-head-marker {
       width: 0; height: 0; 
-      border-left: 8px solid transparent; 
-      border-right: 8px solid transparent; 
-      border-bottom: 14px solid #ffcc00;
-      margin-bottom: 6px; z-index: 5;
+      border-left: 10px solid transparent; 
+      border-right: 10px solid transparent; 
+      border-bottom: 18px solid #ffcc00;
+      margin-bottom: 8px; z-index: 5;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
     }
 
     .fs-compass-dial-large {
-      width: 260px; height: 260px; border-radius: 50%; border: 6px solid #888888;
+      width: 270px; height: 270px; border-radius: 50%; border: 6px solid #4a5c6d;
       background: #ffffff;
       position: relative; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
-      transition: transform 0.15s ease-out;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.2);
+      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
     .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #000000; }
-    .fs-lbl-n { top: 8px; font-size: 18px; color: #ff0000; }
-    .fs-lbl-s { bottom: 8px; font-size: 16px; color: #000000; }
-    .fs-lbl-e { right: 12px; font-size: 16px; color: #000000; }
-    .fs-lbl-w { left: 12px; font-size: 16px; color: #000000; }
-    .fs-lbl-ne { top: 32px; right: 38px; font-size: 11px; color: #333333; }
-    .fs-lbl-nw { top: 32px; left: 38px; font-size: 11px; color: #333333; }
-    .fs-lbl-se { bottom: 32px; right: 38px; font-size: 11px; color: #333333; }
-    .fs-lbl-sw { bottom: 32px; left: 38px; font-size: 11px; color: #333333; }
+    .fs-lbl-n { top: 10px; font-size: 20px; color: #ff0000; }
+    .fs-lbl-s { bottom: 10px; font-size: 18px; color: #000000; }
+    .fs-lbl-e { right: 14px; font-size: 18px; color: #000000; }
+    .fs-lbl-w { left: 14px; font-size: 18px; color: #000000; }
+    .fs-lbl-ne { top: 36px; right: 40px; font-size: 12px; color: #555; }
+    .fs-lbl-nw { top: 36px; left: 40px; font-size: 12px; color: #555; }
+    .fs-lbl-se { bottom: 36px; right: 40px; font-size: 12px; color: #555; }
+    .fs-lbl-sw { bottom: 36px; left: 40px; font-size: 12px; color: #555; }
 
     .garmin-orange-arrow {
       position: absolute; width: 0; height: 0;
-      border-left: 28px solid transparent;
-      border-right: 28px solid transparent;
-      border-bottom: 90px solid #ff6600;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      border-left: 24px solid transparent;
+      border-right: 24px solid transparent;
+      border-bottom: 95px solid #ff4400;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
       z-index: 4;
-      transform-origin: center center;
+      transform-origin: 50% 85%;
+      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
@@ -268,6 +271,7 @@
     .boat-heading-arrow {
       width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 30px solid #00ffcc;
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
+      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     .border-alert-banner {
@@ -288,9 +292,7 @@
       pointer-events: auto !important; cursor: pointer;
       transition: height 0.3s ease;
     }
-    .sonar-panel.expanded {
-      height: 38vh !important;
-    }
+    .sonar-panel.expanded { height: 38vh !important; }
     
     .sonar-close-btn {
       position: absolute; top: 4px; left: 6px; background: #d90429; color: #fff;
@@ -525,13 +527,14 @@
     <div style="font-size: 11px; color: #aaa; margin-top: 15px;">(மீண்டும் தொட தொடுங்கள்)</div>
   </div>
 
-  <!-- FULLSCREEN GARMIN eTrex STYLE COMPASS MODAL -->
+  <!-- FULLSCREEN GARMIN eTrex / GPS 12H STYLE COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div id="compassContentContainer">
       <div class="fs-compass-top-bar">
         <div class="fs-info-card">
           <div style="font-size:9px; color:#ffaa44;">வேகம்</div>
-          <div style="font-size:15px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
+          <div style="font-size:14px; font-weight:bold; color:#ffffff; font-family:monospace;" id="fs-speed-val">0.0 kts</div>
+          <div style="font-size:9px; color:#00ffcc; font-family:monospace;" id="fs-speed-kmh">0.0 km/h</div>
         </div>
         
         <div class="fs-center-controls">
@@ -556,8 +559,10 @@
       </div>
 
       <div class="fs-compass-center-area">
-        <div class="fs-boat-head-marker" title="நேர் திசை (Heading)"></div>
+        <!-- படகின் முகப்பு குறி (Lubber Line / Course Pointer) -->
+        <div class="fs-boat-head-marker" title="படகு செல்லும் நேர் திசை (Boat Heading)"></div>
 
+        <!-- கார்மின் காம்பஸ் டயல் -->
         <div class="fs-compass-dial-large" id="fsCompassDial">
           <span class="fs-lbl fs-lbl-n">N</span>
           <span class="fs-lbl fs-lbl-s">S</span>
@@ -568,6 +573,7 @@
           <span class="fs-lbl fs-lbl-se">SE</span>
           <span class="fs-lbl fs-lbl-sw">SW</span>
 
+          <!-- கார்மின் இலக்கு சுட்டும் அம்பு குறி -->
           <div class="garmin-orange-arrow" id="garminOrangeArrow"></div>
         </div>
 
@@ -678,7 +684,7 @@
     </div>
 
     <div class="status-bar">
-      <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts</span>
+      <span id="boat-speed" style="color: #00ffcc; font-weight: bold;">வேகம்: 0.0 kts (0.0 km/h)</span>
       <span id="fuel-status" style="color: #ffcc00; font-weight: bold;" onclick="openFuelConfigModal()" title="டீசல் அமைப்பு மாற்ற">⛽ டீசல்: 50.0L</span>
       <span id="norm-time" onclick="toggleBigClock()" title="தொட்டால் பெருசாகும்">--:--:-- PM</span>
     </div>
@@ -1236,6 +1242,7 @@
       });
     }
 
+    // டீசல் அமைப்புகள்
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
     let dieselConsumePerNM = parseFloat(localStorage.getItem('marine_diesel_per_nm') || '0.5');
     let totalDistanceTraveledNM = parseFloat(localStorage.getItem('marine_total_dist_nm') || '0');
@@ -1254,9 +1261,11 @@
       if (!isNaN(tD) && !isNaN(dNM)) {
         totalDieselCapacity = tD;
         dieselConsumePerNM = dNM;
+        totalDistanceTraveledNM = 0;
+        localStorage.setItem('marine_total_dist_nm', '0');
         localStorage.setItem('marine_total_diesel', totalDieselCapacity);
         localStorage.setItem('marine_diesel_per_nm', dieselConsumePerNM);
-        alert("✅ டீசல் அமைப்பு சேமிக்கப்பட்டது!");
+        alert("✅ டீசல் அமைப்பு சேமிக்கப்பட்டது! டீசல் அளவு: " + totalDieselCapacity.toFixed(1) + "L");
       }
       document.getElementById('fuelModal').style.display = 'none';
       updateFuelDisplay();
@@ -1526,8 +1535,16 @@
     let currentLat = 8.8238;
     let currentLng = 78.1567;
     let currentHeading = 0;
+    let smoothedHeading = 0;
     let lastValidHeading = 0;
+    
+    // துல்லியமான வேகம் கணக்கிடுவதற்கான மாறிகள்
     let currentSpeedKts = 0;
+    let currentSpeedKmh = 0;
+    let smoothedSpeedKts = 0;
+    let lastPositionTime = null;
+    let lastSpeedLat = null;
+    let lastSpeedLng = null;
 
     let boatMarker = null;
     let arrowInnerEl = null;
@@ -1576,11 +1593,21 @@
       if (!modal || modal.style.display !== 'flex') return;
 
       document.getElementById('fs-speed-val').innerText = `${currentSpeedKts.toFixed(1)} kts`;
+      const fsKmhEl = document.getElementById('fs-speed-kmh');
+      if (fsKmhEl) fsKmhEl.innerText = `${currentSpeedKmh.toFixed(1)} km/h`;
 
+      const dial = document.getElementById('fsCompassDial');
       const orangeArrow = document.getElementById('garminOrangeArrow');
       const distCard = document.getElementById('fs-dist-val');
       const headingText = document.getElementById('fs-heading-text');
       const targetBearingText = document.getElementById('fs-target-bearing-text');
+
+      let roundedHeading = Math.round(smoothedHeading);
+      let boatDir = getHeadingDir(roundedHeading);
+
+      if (dial) {
+        dial.style.transform = `rotate(${-roundedHeading}deg)`;
+      }
 
       if (targetTarget) {
         let dist = calcDistanceNM(currentLat, currentLng, targetTarget.lat, targetTarget.lng);
@@ -1588,27 +1615,26 @@
         let dirName = getHeadingDir(targetBear);
         
         distCard.innerText = `${dist} NM`;
-        headingText.innerText = `இலக்கு திசை: ${targetBear}° (${dirName})`;
+        headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | இலக்கு: ${targetBear}° (${dirName})`;
 
-        let relativeBearing = (targetBear - currentHeading + 360) % 360;
         if (orangeArrow) {
-          orangeArrow.style.transform = `rotate(${relativeBearing}deg)`;
+          orangeArrow.style.transform = `rotate(${targetBear}deg)`;
         }
 
+        let diff = (targetBear - roundedHeading + 360) % 360;
         let directionDesc = "";
-        if (targetBear >= 337.5 || targetBear < 22.5) directionDesc = "வடக்கில் (North)";
-        else if (targetBear >= 22.5 && targetBear < 67.5) directionDesc = "வடகிழக்கில் (North-East)";
-        else if (targetBear >= 67.5 && targetBear < 112.5) directionDesc = "கிழக்கில் (East)";
-        else if (targetBear >= 112.5 && targetBear < 157.5) directionDesc = "தென்கிழக்கில் (South-East)";
-        else if (targetBear >= 157.5 && targetBear < 202.5) directionDesc = "தெற்கில் (South)";
-        else if (targetBear >= 202.5 && targetBear < 247.5) directionDesc = "தென்மேற்கில் (South-West)";
-        else if (targetBear >= 247.5 && targetBearing < 292.5) directionDesc = "மேற்கில் (West)";
-        else directionDesc = "வடமேற்கில் (North-West)";
+        if (diff <= 5 || diff >= 355) {
+          directionDesc = "🎯 அம்பு குறிக்கு நேராகச் செல்கிறீர்கள்!";
+        } else if (diff > 5 && diff <= 180) {
+          directionDesc = `👉 வலதுபக்கம் ${diff}° திருப்புங்கள்`;
+        } else {
+          directionDesc = `👈 இடதுபக்கம் ${360 - diff}° திருப்புங்கள்`;
+        }
 
         targetBearingText.innerText = `${dist} NM | ${directionDesc}`;
       } else {
         distCard.innerText = `-- NM`;
-        headingText.innerText = `திசை: ${currentHeading}°`;
+        headingText.innerText = `படகு திசை: ${roundedHeading}° (${boatDir})`;
         if (orangeArrow) {
           orangeArrow.style.transform = `rotate(0deg)`;
         }
@@ -2513,24 +2539,76 @@
       }
     }
 
+    // GPS, வேகம் & காம்பஸ் துல்லியக் கணக்கீடுகள்
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
         let lng = pos.coords.longitude;
-        let rawSpeed = pos.coords.speed ? (pos.coords.speed * 1.94384) : 0;
+        let now = pos.timestamp || Date.now();
         
-        let speed = rawSpeed > 0.5 ? rawSpeed : 0;
-        
-        let heading = lastValidHeading;
-        if (speed > 0.6 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-          heading = Math.round(pos.coords.heading);
-          lastValidHeading = heading;
+        let calculatedSpeedKts = 0;
+
+        // 1. ஜிபிஎஸ் சிப்பில் இருந்து வரும் வேகம்
+        let rawHardwareSpeedKts = (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) 
+                                  ? (pos.coords.speed * 1.94384) : 0;
+
+        // 2. இரண்டு புள்ளிகளுக்கு இடைப்பட்ட தூரம் / நேரம் மூலம் நேரடி வேகம் கணக்கிடுதல்
+        if (lastPositionTime !== null && lastSpeedLat !== null && lastSpeedLng !== null) {
+          let timeDeltaSec = (now - lastPositionTime) / 1000.0;
+          if (timeDeltaSec > 0.4 && timeDeltaSec < 10.0) {
+            let distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
+            let distMeters = distNM * 1852.0;
+
+            // அலைகள் காரணமாக ஃபோன் சும்மா ஆடும்போது (GPS Drift) வேகம் காட்டாமல் இருக்க 1.5 மீட்டருக்கு கீழ் பூஜ்ஜியம்
+            if (distMeters > 1.5) {
+              let computedSpeedKts = (distNM / (timeDeltaSec / 3600.0));
+              
+              if (rawHardwareSpeedKts > 0.3) {
+                // ஹார்டுவேர் ஸ்பீட் மற்றும் நேரடி தூர ஸ்பீட் இரண்டையும் சமன் செய்தல்
+                calculatedSpeedKts = (rawHardwareSpeedKts * 0.7) + (computedSpeedKts * 0.3);
+              } else {
+                calculatedSpeedKts = computedSpeedKts;
+              }
+            } else {
+              calculatedSpeedKts = 0;
+            }
+          }
+        } else {
+          calculatedSpeedKts = rawHardwareSpeedKts;
         }
 
-        currentSpeedKts = speed;
-        currentLat = lat; currentLng = lng; currentHeading = heading;
+        lastSpeedLat = lat;
+        lastSpeedLng = lng;
+        lastPositionTime = now;
 
-        if (speed > 0.5 && lastLatForFuel !== null && lastLngForFuel !== null) {
+        // படகு நிற்கும்போது அல்லது மிக மெதுவாக மிதக்கும்போது 0.3 kts-க்குக் கீழ் இருந்தால் 0 எனக் காட்டும்
+        if (calculatedSpeedKts < 0.35) {
+          calculatedSpeedKts = 0;
+        }
+
+        // படகு வேகத்திற்கு ஏற்ப உடனடி ரெஸ்பான்ஸ் (Responsive Speed Filter)
+        if (calculatedSpeedKts === 0) {
+          smoothedSpeedKts = 0; // போட் நின்றால் உடனடியாக 0
+        } else {
+          smoothedSpeedKts = (smoothedSpeedKts * 0.4) + (calculatedSpeedKts * 0.6);
+        }
+
+        currentSpeedKts = smoothedSpeedKts;
+        currentSpeedKmh = currentSpeedKts * 1.852; // கி.மீ/மணி நேரடி மாற்று
+
+        // படகு நகரும் போது மட்டுமே Heading புதுப்பிக்கப்படும்
+        if (currentSpeedKts > 0.4 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+          let rawHeading = pos.coords.heading;
+          lastValidHeading = rawHeading;
+
+          let diff = (rawHeading - smoothedHeading + 540) % 360 - 180;
+          smoothedHeading = (smoothedHeading + diff * 0.35 + 360) % 360;
+        }
+
+        currentHeading = lastValidHeading;
+        currentLat = lat; currentLng = lng;
+
+        if (currentSpeedKts > 0.4 && lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, lat, lng));
           if (stepNM > 0.001 && stepNM < 5.0) {
             totalDistanceTraveledNM += stepNM;
@@ -2545,12 +2623,15 @@
         let lngStr = formatCoord(lng, false);
         document.getElementById('lat-coord').innerText = `Lat: ${latStr}`;
         document.getElementById('lng-coord').innerText = `Lng: ${lngStr}`;
-        document.getElementById('boat-speed').innerText = `வேகம்: ${speed.toFixed(1)} kts`;
-        document.getElementById('heading-val').innerText = `${heading}° ${getHeadingDir(heading)}`;
         
+        // டேஷ்போர்டில் நாட்டிக்கல் மைல் மற்றும் கிலோமீட்டர் வேகம் இரண்டையும் துல்லியமாகக் காட்டுதல்
+        document.getElementById('boat-speed').innerText = `வேகம்: ${currentSpeedKts.toFixed(1)} kts (${currentSpeedKmh.toFixed(1)} km/h)`;
+        document.getElementById('heading-val').innerText = `${Math.round(smoothedHeading)}° ${getHeadingDir(Math.round(smoothedHeading))}`;
+        
+        // சின்ன காம்பஸ் முள்ளு
         const needle = document.getElementById('compass-needle');
-        if (needle) needle.style.transform = `rotate(${heading}deg)`;
-        if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${heading}deg)`;
+        if (needle) needle.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
+        if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
 
         if (boatMarker) {
           try { boatMarker.setLngLat([lng, lat]); } catch(e) {}
