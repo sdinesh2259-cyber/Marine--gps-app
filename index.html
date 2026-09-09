@@ -88,7 +88,7 @@
 
     .compass-needle {
       width: 4px; height: 26px; position: absolute; display: flex; flex-direction: column; align-items: center;
-      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transition: transform 0.2s linear;
     }
     .arrow-head {
       width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #ff6600;
@@ -96,9 +96,10 @@
     .arrow-tail { width: 2px; height: 14px; background: #333; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
+    /* GARMIN 12H FULLSCREEN COMPASS STYLES */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #1c2631; z-index: 99999; display: none; flex-direction: column;
+      background: #18232c; z-index: 99999; display: none; flex-direction: column;
       padding: 0; margin: 0; overflow: hidden;
     }
 
@@ -148,41 +149,70 @@
       position: relative;
     }
 
+    /* Garmin Lubber Line (Boat Bow Direction) */
     .fs-boat-head-marker {
       width: 0; height: 0; 
-      border-left: 10px solid transparent; 
-      border-right: 10px solid transparent; 
-      border-bottom: 18px solid #ffcc00;
-      margin-bottom: 8px; z-index: 5;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+      border-left: 11px solid transparent; 
+      border-right: 11px solid transparent; 
+      border-bottom: 20px solid #ffcc00;
+      margin-bottom: 8px; z-index: 10;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
     }
 
-    .fs-compass-dial-large {
-      width: 270px; height: 270px; border-radius: 50%; border: 6px solid #4a5c6d;
-      background: #ffffff;
+    .compass-housing-circle {
+      width: 280px; height: 280px; border-radius: 50%;
       position: relative; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 35px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0,0,0,0.2);
-      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+      background: #000; border: 6px solid #3a4b58;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0,0,0,0.6);
     }
-    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; color: #000000; }
-    .fs-lbl-n { top: 10px; font-size: 20px; color: #ff0000; }
-    .fs-lbl-s { bottom: 10px; font-size: 18px; color: #000000; }
-    .fs-lbl-e { right: 14px; font-size: 18px; color: #000000; }
-    .fs-lbl-w { left: 14px; font-size: 18px; color: #000000; }
-    .fs-lbl-ne { top: 36px; right: 40px; font-size: 12px; color: #555; }
-    .fs-lbl-nw { top: 36px; left: 40px; font-size: 12px; color: #555; }
-    .fs-lbl-se { bottom: 36px; right: 40px; font-size: 12px; color: #555; }
-    .fs-lbl-sw { bottom: 36px; left: 40px; font-size: 12px; color: #555; }
 
-    .garmin-orange-arrow {
-      position: absolute; width: 0; height: 0;
-      border-left: 24px solid transparent;
-      border-right: 24px solid transparent;
-      border-bottom: 95px solid #ff4400;
-      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
-      z-index: 4;
-      transform-origin: 50% 85%;
-      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+    /* Independent Rotating Dial */
+    .fs-compass-dial-large {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      background: #ffffff;
+      transition: transform 0.2s linear;
+      z-index: 1;
+    }
+
+    .fs-lbl { position: absolute; font-weight: 900; font-family: monospace; }
+    .fs-lbl-n { top: 6px; left: 50%; transform: translateX(-50%); font-size: 20px; color: #ff0000; }
+    .fs-lbl-s { bottom: 6px; left: 50%; transform: translateX(-50%); font-size: 18px; color: #000000; }
+    .fs-lbl-e { right: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #000000; }
+    .fs-lbl-w { left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #000000; }
+
+    .fs-lbl-deg { position: absolute; font-size: 9px; font-weight: bold; color: #333; font-family: monospace; }
+    .deg-30 { top: 22px; right: 65px; }
+    .deg-60 { top: 65px; right: 22px; }
+    .deg-120 { bottom: 65px; right: 22px; }
+    .deg-150 { bottom: 22px; right: 65px; }
+    .deg-210 { bottom: 22px; left: 65px; }
+    .deg-240 { bottom: 65px; left: 22px; }
+    .deg-300 { top: 65px; left: 22px; }
+    .deg-330 { top: 22px; left: 65px; }
+
+    /* Independent Garmin 12H Target Pointer Arrow */
+    .garmin-pointer-container {
+      position: absolute; width: 100%; height: 100%; border-radius: 50%;
+      z-index: 5; pointer-events: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s linear;
+    }
+
+    .garmin-pointer-arrow {
+      width: 0; height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 100px solid #ff3b00;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.8));
+      transform: translateY(-28px);
+    }
+    .garmin-pointer-tail {
+      position: absolute; width: 6px; height: 45px; background: #ff3b00;
+      transform: translateY(35px); border-radius: 2px;
+    }
+    .garmin-pointer-pivot {
+      position: absolute; width: 16px; height: 16px; border-radius: 50%;
+      background: #000; border: 3px solid #ffcc00;
     }
 
     .marine-tools-panel { position: relative; display: flex; flex-direction: column; align-items: flex-end; pointer-events: auto !important; }
@@ -271,7 +301,7 @@
     .boat-heading-arrow {
       width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 30px solid #00ffcc;
       filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
-      transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transition: transform 0.2s linear;
     }
 
     .border-alert-banner {
@@ -559,22 +589,34 @@
       </div>
 
       <div class="fs-compass-center-area">
-        <!-- படகின் முகப்பு குறி (Lubber Line / Course Pointer) -->
+        <!-- நிலையான படகு முகப்புக் குறி (Garmin Lubber Line) -->
         <div class="fs-boat-head-marker" title="படகு செல்லும் நேர் திசை (Boat Heading)"></div>
 
-        <!-- கார்மின் காம்பஸ் டயல் -->
-        <div class="fs-compass-dial-large" id="fsCompassDial">
-          <span class="fs-lbl fs-lbl-n">N</span>
-          <span class="fs-lbl fs-lbl-s">S</span>
-          <span class="fs-lbl fs-lbl-e">E</span>
-          <span class="fs-lbl fs-lbl-w">W</span>
-          <span class="fs-lbl fs-lbl-ne">NE</span>
-          <span class="fs-lbl fs-lbl-nw">NW</span>
-          <span class="fs-lbl fs-lbl-se">SE</span>
-          <span class="fs-lbl fs-lbl-sw">SW</span>
+        <!-- கார்மின் காம்பஸ் கூண்டு -->
+        <div class="compass-housing-circle">
+          <!-- சுழலும் திசை டயல் -->
+          <div class="fs-compass-dial-large" id="fsCompassDial">
+            <span class="fs-lbl fs-lbl-n">N</span>
+            <span class="fs-lbl fs-lbl-e">E</span>
+            <span class="fs-lbl fs-lbl-s">S</span>
+            <span class="fs-lbl fs-lbl-w">W</span>
+            
+            <span class="fs-lbl-deg deg-30">30</span>
+            <span class="fs-lbl-deg deg-60">60</span>
+            <span class="fs-lbl-deg deg-120">120</span>
+            <span class="fs-lbl-deg deg-150">150</span>
+            <span class="fs-lbl-deg deg-210">210</span>
+            <span class="fs-lbl-deg deg-240">240</span>
+            <span class="fs-lbl-deg deg-300">300</span>
+            <span class="fs-lbl-deg deg-330">330</span>
+          </div>
 
-          <!-- கார்மின் இலக்கு சுட்டும் அம்பு குறி -->
-          <div class="garmin-orange-arrow" id="garminOrangeArrow"></div>
+          <!-- தனியாக இயங்கும் கார்மின் இலக்கு அம்பு குறி -->
+          <div class="garmin-pointer-container" id="garminPointerLayer" style="display: none;">
+            <div class="garmin-pointer-arrow"></div>
+            <div class="garmin-pointer-tail"></div>
+            <div class="garmin-pointer-pivot"></div>
+          </div>
         </div>
 
         <div style="margin-top: 15px; text-align:center;">
@@ -1538,7 +1580,6 @@
     let smoothedHeading = 0;
     let lastValidHeading = 0;
     
-    // துல்லியமான வேகம் கணக்கிடுவதற்கான மாறிகள்
     let currentSpeedKts = 0;
     let currentSpeedKmh = 0;
     let smoothedSpeedKts = 0;
@@ -1588,6 +1629,7 @@
       }
     }
 
+    // ORIGINAL GARMIN GPS 12H COMPASS ENGINE
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -1597,7 +1639,7 @@
       if (fsKmhEl) fsKmhEl.innerText = `${currentSpeedKmh.toFixed(1)} km/h`;
 
       const dial = document.getElementById('fsCompassDial');
-      const orangeArrow = document.getElementById('garminOrangeArrow');
+      const pointerLayer = document.getElementById('garminPointerLayer');
       const distCard = document.getElementById('fs-dist-val');
       const headingText = document.getElementById('fs-heading-text');
       const targetBearingText = document.getElementById('fs-target-bearing-text');
@@ -1605,6 +1647,7 @@
       let roundedHeading = Math.round(smoothedHeading);
       let boatDir = getHeadingDir(roundedHeading);
 
+      // கார்மின் 12H முறை: படகு செல்லும் திசைக்கு ஏற்ப டயல் எதிர்திசையில் சுழலும்
       if (dial) {
         dial.style.transform = `rotate(${-roundedHeading}deg)`;
       }
@@ -1617,15 +1660,19 @@
         distCard.innerText = `${dist} NM`;
         headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | இலக்கு: ${targetBear}° (${dirName})`;
 
-        if (orangeArrow) {
-          orangeArrow.style.transform = `rotate(${targetBear}deg)`;
+        // படகின் தலைப்பகுதியுடன் ஒப்பீட்டு கோணம் (Relative Bearing)
+        let relativeAngle = (targetBear - roundedHeading + 360) % 360;
+
+        if (pointerLayer) {
+          pointerLayer.style.display = 'flex';
+          pointerLayer.style.transform = `rotate(${relativeAngle}deg)`;
         }
 
-        let diff = (targetBear - roundedHeading + 360) % 360;
+        let diff = relativeAngle;
         let directionDesc = "";
-        if (diff <= 5 || diff >= 355) {
+        if (diff <= 4 || diff >= 356) {
           directionDesc = "🎯 அம்பு குறிக்கு நேராகச் செல்கிறீர்கள்!";
-        } else if (diff > 5 && diff <= 180) {
+        } else if (diff > 4 && diff <= 180) {
           directionDesc = `👉 வலதுபக்கம் ${diff}° திருப்புங்கள்`;
         } else {
           directionDesc = `👈 இடதுபக்கம் ${360 - diff}° திருப்புங்கள்`;
@@ -1635,8 +1682,8 @@
       } else {
         distCard.innerText = `-- NM`;
         headingText.innerText = `படகு திசை: ${roundedHeading}° (${boatDir})`;
-        if (orangeArrow) {
-          orangeArrow.style.transform = `rotate(0deg)`;
+        if (pointerLayer) {
+          pointerLayer.style.display = 'none';
         }
         targetBearingText.innerText = `இலக்கு தேர்ந்தெடுக்கப்படவில்லை`;
       }
@@ -2539,7 +2586,7 @@
       }
     }
 
-    // GPS, வேகம் & காம்பஸ் துல்லியக் கணக்கீடுகள்
+    // GPS & REAL-TIME HEADING TRACKING ENGINE
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -2548,26 +2595,27 @@
         
         let calculatedSpeedKts = 0;
 
-        // 1. ஜிபிஎஸ் சிப்பில் இருந்து வரும் வேகம்
         let rawHardwareSpeedKts = (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) 
                                   ? (pos.coords.speed * 1.94384) : 0;
 
-        // 2. இரண்டு புள்ளிகளுக்கு இடைப்பட்ட தூரம் / நேரம் மூலம் நேரடி வேகம் கணக்கிடுதல்
         if (lastPositionTime !== null && lastSpeedLat !== null && lastSpeedLng !== null) {
           let timeDeltaSec = (now - lastPositionTime) / 1000.0;
           if (timeDeltaSec > 0.4 && timeDeltaSec < 10.0) {
             let distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
             let distMeters = distNM * 1852.0;
 
-            // அலைகள் காரணமாக ஃபோன் சும்மா ஆடும்போது (GPS Drift) வேகம் காட்டாமல் இருக்க 1.5 மீட்டருக்கு கீழ் பூஜ்ஜியம்
-            if (distMeters > 1.5) {
+            if (distMeters > 1.2) {
               let computedSpeedKts = (distNM / (timeDeltaSec / 3600.0));
               
-              if (rawHardwareSpeedKts > 0.3) {
-                // ஹார்டுவேர் ஸ்பீட் மற்றும் நேரடி தூர ஸ்பீட் இரண்டையும் சமன் செய்தல்
+              if (rawHardwareSpeedKts > 0.2) {
                 calculatedSpeedKts = (rawHardwareSpeedKts * 0.7) + (computedSpeedKts * 0.3);
               } else {
                 calculatedSpeedKts = computedSpeedKts;
+              }
+
+              // ஜிபிஎஸ் ஹெடிங் இல்லாத போது புள்ளிகள் மூலம் திசையைக் கணக்கிடுதல் (Course Over Ground)
+              if (pos.coords.heading === null || isNaN(pos.coords.heading)) {
+                lastValidHeading = Math.round(calcBearing(lastSpeedLat, lastSpeedLng, lat, lng));
               }
             } else {
               calculatedSpeedKts = 0;
@@ -2581,28 +2629,27 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // படகு நிற்கும்போது அல்லது மிக மெதுவாக மிதக்கும்போது 0.3 kts-க்குக் கீழ் இருந்தால் 0 எனக் காட்டும்
         if (calculatedSpeedKts < 0.35) {
           calculatedSpeedKts = 0;
         }
 
-        // படகு வேகத்திற்கு ஏற்ப உடனடி ரெஸ்பான்ஸ் (Responsive Speed Filter)
         if (calculatedSpeedKts === 0) {
-          smoothedSpeedKts = 0; // போட் நின்றால் உடனடியாக 0
+          smoothedSpeedKts = 0;
         } else {
-          smoothedSpeedKts = (smoothedSpeedKts * 0.4) + (calculatedSpeedKts * 0.6);
+          smoothedSpeedKts = (smoothedSpeedKts * 0.35) + (calculatedSpeedKts * 0.65);
         }
 
         currentSpeedKts = smoothedSpeedKts;
-        currentSpeedKmh = currentSpeedKts * 1.852; // கி.மீ/மணி நேரடி மாற்று
+        currentSpeedKmh = currentSpeedKts * 1.852;
 
-        // படகு நகரும் போது மட்டுமே Heading புதுப்பிக்கப்படும்
-        if (currentSpeedKts > 0.4 && pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-          let rawHeading = pos.coords.heading;
-          lastValidHeading = rawHeading;
+        // போட் நகரும் போது ஹெடிங் புதுப்பித்தல்
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && currentSpeedKts > 0.3) {
+          lastValidHeading = pos.coords.heading;
+        }
 
-          let diff = (rawHeading - smoothedHeading + 540) % 360 - 180;
-          smoothedHeading = (smoothedHeading + diff * 0.35 + 360) % 360;
+        if (currentSpeedKts > 0.3) {
+          let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
+          smoothedHeading = (smoothedHeading + diff * 0.45 + 360) % 360;
         }
 
         currentHeading = lastValidHeading;
@@ -2624,11 +2671,9 @@
         document.getElementById('lat-coord').innerText = `Lat: ${latStr}`;
         document.getElementById('lng-coord').innerText = `Lng: ${lngStr}`;
         
-        // டேஷ்போர்டில் நாட்டிக்கல் மைல் மற்றும் கிலோமீட்டர் வேகம் இரண்டையும் துல்லியமாகக் காட்டுதல்
         document.getElementById('boat-speed').innerText = `வேகம்: ${currentSpeedKts.toFixed(1)} kts (${currentSpeedKmh.toFixed(1)} km/h)`;
         document.getElementById('heading-val').innerText = `${Math.round(smoothedHeading)}° ${getHeadingDir(Math.round(smoothedHeading))}`;
         
-        // சின்ன காம்பஸ் முள்ளு
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
         if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
