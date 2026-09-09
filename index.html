@@ -149,7 +149,6 @@
       position: relative;
     }
 
-    /* Fixed Boat Lubber Line (Heading Marker) */
     .fs-boat-head-marker {
       width: 0; height: 0; 
       border-left: 11px solid transparent; 
@@ -166,7 +165,6 @@
       box-shadow: 0 0 35px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0,0,0,0.6);
     }
 
-    /* Rotating Compass Rose / Dial */
     .fs-compass-dial-large {
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       background: #ffffff;
@@ -190,7 +188,6 @@
     .deg-300 { top: 65px; left: 22px; }
     .deg-330 { top: 22px; left: 65px; }
 
-    /* Independent Target Pointer Arrow */
     .garmin-pointer-container {
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       z-index: 5; pointer-events: none;
@@ -588,12 +585,9 @@
       </div>
 
       <div class="fs-compass-center-area">
-        <!-- நிலையான படகு முகப்புக் குறி (Garmin Lubber Line) -->
         <div class="fs-boat-head-marker" title="படகு செல்லும் நேர் திசை (Boat Heading)"></div>
 
-        <!-- கார்மின் காம்பஸ் கூண்டு -->
         <div class="compass-housing-circle">
-          <!-- சுழலும் திசை டயல் -->
           <div class="fs-compass-dial-large" id="fsCompassDial">
             <span class="fs-lbl fs-lbl-n">N</span>
             <span class="fs-lbl fs-lbl-e">E</span>
@@ -610,7 +604,6 @@
             <span class="fs-lbl-deg deg-330">330</span>
           </div>
 
-          <!-- தனியாக இயங்கும் கார்மின் இலக்கு அம்பு குறி -->
           <div class="garmin-pointer-container" id="garminPointerLayer" style="display: none;">
             <div class="garmin-pointer-arrow"></div>
             <div class="garmin-pointer-tail"></div>
@@ -668,7 +661,7 @@
               </button>
               <button class="map-menu-item-btn" id="menuSatelliteToggleBtn" onclick="toggleMapLayer();">
                 <span>🗺️ மேப் வகை</span>
-                <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாட்டிலைட்</span>
+                <span id="mapTypeBadge" style="color:#ffcc00; font-size:9.5px;">சாதா மேப்</span>
               </button>
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
                 <span>🏝️ தீவு & போயா</span>
@@ -1594,7 +1587,9 @@
     let beepInterval = null;
     let spotBeepInterval = null;
     let currentViewMode = 0;
-    let currentLayerType = 'satellite';
+
+    // இயல்புநிலை சாதா மேப் மற்றும் சேமிக்கப்பட்ட மேப் நினைவகம்
+    let currentLayerType = localStorage.getItem('dm_map_layer_type') || 'osm';
     let activeMarkers = [];
 
     let navVoiceStep = {
@@ -1642,7 +1637,6 @@
       let roundedHeading = Math.round(smoothedHeading);
       let boatDir = getHeadingDir(roundedHeading);
 
-      // கார்மின் 12H முறை: படகு நகரும் திசைக்கு ஏற்ப டயல் எதிர்திசையில் சுழலும்
       if (dial) {
         dial.style.transform = `rotate(${-roundedHeading}deg)`;
       }
@@ -1655,7 +1649,6 @@
         distCard.innerText = `${dist} NM`;
         headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | இலக்கு: ${targetBear}° (${dirName})`;
 
-        // படகின் தலைப்பகுதியுடன் ஒப்பீட்டு கோணம் (Relative Bearing)
         let relativeAngle = (targetBear - roundedHeading + 360) % 360;
 
         if (pointerLayer) {
@@ -1740,8 +1733,21 @@
             },
             layers: [
               { id: 'background', type: 'background', paint: { 'background-color': '#001220' } },
-              { id: 'satellite-layer', type: 'raster', source: 'satellite-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'visible' } },
-              { id: 'osm-layer', type: 'raster', source: 'osm-marine-tiles', minzoom: 0, maxzoom: 22, layout: { 'visibility': 'none' }, paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } }
+              { 
+                id: 'satellite-layer', 
+                type: 'raster', 
+                source: 'satellite-tiles', 
+                minzoom: 0, maxzoom: 22, 
+                layout: { 'visibility': currentLayerType === 'satellite' ? 'visible' : 'none' } 
+              },
+              { 
+                id: 'osm-layer', 
+                type: 'raster', 
+                source: 'osm-marine-tiles', 
+                minzoom: 0, maxzoom: 22, 
+                layout: { 'visibility': currentLayerType === 'osm' ? 'visible' : 'none' }, 
+                paint: { 'raster-contrast': 0.1, 'raster-brightness-min': 0.05 } 
+              }
             ]
           },
           center: [currentLng, currentLat],
@@ -1822,6 +1828,7 @@
       if (menu) menu.classList.remove('show');
     }
 
+    // மேப் லேயரை மாற்றி லோக்கல் ஸ்டோரேஜில் சேமிக்கும் செயல்பாடு
     function toggleMapLayer() {
       if (!map) return;
       try {
@@ -1834,6 +1841,7 @@
           map.setLayoutProperty('satellite-layer', 'visibility', 'visible');
           currentLayerType = 'satellite';
         }
+        localStorage.setItem('dm_map_layer_type', currentLayerType);
       } catch(e) {}
       updateMapMenuBadges();
       closeMapControls();
@@ -2591,7 +2599,6 @@
         
         let calculatedSpeedKts = 0;
 
-        // ஜிபிஎஸ் சிப்பில் இருந்து வரும் வேகம்
         let rawHardwareSpeedKts = (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) 
                                   ? (pos.coords.speed * 1.94384) : 0;
 
@@ -2601,7 +2608,6 @@
             let distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
             let distMeters = distNM * 1852.0;
 
-            // ஜிபிஎஸ் துல்லியத்திற்கு குறைவான தூர நகர்வுகளைப் பொய் நகர்வு (Drift) எனப் புறக்கணித்தல்
             let minDistanceCutoff = Math.max(3.5, accuracy * 0.4);
 
             if (distMeters > minDistanceCutoff) {
@@ -2613,7 +2619,6 @@
                 calculatedSpeedKts = computedSpeedKts;
               }
 
-              // படகு உண்மையில் 0.8 நாட் வேகத்திற்கு மேல் சென்றால் மட்டுமே புதிய திசையைக் கணக்கிடுதல்
               if (calculatedSpeedKts > 0.8) {
                 if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
                   lastValidHeading = pos.coords.heading;
@@ -2633,14 +2638,12 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // படகு 0.6 நாட்-க்குக் கீழ் இருந்தால் முழு பூஜ்ஜியம்
         if (calculatedSpeedKts < 0.65) {
           calculatedSpeedKts = 0;
         }
 
         currentSpeedKts = calculatedSpeedKts;
 
-        // படகு நகர்ந்தால் மட்டுமே ஹெடிங் மாறும்; நின்றால் பழைய நிலையான திசையிலேயே கல் போல் நிற்கும்
         if (currentSpeedKts > 0.8) {
           let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
           smoothedHeading = (smoothedHeading + diff * 0.45 + 360) % 360;
@@ -2665,11 +2668,9 @@
         document.getElementById('lat-coord').innerText = `Lat: ${latStr}`;
         document.getElementById('lng-coord').innerText = `Lng: ${lngStr}`;
         
-        // நாட்டிக்கல் மைல் வேகம் மட்டுமே காட்சிப்படுத்தப்படும்
         document.getElementById('boat-speed').innerText = `வேகம்: ${currentSpeedKts.toFixed(1)} kts`;
         document.getElementById('heading-val').innerText = `${Math.round(smoothedHeading)}° ${getHeadingDir(Math.round(smoothedHeading))}`;
         
-        // சின்ன காம்பஸ் முள்ளு
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
         if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${Math.round(smoothedHeading)}deg)`;
