@@ -96,10 +96,10 @@
     .arrow-tail { width: 2px; height: 14px; background: #333; }
     .heading-text { font-size: 9px; color: #00ffcc; font-weight: bold; margin-top: 2px; font-family: monospace; }
 
-    /* OLD ELEGANT ORANGE FULLSCREEN COMPASS MODAL */
+    /* FULLSCREEN COMPASS MODAL (GARMIN 12H ACCURATE TICKED DIAL) */
     .fullscreen-compass-modal {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: #3b2a22; z-index: 99999; display: none; flex-direction: column;
+      background: #251d18; z-index: 99999; display: none; flex-direction: column;
       padding: 0; margin: 0; overflow: hidden;
     }
 
@@ -114,7 +114,7 @@
       padding: 6px 8px 0 8px; gap: 5px; z-index: 2;
     }
     .fs-info-card {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      background: #18110d; border: 1.5px solid #ffaa44; border-radius: 8px;
       padding: 4px 8px; text-align: center; min-width: 85px; color: #fff;
     }
     
@@ -124,7 +124,7 @@
     }
 
     .fs-brightness-control {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      background: #18110d; border: 1.5px solid #ffaa44; border-radius: 8px;
       padding: 3px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
       width: 100%; max-width: 125px; color: #fff;
     }
@@ -133,7 +133,7 @@
     }
 
     .fs-clock-card {
-      background: #221812; border: 1.5px solid #ffaa44; border-radius: 8px;
+      background: #18110d; border: 1.5px solid #ffaa44; border-radius: 8px;
       padding: 2px 8px; text-align: center; width: 100%; max-width: 125px; color: #fff;
     }
 
@@ -158,12 +158,13 @@
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.8));
     }
 
-    /* OLD MODEL COMPASS DIAL */
+    /* COMPASS HOUSING WITH GARMIN 12H TICKS RING */
     .compass-housing-circle {
-      width: 270px; height: 270px; border-radius: 50%;
+      width: 275px; height: 275px; border-radius: 50%;
       position: relative; display: flex; align-items: center; justify-content: center;
-      background: #ffffff; border: 6px solid #888888;
+      background: #ffffff; border: 6px solid #6e594d;
       box-shadow: 0 0 35px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
     }
 
     .fs-compass-dial-large {
@@ -173,32 +174,33 @@
       z-index: 1;
     }
 
-    /* ONLY N(0°), E(90°), S(180°), W(270°) LABELS */
-    .fs-lbl-group {
-      position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-family: monospace; font-weight: 900;
-    }
-    .fs-group-n { top: 6px; left: 50%; transform: translateX(-50%); }
-    .fs-group-s { bottom: 6px; left: 50%; transform: translateX(-50%); }
-    .fs-group-e { right: 8px; top: 50%; transform: translateY(-50%); }
-    .fs-group-w { left: 8px; top: 50%; transform: translateY(-50%); }
-
-    .fs-main-letter { font-size: 20px; line-height: 1.0; }
-    .fs-letter-n { color: #ff0000; }
-    .fs-letter-other { color: #000000; }
-    .fs-deg-num { font-size: 10px; font-weight: bold; color: #444444; margin-top: 1px; }
-
-    /* Cross-hair guidelines */
-    .fs-cross-hair-v {
-      position: absolute; top: 38px; bottom: 38px; left: 50%; width: 1.5px;
-      background: rgba(0, 0, 0, 0.12); transform: translateX(-50%);
-    }
-    .fs-cross-hair-h {
-      position: absolute; left: 38px; right: 38px; top: 50%; height: 1.5px;
-      background: rgba(0, 0, 0, 0.12); transform: translateY(-50%);
+    /* SVG TICKS RING ON DIAL EDGE */
+    .compass-ticks-svg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
     }
 
-    /* OLD BEAUTIFUL ORANGE ARROW */
+    /* GARMIN 12H N, E, S, W & NUMERICAL LABELS */
+    .fs-dial-mark {
+      position: absolute; font-family: monospace; font-weight: 900;
+      color: #111111; text-align: center; line-height: 1;
+    }
+    .fs-mark-n { top: 12px; left: 50%; transform: translateX(-50%); font-size: 22px; color: #d90429; }
+    .fs-mark-e { right: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+    .fs-mark-s { bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+    .fs-mark-w { left: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+
+    .fs-mark-num { font-size: 13px; font-weight: bold; color: #222222; }
+    .num-3  { top: 28px; right: 54px; }
+    .num-6  { top: 56px; right: 26px; }
+    .num-12 { bottom: 56px; right: 24px; }
+    .num-15 { bottom: 28px; right: 54px; }
+    .num-21 { bottom: 28px; left: 54px; }
+    .num-24 { bottom: 56px; left: 24px; }
+    .num-30 { top: 56px; left: 26px; }
+    .num-33 { top: 28px; left: 54px; }
+
+    /* BEAUTIFUL GARMIN ORANGE POINTER ARROW (STANDALONE PIVOT) */
     .garmin-pointer-container {
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       z-index: 5; pointer-events: none;
@@ -208,15 +210,15 @@
 
     .garmin-orange-arrow {
       position: absolute; width: 0; height: 0;
-      border-left: 26px solid transparent;
-      border-right: 26px solid transparent;
-      border-bottom: 95px solid #ff6600;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+      border-left: 24px solid transparent;
+      border-right: 24px solid transparent;
+      border-bottom: 95px solid #ff5500;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.35));
       transform: translateY(-24px);
     }
     .garmin-pointer-pivot {
       position: absolute; width: 18px; height: 18px; border-radius: 50%;
-      background: #221812; border: 3px solid #ffaa44;
+      background: #18110d; border: 3px solid #ffaa44;
       box-shadow: 0 0 8px rgba(0,0,0,0.5);
     }
 
@@ -562,7 +564,7 @@
     <div style="font-size: 11px; color: #aaa; margin-top: 15px;">(மீண்டும் தொட தொடுங்கள்)</div>
   </div>
 
-  <!-- FULLSCREEN GARMIN eTrex / GPS 12H STYLE COMPASS MODAL -->
+  <!-- FULLSCREEN GARMIN 12H TICKED DIAL COMPASS MODAL -->
   <div class="fullscreen-compass-modal" id="fsCompassModal">
     <div id="compassContentContainer">
       <div class="fs-compass-top-bar">
@@ -593,39 +595,35 @@
       </div>
 
       <div class="fs-compass-center-area">
-        <!-- நிலையான படகு முகப்புக் குறி (Garmin Lubber Line) -->
+        <!-- படகின் முகப்புக் குறி (Boat Bow) -->
         <div class="fs-boat-head-marker" title="படகு செல்லும் நேர் திசை (Boat Heading)"></div>
 
-        <!-- OLD STYLE COMPASS HOUSING -->
+        <!-- கார்மின் காம்பஸ் கூண்டு -->
         <div class="compass-housing-circle">
           <!-- சுழலும் திசை டயல் -->
           <div class="fs-compass-dial-large" id="fsCompassDial">
-            <div class="fs-cross-hair-v"></div>
-            <div class="fs-cross-hair-h"></div>
+            <!-- 360° TICK MARKS RING -->
+            <svg class="compass-ticks-svg" viewBox="0 0 275 275">
+              <!-- JS-ல் 72 கோடுகள் (5° மற்றும் 10° இடைவெளிகளில்) தானாக வரையப்படும் -->
+              <g id="compassTicksGroup"></g>
+            </svg>
 
-            <!-- ONLY 4 MAIN DIRECTIONS WITH DEGREES -->
-            <div class="fs-lbl-group fs-group-n">
-              <span class="fs-main-letter fs-letter-n">N</span>
-              <span class="fs-deg-num">0°</span>
-            </div>
-
-            <div class="fs-lbl-group fs-group-e">
-              <span class="fs-main-letter fs-letter-other">E</span>
-              <span class="fs-deg-num">90°</span>
-            </div>
-
-            <div class="fs-lbl-group fs-group-s">
-              <span class="fs-main-letter fs-letter-other">S</span>
-              <span class="fs-deg-num">180°</span>
-            </div>
-
-            <div class="fs-lbl-group fs-group-w">
-              <span class="fs-main-letter fs-letter-other">W</span>
-              <span class="fs-deg-num">270°</span>
-            </div>
+            <!-- ONLY 4 MAIN DIRECTIONS WITH ACCURATE GARMIN NUMBERS -->
+            <div class="fs-dial-mark fs-mark-n">N</div>
+            <div class="fs-dial-mark fs-mark-num num-3">3</div>
+            <div class="fs-dial-mark fs-mark-num num-6">6</div>
+            <div class="fs-dial-mark fs-mark-e">E</div>
+            <div class="fs-dial-mark fs-mark-num num-12">12</div>
+            <div class="fs-dial-mark fs-mark-num num-15">15</div>
+            <div class="fs-dial-mark fs-mark-s">S</div>
+            <div class="fs-dial-mark fs-mark-num num-21">21</div>
+            <div class="fs-dial-mark fs-mark-num num-24">24</div>
+            <div class="fs-dial-mark fs-mark-w">W</div>
+            <div class="fs-dial-mark fs-mark-num num-30">30</div>
+            <div class="fs-dial-mark fs-mark-num num-33">33</div>
           </div>
 
-          <!-- OLD BEAUTIFUL GARMIN ORANGE POINTER ARROW -->
+          <!-- நடுவில் சுழலும் ஆரஞ்சு வழிகாட்டி அம்பு -->
           <div class="garmin-pointer-container" id="garminPointerLayer" style="display: none;">
             <div class="garmin-orange-arrow"></div>
             <div class="garmin-pointer-pivot"></div>
@@ -1055,6 +1053,40 @@
       if (!globalWakeLock) keepScreenAlwaysOn();
     }, { once: false });
 
+    // DRAW GARMIN COMPASS TICKS AROUND THE CIRCLE (72 TICKS)
+    function renderGarminTicks() {
+      const g = document.getElementById('compassTicksGroup');
+      if (!g || g.children.length > 0) return;
+
+      const cx = 137.5;
+      const cy = 137.5;
+      const rOuter = 136;
+
+      for (let deg = 0; deg < 360; deg += 5) {
+        const rad = (deg - 90) * Math.PI / 180;
+        const isMajor = (deg % 30 === 0);
+        const isMedium = (deg % 10 === 0);
+        const tickLength = isMajor ? 11 : (isMedium ? 7 : 4);
+        const strokeWidth = isMajor ? 2.5 : (isMedium ? 1.5 : 1);
+        const strokeColor = isMajor ? '#111111' : '#555555';
+
+        const x1 = cx + rOuter * Math.cos(rad);
+        const y1 = cy + rOuter * Math.sin(rad);
+        const x2 = cx + (rOuter - tickLength) * Math.cos(rad);
+        const y2 = cy + (rOuter - tickLength) * Math.sin(rad);
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('stroke', strokeColor);
+        line.setAttribute('stroke-width', strokeWidth);
+        line.setAttribute('stroke-linecap', 'round');
+        g.appendChild(line);
+      }
+    }
+
     function toggleDashboardSlide() {
       const dashboard = document.getElementById('mainDashboardBox');
       const toggleBtn = document.getElementById('dashToggleBtn');
@@ -1297,7 +1329,6 @@
       });
     }
 
-    // டீசல் அமைப்புகள்
     let totalDieselCapacity = parseFloat(localStorage.getItem('marine_total_diesel') || '50');
     let dieselConsumePerNM = parseFloat(localStorage.getItem('marine_diesel_per_nm') || '0.5');
     let totalDistanceTraveledNM = parseFloat(localStorage.getItem('marine_total_dist_nm') || '0');
@@ -1574,6 +1605,7 @@
       updateMapMenuBadges();
       updateFuelDisplay();
       updateTrapCounters();
+      renderGarminTicks();
       let savedName = localStorage.getItem('marine_walkie_name') || '';
       if(document.getElementById('myWalkieNameInput')) {
         document.getElementById('myWalkieNameInput').value = savedName;
@@ -1625,6 +1657,7 @@
 
     function openFullscreenCompass() {
       document.getElementById('fsCompassModal').style.display = 'flex';
+      renderGarminTicks();
       let currentBright = document.getElementById('compassBrightnessRange').value;
       adjustCompassBrightness(currentBright);
       updateFsCompassElements();
@@ -1641,7 +1674,7 @@
       }
     }
 
-    // OLD ELEGANT ORANGE COMPASS ENGINE
+    // ORIGINAL GARMIN GPS 12H COMPASS ENGINE
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
