@@ -314,8 +314,9 @@
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
     .spot-alert-banner {
-      position: absolute; top: 125px; left: 10px; max-width: 220px; background: #2a9d8f; color: white;
-      font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
+      position: absolute; top: 125px; left: 10px; max-width: 240px; background: #2a9d8f; color: white;
+      font-weight: bold; font-size: 10px; padding: 5px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.8);
     }
 
     .sonar-panel {
@@ -632,8 +633,8 @@
 
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
-      <span id="spotAlertText">📍 பார் கீழே!</span>
-      <button class="mute-btn" onclick="muteSpotAlert()">🔇 நிறுத்து</button>
+      <span id="spotAlertText">📍 பாயிண்ட் நெருங்குகிறது!</span>
+      <button class="mute-btn" onclick="stopSirenAlarm()">🔇 நிறுத்து</button>
     </div>
   </div>
 
@@ -998,7 +999,7 @@
       <span>பார் சேமி</span>
     </div>
     <button class="btn-action btn-blue-list" onclick="openSpotsListModal()">📁 பட்டியல்</button>
-    <button class="btn-action btn-darkblue-export" onclick="exportData()">📥 எடு</button>
+    <button class="btn-darkblue-export" onclick="exportData()">📥 எடு</button>
   </div>
 
   <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -1091,40 +1092,81 @@
       alert(voiceAlertMasterEnabled ? "🚨 சைரன் அலாரம் ஆன் செய்யப்பட்டது (ON)" : "🔇 சைரன் அலாரம் ஆஃப் செய்யப்பட்டது (OFF)");
     }
 
-    // POLICE / AMBULANCE SIREN ALARM ("வீ... வூ... வீ... வூ...")
-    function playPoliceSiren(durationSec = 2.5) {
+    // 1-MINUTE POLICE SIREN ALARM ENGINE WITH ACTIVE MUTE BUTTON
+    let activeSirenInterval = null;
+    let activeSirenTimeout = null;
+    let sirenOsc = null;
+    let sirenGain = null;
+
+    function startSirenAlarm(alertMsg = "🚨 பாயிண்ட் நெருங்குகிறது!") {
       if (!voiceAlertMasterEnabled) return;
+      stopSirenAlarm(); // முந்தையதை நிறுத்து
+
+      const banner = document.getElementById('spotAlertBanner');
+      const bannerText = document.getElementById('spotAlertText');
+      if (banner && bannerText) {
+        bannerText.innerText = alertMsg;
+        banner.style.display = 'block';
+      }
+
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
 
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
+        sirenOsc = audioCtx.createOscillator();
+        sirenGain = audioCtx.createGain();
+        sirenOsc.type = 'sawtooth';
 
         let t = audioCtx.currentTime;
-        let cycles = Math.floor(durationSec / 0.5);
+        let totalDuration = 60; // முழு 1 நிமிடம் (60 விநாடிகள்)
 
-        for (let i = 0; i < cycles; i++) {
+        for (let i = 0; i < totalDuration * 2; i++) {
           let step = t + (i * 0.5);
-          osc.frequency.setValueAtTime(650, step);
-          osc.frequency.linearRampToValueAtTime(1000, step + 0.25);
-          osc.frequency.linearRampToValueAtTime(650, step + 0.5);
+          sirenOsc.frequency.setValueAtTime(650, step);
+          sirenOsc.frequency.linearRampToValueAtTime(1000, step + 0.25);
+          sirenOsc.frequency.linearRampToValueAtTime(650, step + 0.5);
         }
 
-        gain.gain.setValueAtTime(0.5, t);
-        gain.gain.setValueAtTime(0.5, t + durationSec - 0.1);
-        gain.gain.linearRampToValueAtTime(0.01, t + durationSec);
+        sirenGain.gain.setValueAtTime(0.5, t);
+        sirenOsc.connect(sirenGain);
+        sirenGain.connect(audioCtx.destination);
 
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        sirenOsc.start(t);
 
-        osc.start(t);
-        osc.stop(t + durationSec);
+        // தொடர் அதிர்வு (Vibration)
+        activeSirenInterval = setInterval(() => {
+          if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200]);
+        }, 1200);
 
-        if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]);
+        // 60 விநாடி முடிந்ததும் தானாக நிற்கும்
+        activeSirenTimeout = setTimeout(() => {
+          stopSirenAlarm();
+        }, totalDuration * 1000);
+
       } catch (e) {
-        console.warn("Siren audio error", e);
+        console.warn("Siren start error", e);
+      }
+    }
+
+    function stopSirenAlarm() {
+      const banner = document.getElementById('spotAlertBanner');
+      if (banner) banner.style.display = 'none';
+
+      if (activeSirenInterval) {
+        clearInterval(activeSirenInterval);
+        activeSirenInterval = null;
+      }
+      if (activeSirenTimeout) {
+        clearTimeout(activeSirenTimeout);
+        activeSirenTimeout = null;
+      }
+
+      if (sirenOsc) {
+        try {
+          sirenOsc.stop();
+          sirenOsc.disconnect();
+        } catch (e) {}
+        sirenOsc = null;
       }
     }
 
@@ -2275,8 +2317,7 @@
     }
 
     function muteSpotAlert() {
-      document.getElementById('spotAlertBanner').style.display = 'none';
-      if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
+      stopSirenAlarm();
     }
 
     let exitedSpotIds = new Set();
@@ -2317,18 +2358,8 @@
         }
       }
 
-      const banner = document.getElementById('spotAlertBanner');
       if (foundZeroSpot) {
-        document.getElementById('spotAlertText').innerText = alertMsgStr;
-        banner.style.display = 'block';
-        if (!spotBeepInterval) {
-          playSpotBeep();
-          if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
-          spotBeepInterval = setInterval(() => {
-            playSpotBeep();
-            if(navigator.vibrate) navigator.vibrate(200);
-          }, 800);
-        }
+        startSirenAlarm(alertMsgStr);
       }
     }
 
@@ -2624,13 +2655,14 @@
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
       updateFsCompassElements();
-      playPoliceSiren(1.2);
+      playPoliceSiren(2.0); // வழிகாட்டல் தொடங்கும் போது ஆரம்ப சைரன்
       alert("🚀 வழிகாட்டுகிறது!");
     }
 
     function stopNavigation() {
       targetTarget = null;
       document.getElementById('nav-info').style.display = 'none';
+      stopSirenAlarm();
       if (map && map.getSource('navSource')) {
         try {
           map.getSource('navSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
@@ -2743,7 +2775,7 @@
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
 
-        // DISTANCE APPROACH POLICE SIREN ALERT ENGINE
+        // DISTANCE APPROACH 1-MINUTE POLICE SIREN ALERT ENGINE
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2754,28 +2786,28 @@
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
           if (dist <= 3.00 && dist > 2.50 && !navVoiceStep.spoke3_0) {
-            playPoliceSiren(2.0);
+            startSirenAlarm("🚨 3 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke3_0 = true;
           } else if (dist <= 2.50 && dist > 2.00 && !navVoiceStep.spoke2_5) {
-            playPoliceSiren(2.0);
+            startSirenAlarm("🚨 இரண்டரை மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke2_5 = true;
           } else if (dist <= 2.00 && dist > 1.50 && !navVoiceStep.spoke2_0) {
-            playPoliceSiren(2.0);
+            startSirenAlarm("🚨 2 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke2_0 = true;
           } else if (dist <= 1.50 && dist > 1.00 && !navVoiceStep.spoke1_5) {
-            playPoliceSiren(2.5);
+            startSirenAlarm("🚨 ஒன்றரை மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_5 = true;
           } else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
-            playPoliceSiren(2.5);
+            startSirenAlarm("🚨 1 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_0 = true;
           } else if (dist <= 0.50 && dist > 0.20 && !navVoiceStep.spoke0_50) {
-            playPoliceSiren(3.0);
+            startSirenAlarm("🚨 50 பாயிண்ட் மட்டுமே உள்ளது!");
             navVoiceStep.spoke0_50 = true;
           } else if (dist <= 0.20 && dist > 0.10 && !navVoiceStep.spoke0_20) {
-            playPoliceSiren(3.0);
+            startSirenAlarm("🚨 20 பாயிண்ட் மட்டுமே உள்ளது!");
             navVoiceStep.spoke0_20 = true;
           } else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
-            playPoliceSiren(3.5);
+            startSirenAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
             navVoiceStep.spoke0_10 = true;
           } else if (dist <= 0.005) {
             document.getElementById('target-dist').innerText = `0.00 NM`;
