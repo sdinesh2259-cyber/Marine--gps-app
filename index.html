@@ -676,7 +676,7 @@
                 <span id="sonarReefStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
               <button class="map-menu-item-btn" id="menuVoiceAlertToggleBtn" onclick="toggleVoiceAlertMaster();">
-                <span>🗣️ பாயிண்ட் குரல் அறிவிப்பு</span>
+                <span>🚨 சைரன் அலாரம்</span>
                 <span id="voiceAlertStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
               </button>
               <button class="map-menu-item-btn" id="menuSpotAlarmToggleBtn" onclick="toggleSpotAlarmMaster();">
@@ -1088,21 +1088,43 @@
       localStorage.setItem('dm_voice_alert_master', voiceAlertMasterEnabled ? 'true' : 'false');
       updateMapMenuBadges();
       closeMapControls();
-      alert(voiceAlertMasterEnabled ? "🗣️ பாயிண்ட் குரல் அறிவிப்பு ஆன் செய்யப்பட்டது (ON)" : "🔇 குரல் அறிவிப்பு ஆஃப் செய்யப்பட்டது (OFF)");
+      alert(voiceAlertMasterEnabled ? "🚨 சைரன் அலாரம் ஆன் செய்யப்பட்டது (ON)" : "🔇 சைரன் அலாரம் ஆஃப் செய்யப்பட்டது (OFF)");
     }
 
-    function speakTamil(text) {
+    // POLICE / AMBULANCE SIREN ALARM ("வீ... வூ... வீ... வூ...")
+    function playPoliceSiren(durationSec = 2.5) {
       if (!voiceAlertMasterEnabled) return;
       try {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          let utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'ta-IN';
-          utterance.rate = 0.9;
-          window.speechSynthesis.speak(utterance);
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+
+        let t = audioCtx.currentTime;
+        let cycles = Math.floor(durationSec / 0.5);
+
+        for (let i = 0; i < cycles; i++) {
+          let step = t + (i * 0.5);
+          osc.frequency.setValueAtTime(650, step);
+          osc.frequency.linearRampToValueAtTime(1000, step + 0.25);
+          osc.frequency.linearRampToValueAtTime(650, step + 0.5);
         }
+
+        gain.gain.setValueAtTime(0.5, t);
+        gain.gain.setValueAtTime(0.5, t + durationSec - 0.1);
+        gain.gain.linearRampToValueAtTime(0.01, t + durationSec);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(t);
+        osc.stop(t + durationSec);
+
+        if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]);
       } catch (e) {
-        console.warn("Speech synthesis error", e);
+        console.warn("Siren audio error", e);
       }
     }
 
@@ -2216,6 +2238,7 @@
       if (borderAlertSoundMuted) return;
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(880, audioCtx.currentTime);
@@ -2228,6 +2251,7 @@
     function playSpotBeep() {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine'; osc.frequency.setValueAtTime(900, audioCtx.currentTime);
@@ -2600,7 +2624,7 @@
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
       updateFsCompassElements();
-      speakTamil("வழிகாட்டல் தொடங்கப்பட்டது");
+      playPoliceSiren(1.2);
       alert("🚀 வழிகாட்டுகிறது!");
     }
 
@@ -2632,12 +2656,10 @@
         
         let calculatedSpeedKts = 0;
 
-        // 1. நேரடி ஜிபிஎஸ் சிப் வேகம்
         if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) {
           calculatedSpeedKts = pos.coords.speed * 1.94384;
         }
 
-        // 2. இரண்டு புள்ளிகளுக்கு இடைப்பட்ட தூரம் / நேரம் மூலம் கூடுதல் சரிபார்ப்பு
         if (lastPositionTime !== null && lastSpeedLat !== null && lastSpeedLng !== null) {
           let timeDeltaSec = (now - lastPositionTime) / 1000.0;
           if (timeDeltaSec > 0.5 && timeDeltaSec < 15.0) {
@@ -2653,7 +2675,6 @@
                 calculatedSpeedKts = (calculatedSpeedKts * 0.7) + (computedSpeedKts * 0.3);
               }
 
-              // படகு நகரும் திசையை (Heading) உடனடியாகக் கண்டறிதல்
               if (distMeters > 1.5) {
                 let derivedHeading = Math.round(calcBearing(lastSpeedLat, lastSpeedLng, lat, lng));
                 if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
@@ -2670,14 +2691,12 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // போட் நிற்கும் போது 0.25 kts-க்குக் கீழ் இருந்தால் 0 எனக் காட்டும்
         if (calculatedSpeedKts < 0.25) {
           calculatedSpeedKts = 0;
         }
 
         currentSpeedKts = calculatedSpeedKts;
 
-        // படகு புறப்பட்டு நகரும் போது அம்பு குறி உடனடி ரெஸ்பான்ஸ் உடன் திரும்பும்
         if (currentSpeedKts > 0.3 || (pos.coords.heading !== null && !isNaN(pos.coords.heading))) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             lastValidHeading = pos.coords.heading;
@@ -2690,7 +2709,6 @@
         currentLat = lat; 
         currentLng = lng;
 
-        // டீசல் கணக்கு
         if (currentSpeedKts > 0.3 && lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, lat, lng));
           if (stepNM > 0.001 && stepNM < 5.0) {
@@ -2707,15 +2725,12 @@
         document.getElementById('lat-coord').innerText = `Lat: ${latStr}`;
         document.getElementById('lng-coord').innerText = `Lng: ${lngStr}`;
         
-        // டேஷ்போர்டில் வேகம் மற்றும் படகு திசை
         document.getElementById('boat-speed').innerText = `வேகம்: ${currentSpeedKts.toFixed(1)} kts`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
         
-        // சின்ன காம்பஸ் முள்ளு
         const needle = document.getElementById('compass-needle');
         if (needle) needle.style.transform = `rotate(${currentHeading}deg)`;
         
-        // மேப்பில் இருக்கும் பச்சை படகு அம்பு குறி சரியான திசைக்கு உடனே திரும்பும்
         if (arrowInnerEl) arrowInnerEl.style.transform = `rotate(${currentHeading}deg)`;
 
         if (boatMarker) {
@@ -2728,6 +2743,7 @@
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
 
+        // DISTANCE APPROACH POLICE SIREN ALERT ENGINE
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2738,28 +2754,28 @@
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
           if (dist <= 3.00 && dist > 2.50 && !navVoiceStep.spoke3_0) {
-            speakTamil("இன்னும் மூன்று மைல் தூரம் உள்ளது");
+            playPoliceSiren(2.0);
             navVoiceStep.spoke3_0 = true;
           } else if (dist <= 2.50 && dist > 2.00 && !navVoiceStep.spoke2_5) {
-            speakTamil("இன்னும் இரண்டரை மைல் தூரம் உள்ளது");
+            playPoliceSiren(2.0);
             navVoiceStep.spoke2_5 = true;
           } else if (dist <= 2.00 && dist > 1.50 && !navVoiceStep.spoke2_0) {
-            speakTamil("இன்னும் இரண்டு மைல் தூரம் உள்ளது");
+            playPoliceSiren(2.0);
             navVoiceStep.spoke2_0 = true;
           } else if (dist <= 1.50 && dist > 1.00 && !navVoiceStep.spoke1_5) {
-            speakTamil("இன்னும் ஒன்றரை மைல் தூரம் உள்ளது");
+            playPoliceSiren(2.5);
             navVoiceStep.spoke1_5 = true;
           } else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
-            speakTamil("இன்னும் ஒரு மைல் தூரம் உள்ளது");
+            playPoliceSiren(2.5);
             navVoiceStep.spoke1_0 = true;
           } else if (dist <= 0.50 && dist > 0.20 && !navVoiceStep.spoke0_50) {
-            speakTamil("இன்னும் 50 பாயிண்ட் தூரம் உள்ளது");
+            playPoliceSiren(3.0);
             navVoiceStep.spoke0_50 = true;
           } else if (dist <= 0.20 && dist > 0.10 && !navVoiceStep.spoke0_20) {
-            speakTamil("இன்னும் 20 பாயிண்ட் மட்டுமே உள்ளது");
+            playPoliceSiren(3.0);
             navVoiceStep.spoke0_20 = true;
           } else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
-            speakTamil("இன்னும் 10 பாயிண்ட் மட்டுமே உள்ளது. ஜீரோ வரப்போகிறது.");
+            playPoliceSiren(3.5);
             navVoiceStep.spoke0_10 = true;
           } else if (dist <= 0.005) {
             document.getElementById('target-dist').innerText = `0.00 NM`;
