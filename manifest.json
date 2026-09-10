@@ -9,28 +9,16 @@
   "description": "Professional Marine GPS Navigation for Fishermen",
   "icons": [
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
+      "src": "https://sdinesh2259-cyber.github.io/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
+      "src": "https://sdinesh2259-cyber.github.io/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
