@@ -10,14 +10,20 @@
   "icons": [
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23ffffff'/%3E%3Cpath d='M220 86 A180 180 0 0 0 98 226 L144 242 A132 132 0 0 1 234 138 Z' fill='%231a1a1a'/%3E%3Cpath d='M292 86 L278 138 A132 132 0 0 1 368 242 L414 226 A180 180 0 0 0 292 86 Z' fill='%231a1a1a'/%3E%3Cpath d='M118 290 A180 180 0 0 0 394 290 L350 274 A132 132 0 0 1 162 274 Z' fill='%231a1a1a'/%3E%3Cpolygon points='256,92 350,345 256,285 162,345' fill='%23ff0033'/%3E%3C/svg%3E",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
       "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23ffffff'/%3E%3Cpath d='M220 86 A180 180 0 0 0 98 226 L144 242 A132 132 0 0 1 234 138 Z' fill='%231a1a1a'/%3E%3Cpath d='M292 86 L278 138 A132 132 0 0 1 368 242 L414 226 A180 180 0 0 0 292 86 Z' fill='%231a1a1a'/%3E%3Cpath d='M118 290 A180 180 0 0 0 394 290 L350 274 A132 132 0 0 1 162 274 Z' fill='%231a1a1a'/%3E%3Cpolygon points='256,92 350,345 256,285 162,345' fill='%23ff0033'/%3E%3C/svg%3E",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23ffffff'/%3E%3Cpath d='M220 86 A180 180 0 0 0 98 226 L144 242 A132 132 0 0 1 234 138 Z' fill='%231a1a1a'/%3E%3Cpath d='M292 86 L278 138 A132 132 0 0 1 368 242 L414 226 A180 180 0 0 0 292 86 Z' fill='%231a1a1a'/%3E%3Cpath d='M118 290 A180 180 0 0 0 394 290 L350 274 A132 132 0 0 1 162 274 Z' fill='%231a1a1a'/%3E%3Cpolygon points='256,92 350,345 256,285 162,345' fill='%23ff0033'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ]
