@@ -9,25 +9,25 @@
   "description": "Professional Marine GPS Navigation for Fishermen",
   "icons": [
     {
-      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=192&height=192&bg=%230b132b",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=192&height=192&bg=%230b132b",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=512&height=512&bg=%230b132b",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=512&height=512&bg=%230b132b",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Compass_rose_pale-2.svg/512px-Compass_rose_pale-2.svg.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
