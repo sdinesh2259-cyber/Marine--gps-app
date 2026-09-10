@@ -315,11 +315,25 @@
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
+    /* வழிகாட்டுதல் பாருக்கு கீழே நச்சென்று தெரியும்படி திருத்தப்பட்ட அலார பேனர் */
     .spot-alert-banner {
-      position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 320px; background: #d90429; color: white;
-      font-weight: bold; font-size: 12px; padding: 8px 12px; border-radius: 8px; z-index: 99999; display: none; border: 2px solid #ffcc00;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.9); text-align: center;
+      position: fixed; 
+      top: 165px; 
+      left: 50%; 
+      transform: translateX(-50%);
+      width: 90%; 
+      max-width: 320px; 
+      background: #d90429; 
+      color: white;
+      font-weight: bold; 
+      font-size: 12px; 
+      padding: 8px 12px; 
+      border-radius: 8px; 
+      z-index: 100005; 
+      display: none; 
+      border: 2px solid #ffcc00;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.9); 
+      text-align: center;
     }
 
     .sonar-panel {
@@ -634,6 +648,7 @@
     </div>
   </div>
 
+  <!-- வழிகாட்டுதல் பாருக்கு கீழே நச்சென்று தெரியும் அலார பேனர் -->
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
       <span id="spotAlertText" style="flex: 1; text-align: left;">🚨 பாயிண்ட் நெருங்குகிறது!</span>
@@ -2762,6 +2777,7 @@
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
 
+        // 2, 1.5, 1, 0.5 மைல் மற்றும் 10 பாயிண்ட் வரும்போது 1 நிமிடம் ஒலிக்கும் அலாரம் அமைப்பு
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
