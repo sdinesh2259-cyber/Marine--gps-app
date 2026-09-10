@@ -9,7 +9,8 @@
   <title>DM Marine GPS</title>
   <link rel="manifest" href="manifest.json">
 
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b132b'/%3E%3Cpath d='M20 62 L80 62 L70 78 L30 78 Z' fill='%2300ffcc' stroke='%23ffffff' stroke-width='2'/%3E%3Cpath d='M50 20 L50 62 M50 24 L74 54 L50 54 Z' fill='%23ffcc00' stroke='%23ffffff' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/192/yacht.png">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/yacht.png">
   
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
   <style>
@@ -314,7 +315,6 @@
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-    /* நேரடி மியூட் பட்டன் கொண்ட அலார பேனர் */
     .spot-alert-banner {
       position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
       width: 90%; max-width: 320px; background: #d90429; color: white;
@@ -634,7 +634,6 @@
     </div>
   </div>
 
-  <!-- நேரடியாக மியூட் செய்யும் பட்டன் கொண்ட அலார பேனர் -->
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
       <span id="spotAlertText" style="flex: 1; text-align: left;">🚨 பாயிண்ட் நெருங்குகிறது!</span>
@@ -1096,7 +1095,6 @@
       alert(voiceAlertMasterEnabled ? "🚨 சைரன் அலாரம் ஆன் செய்யப்பட்டது (ON)" : "🔇 சைரன் அலாரம் ஆஃப் செய்யப்பட்டது (OFF)");
     }
 
-    // 1-நிமிட அலாரம் இன்ஜின் மற்றும் மியூட் அமைப்பு
     let activeSirenInterval = null;
     let activeSirenTimeout = null;
     let sirenOsc = null;
@@ -1104,7 +1102,7 @@
 
     function startSirenAlarm(alertMsg = "🚨 பாயிண்ட் நெருங்குகிறது!") {
       if (!voiceAlertMasterEnabled) return;
-      stopSirenAlarm(); // முந்தைய அலாரம் இருந்தால் நிறுத்து
+      stopSirenAlarm();
 
       const banner = document.getElementById('spotAlertBanner');
       const bannerText = document.getElementById('spotAlertText');
@@ -1122,7 +1120,7 @@
         sirenOsc.type = 'sawtooth';
 
         let t = audioCtx.currentTime;
-        let totalDuration = 60; // முழு 60 விநாடிகள் (1 நிமிடம்)
+        let totalDuration = 60;
 
         for (let i = 0; i < totalDuration * 2; i++) {
           let step = t + (i * 0.5);
@@ -1693,7 +1691,6 @@
     let currentLayerType = localStorage.getItem('dm_map_layer_type') || 'osm';
     let activeMarkers = [];
 
-    // தூரம் வாரியான அலார கண்காணிப்பு மாறிகள்
     let navVoiceStep = {
       spoke2_0: false,
       spoke1_5: false,
@@ -2670,7 +2667,6 @@
       }
     }
 
-    // LIVE GPS TRACKING ENGINE FOR FISHING BOATS
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -2766,7 +2762,6 @@
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
 
-        // நீங்கள் குறிப்பிட்ட தூரங்களின் போது மட்டும் 1 நிமிடம் ஒலிக்கும் அலாரம் அமைப்பு:
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2776,32 +2771,26 @@
           document.getElementById('target-bearing').innerText = `${bear}°`;
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
-          // 2.0 மைல் அலாரம்
           if (dist <= 2.00 && dist > 1.50 && !navVoiceStep.spoke2_0) {
             startSirenAlarm("🚨 2 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke2_0 = true;
           } 
-          // 1.5 மைல் (ஒன்றரை மைல்) அலாரம்
           else if (dist <= 1.50 && dist > 1.00 && !navVoiceStep.spoke1_5) {
             startSirenAlarm("🚨 ஒன்றரை மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_5 = true;
           } 
-          // 1.0 மைல் அலாரம்
           else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
             startSirenAlarm("🚨 1 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_0 = true;
           } 
-          // 0.5 மைல் (அரை மைல்) அலாரம்
           else if (dist <= 0.50 && dist > 0.10 && !navVoiceStep.spoke0_50) {
             startSirenAlarm("🚨 அரை மைல் மட்டுமே உள்ளது!");
             navVoiceStep.spoke0_50 = true;
           } 
-          // 10 பாயிண்ட் (0.10 NM) அலாரம்
           else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
             startSirenAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
             navVoiceStep.spoke0_10 = true;
           } 
-          // இலக்கை அடைந்ததும்
           else if (dist <= 0.005) {
             document.getElementById('target-dist').innerText = `0.00 NM`;
           }
