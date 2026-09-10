@@ -9,25 +9,25 @@
   "description": "Professional Marine GPS Navigation for Fishermen",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942918.png",
+      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=192&height=192&bg=%230b132b",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942918.png",
+      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=192&height=192&bg=%230b132b",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942918.png",
+      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=512&height=512&bg=%230b132b",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/2942/2942918.png",
+      "src": "https://api.iconify.design/material-symbols:sailing-rounded.png?color=%2300ffcc&width=512&height=512&bg=%230b132b",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
