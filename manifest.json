@@ -9,16 +9,28 @@
   "description": "Professional Marine GPS Navigation for Fishermen",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/sdinesh2259-cyber/sdinesh2259-cyber.github.io/main/icon-192.png",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAAAb/+UuAAAABmJLR0QA/wD/AP+gvaeTAAAAPElEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4GaePAAE3b1o+AAAAAElFTkSuQmCC",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "https://raw.githubusercontent.com/sdinesh2259-cyber/sdinesh2259-cyber.github.io/main/icon-512.png",
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAAAb/+UuAAAABmJLR0QA/wD/AP+gvaeTAAAAPElEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4GaePAAE3b1o+AAAAAElFTkSuQmCC",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAMAAADDpiTIAAAABmJLR0QA/wD/AP+gvaeTAAAAPElEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4GaePAAE3b1o+AAAAAElFTkSuQmCC",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAMAAADDpiTIAAAABmJLR0QA/wD/AP+gvaeTAAAAPElEQVR4nO3BMQEAAADCoPVPbQ0PoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD4GaePAAE3b1o+AAAAAElFTkSuQmCC",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
