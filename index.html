@@ -310,13 +310,15 @@
       position: absolute; top: 125px; left: 10px; max-width: 220px; background: #d90429; color: white;
       font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
     }
-    .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
-    .mute-btn { background: #fff; color: #d90429; border: none; padding: 2px 6px; font-size: 9px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+    .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+    .mute-btn { background: #fff; color: #d90429; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
+    /* நேரடி மியூட் பட்டன் கொண்ட அலார பேனர் */
     .spot-alert-banner {
-      position: absolute; top: 125px; left: 10px; max-width: 240px; background: #2a9d8f; color: white;
-      font-weight: bold; font-size: 10px; padding: 5px 8px; border-radius: 6px; z-index: 10000; display: none; border: 1.5px solid #ffcc00;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+      position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
+      width: 90%; max-width: 320px; background: #d90429; color: white;
+      font-weight: bold; font-size: 12px; padding: 8px 12px; border-radius: 8px; z-index: 99999; display: none; border: 2px solid #ffcc00;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.9); text-align: center;
     }
 
     .sonar-panel {
@@ -631,9 +633,10 @@
     </div>
   </div>
 
+  <!-- நேரடியாக மியூட் செய்யும் பட்டன் கொண்ட அலார பேனர் -->
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content">
-      <span id="spotAlertText">📍 பாயிண்ட் நெருங்குகிறது!</span>
+      <span id="spotAlertText" style="flex: 1; text-align: left;">🚨 பாயிண்ட் நெருங்குகிறது!</span>
       <button class="mute-btn" onclick="stopSirenAlarm()">🔇 நிறுத்து</button>
     </div>
   </div>
@@ -730,7 +733,7 @@
 
     <div class="nav-bar" id="nav-info">
       <span>🚀 தூரம்: <span id="target-dist">0.00 NM</span> | கோணம்: <span id="target-bearing">0°</span></span>
-      <button class="stop-nav-btn" onclick="stopNavigation()">❌ நிறுத்து</button>
+      <button class="stop-nav-btn" onclick="stopNavigation()">❌ வழிகாட்டல் நிறுத்து</button>
     </div>
   </div>
 
@@ -1092,7 +1095,7 @@
       alert(voiceAlertMasterEnabled ? "🚨 சைரன் அலாரம் ஆன் செய்யப்பட்டது (ON)" : "🔇 சைரன் அலாரம் ஆஃப் செய்யப்பட்டது (OFF)");
     }
 
-    // 1-MINUTE POLICE SIREN ALARM ENGINE WITH ACTIVE MUTE BUTTON
+    // 1-நிமிட அலாரம் இன்ஜின் மற்றும் மியூட் அமைப்பு
     let activeSirenInterval = null;
     let activeSirenTimeout = null;
     let sirenOsc = null;
@@ -1100,13 +1103,13 @@
 
     function startSirenAlarm(alertMsg = "🚨 பாயிண்ட் நெருங்குகிறது!") {
       if (!voiceAlertMasterEnabled) return;
-      stopSirenAlarm(); // முந்தையதை நிறுத்து
+      stopSirenAlarm(); // முந்தைய அலாரம் இருந்தால் நிறுத்து
 
       const banner = document.getElementById('spotAlertBanner');
       const bannerText = document.getElementById('spotAlertText');
       if (banner && bannerText) {
         bannerText.innerText = alertMsg;
-        banner.style.display = 'block';
+        banner.style.display = 'flex';
       }
 
       try {
@@ -1118,7 +1121,7 @@
         sirenOsc.type = 'sawtooth';
 
         let t = audioCtx.currentTime;
-        let totalDuration = 60; // முழு 1 நிமிடம் (60 விநாடிகள்)
+        let totalDuration = 60; // முழு 60 விநாடிகள் (1 நிமிடம்)
 
         for (let i = 0; i < totalDuration * 2; i++) {
           let step = t + (i * 0.5);
@@ -1133,12 +1136,10 @@
 
         sirenOsc.start(t);
 
-        // தொடர் அதிர்வு (Vibration)
         activeSirenInterval = setInterval(() => {
           if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200]);
         }, 1200);
 
-        // 60 விநாடி முடிந்ததும் தானாக நிற்கும்
         activeSirenTimeout = setTimeout(() => {
           stopSirenAlarm();
         }, totalDuration * 1000);
@@ -1691,14 +1692,12 @@
     let currentLayerType = localStorage.getItem('dm_map_layer_type') || 'osm';
     let activeMarkers = [];
 
+    // தூரம் வாரியான அலார கண்காணிப்பு மாறிகள்
     let navVoiceStep = {
-      spoke3_0: false,
-      spoke2_5: false,
       spoke2_0: false,
       spoke1_5: false,
       spoke1_0: false,
       spoke0_50: false,
-      spoke0_20: false,
       spoke0_10: false
     };
 
@@ -2316,18 +2315,10 @@
       }
     }
 
-    function muteSpotAlert() {
-      stopSirenAlarm();
-    }
-
     let exitedSpotIds = new Set();
 
     function checkSpotProximity(lat, lng) {
-      if (!spotAlarmMasterEnabled) {
-        document.getElementById('spotAlertBanner').style.display = 'none';
-        if (spotBeepInterval) { clearInterval(spotBeepInterval); spotBeepInterval = null; }
-        return;
-      }
+      if (!spotAlarmMasterEnabled) return;
 
       const savedSpots = JSON.parse(localStorage.getItem('marineReefs') || '[]');
       const savedTraps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
@@ -2651,12 +2642,11 @@
 
     function startNavigation(lat, lng) {
       targetTarget = { lat, lng };
-      navVoiceStep = { spoke3_0: false, spoke2_5: false, spoke2_0: false, spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_20: false, spoke0_10: false };
+      navVoiceStep = { spoke2_0: false, spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
       updateFsCompassElements();
-      playPoliceSiren(2.0); // வழிகாட்டல் தொடங்கும் போது ஆரம்ப சைரன்
-      alert("🚀 வழிகாட்டுகிறது!");
+      alert("🚀 வழிகாட்டல் தொடங்கப்பட்டது!");
     }
 
     function stopNavigation() {
@@ -2679,7 +2669,7 @@
       }
     }
 
-    // LIVE ACTIVE GPS TRACKING ENGINE FOR FISHING BOATS
+    // LIVE GPS TRACKING ENGINE FOR FISHING BOATS
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -2775,7 +2765,7 @@
         checkBorderProximity(lat, lng);
         checkSpotProximity(lat, lng);
 
-        // DISTANCE APPROACH 1-MINUTE POLICE SIREN ALERT ENGINE
+        // நீங்கள் குறிப்பிட்ட தூரங்களின் போது மட்டும் 1 நிமிடம் ஒலிக்கும் அலாரம் அமைப்பு:
         if (targetTarget) {
           let distStr = calcDistanceNM(lat, lng, targetTarget.lat, targetTarget.lng);
           let dist = parseFloat(distStr);
@@ -2785,31 +2775,33 @@
           document.getElementById('target-bearing').innerText = `${bear}°`;
           updateNavigationLine(targetTarget.lat, targetTarget.lng);
 
-          if (dist <= 3.00 && dist > 2.50 && !navVoiceStep.spoke3_0) {
-            startSirenAlarm("🚨 3 மைல் தூரம் உள்ளது!");
-            navVoiceStep.spoke3_0 = true;
-          } else if (dist <= 2.50 && dist > 2.00 && !navVoiceStep.spoke2_5) {
-            startSirenAlarm("🚨 இரண்டரை மைல் தூரம் உள்ளது!");
-            navVoiceStep.spoke2_5 = true;
-          } else if (dist <= 2.00 && dist > 1.50 && !navVoiceStep.spoke2_0) {
+          // 2.0 மைல் அலாரம்
+          if (dist <= 2.00 && dist > 1.50 && !navVoiceStep.spoke2_0) {
             startSirenAlarm("🚨 2 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke2_0 = true;
-          } else if (dist <= 1.50 && dist > 1.00 && !navVoiceStep.spoke1_5) {
+          } 
+          // 1.5 மைல் (ஒன்றரை மைல்) அலாரம்
+          else if (dist <= 1.50 && dist > 1.00 && !navVoiceStep.spoke1_5) {
             startSirenAlarm("🚨 ஒன்றரை மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_5 = true;
-          } else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
+          } 
+          // 1.0 மைல் அலாரம்
+          else if (dist <= 1.00 && dist > 0.50 && !navVoiceStep.spoke1_0) {
             startSirenAlarm("🚨 1 மைல் தூரம் உள்ளது!");
             navVoiceStep.spoke1_0 = true;
-          } else if (dist <= 0.50 && dist > 0.20 && !navVoiceStep.spoke0_50) {
-            startSirenAlarm("🚨 50 பாயிண்ட் மட்டுமே உள்ளது!");
+          } 
+          // 0.5 மைல் (அரை மைல்) அலாரம்
+          else if (dist <= 0.50 && dist > 0.10 && !navVoiceStep.spoke0_50) {
+            startSirenAlarm("🚨 அரை மைல் மட்டுமே உள்ளது!");
             navVoiceStep.spoke0_50 = true;
-          } else if (dist <= 0.20 && dist > 0.10 && !navVoiceStep.spoke0_20) {
-            startSirenAlarm("🚨 20 பாயிண்ட் மட்டுமே உள்ளது!");
-            navVoiceStep.spoke0_20 = true;
-          } else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
+          } 
+          // 10 பாயிண்ட் (0.10 NM) அலாரம்
+          else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
             startSirenAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
             navVoiceStep.spoke0_10 = true;
-          } else if (dist <= 0.005) {
+          } 
+          // இலக்கை அடைந்ததும்
+          else if (dist <= 0.005) {
             document.getElementById('target-dist').innerText = `0.00 NM`;
           }
         }
