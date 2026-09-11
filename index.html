@@ -337,7 +337,7 @@
     .border-alert-content { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
     .mute-btn { background: #fff; color: #d90429; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-    /* பார்/கூண்டு நெருங்கும்போது வரும் அலார பேனர் (இதன் கீழே மியூட் பட்டன் இருக்கும்) */
+    /* பார்/கூண்டு நெருங்கும்போது வரும் அலார பேனர் */
     .spot-alert-banner {
       position: fixed; 
       top: 165px; 
@@ -670,7 +670,6 @@
     </div>
   </div>
 
-  <!-- பார்/கூண்டு நெருங்கும்போது வரும் அலாரம் பேனர் (இதன் கீழே மியூட் பட்டன் இருக்கும்) -->
   <div class="spot-alert-banner" id="spotAlertBanner">
     <div class="border-alert-content" style="flex-direction: column; gap: 6px;">
       <span id="spotAlertText" style="text-align: center; width: 100%;">🚨 பாயிண்ட் நெருங்குகிறது!</span>
@@ -768,7 +767,7 @@
       <span id="norm-time" onclick="toggleBigClock()" title="தொட்டால் பெருசாகும்">--:--:-- PM</span>
     </div>
 
-    <!-- ஹோம் ஸ்கிரீன் வழிகாட்டுதல் பார் (இப்போது தூரமும் கோணமும் சரியாகக் காட்டும்) -->
+    <!-- வழிகாட்டுதல் பார் (தூரமும் கோணமும் லைவ்வாகக் காட்ட அப்டேட் செய்யப்பட்டது) -->
     <div class="nav-bar" id="nav-info">
       <span>🚀 தூரம்: <span id="target-dist" style="color:#ffcc00; font-size:12px;">0.00 NM</span> | கோணம்: <span id="target-bearing" style="color:#00ffcc; font-size:12px;">0°</span></span>
       <button class="stop-nav-btn" onclick="stopNavigation()">❌ வழிகாட்டல் நிறுத்து</button>
@@ -1717,7 +1716,7 @@
 
     let boatMarker = null;
     let arrowInnerEl = null;
-    let targetTarget = null;
+    let targetTarget = null; // இலக்கு புள்ளி {lat, lng}
     let followBoat = true;
     
     let borderAlertSoundMuted = false;
@@ -2681,6 +2680,13 @@
       navVoiceStep = { spoke2_0: false, spoke1_5: false, spoke1_0: false, spoke0_50: false, spoke0_10: false };
       updateNavigationLine(lat, lng);
       document.getElementById('nav-info').style.display = 'flex';
+      
+      // உடனடியாகத் தூரத்தைக் கணக்கிட்டு காட்டும்
+      let distStr = calcDistanceNM(currentLat, currentLng, lat, lng);
+      let bear = Math.round(calcBearing(currentLat, currentLng, lat, lng));
+      document.getElementById('target-dist').innerText = `${distStr} NM`;
+      document.getElementById('target-bearing').innerText = `${bear}°`;
+
       updateFsCompassElements();
       alert("🚀 வழிகாட்டல் தொடங்கப்பட்டது!");
     }
