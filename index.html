@@ -1177,9 +1177,7 @@
           stopSirenAlarm();
         }, totalDuration * 1000);
 
-      } catch (e) {
-        console.warn("Siren start error", e);
-      }
+      } catch (e) {}
     }
 
     function stopSirenAlarm() {
@@ -2705,7 +2703,6 @@
       }
     }
 
-    // --- ஸ்பீடு & காம்பஸ் ஜம்ப் திருத்தம் (Smoothing Logic Added) ---
     let speedBufferArray = [];
 
     if (navigator.geolocation) {
@@ -2751,29 +2748,32 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // ஸ்பீடு ஃபில்டர் (Speed Smoothing Buffer)
         speedBufferArray.push(calculatedSpeedKts);
         if (speedBufferArray.length > 5) speedBufferArray.shift();
         let avgSpeed = speedBufferArray.reduce((a, b) => a + b, 0) / speedBufferArray.length;
 
-        if (avgSpeed < 0.3) {
+        if (avgSpeed < 0.4) {
           currentSpeedKts = 0;
         } else {
           currentSpeedKts = avgSpeed;
         }
 
-        // காம்பஸ் முள் சுத்துவதைத் தவிர்க்கவும் தலைகீழாக மாறுவதைத் தவிர்க்கவும் (Heading Deadzone & Moving Average)
-        if (currentSpeedKts >= 0.4 || (pos.coords.heading !== null && !isNaN(pos.coords.heading))) {
+        // 🛑 இலக்கு (Navigation) இல்லாமலோ அல்லது வேகம் குறைவாகவோ இருந்தால் அம்பு/காம்பஸ் சுற்றுவதைத் தடுக்கவும்
+        if (currentSpeedKts >= 0.8 && (targetTarget !== null || (pos.coords.heading !== null && !isNaN(pos.coords.heading)))) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             lastValidHeading = pos.coords.heading;
           }
           let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
-          smoothedHeading = (smoothedHeading + diff * 0.25 + 360) % 360; // Smooth factor 0.25 for stable needle
+          smoothedHeading = (smoothedHeading + diff * 0.25 + 360) % 360;
+        } else {
+          // வேகம் குறைவாக இருந்தால் அல்லது இலக்கு இல்லாவிட்டால் முள் அசைக்காமல் நிலையாக வைத்திருக்க
+          if (targetTarget === null) {
+            smoothedHeading = lastValidHeading;
+          }
         }
 
         currentHeading = Math.round(smoothedHeading);
         
-        // கோஆர்டினேட் பாயிண்ட் துல்லியம் (Coordinate Precision Rounding 6 decimals)
         currentLat = Math.round(lat * 1000000.0) / 1000000.0; 
         currentLng = Math.round(lng * 1000000.0) / 1000000.0;
 
@@ -2837,7 +2837,7 @@
             navVoiceStep.spoke0_50 = true;
           } 
           else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
-            startSirenAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
+            startSensorAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
             navVoiceStep.spoke0_10 = true;
           } 
           else if (dist <= 0.005) {
@@ -2847,9 +2847,7 @@
 
         updateFsCompassElements();
 
-      }, (err) => {
-        console.warn("GPS Active.");
-      }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+      }, (err) => {}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
     }
 
     setInterval(() => {
