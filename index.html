@@ -1394,7 +1394,7 @@
           <div class="popup-box">
             <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
             <div style="font-size:10px; color:#ffcc00;">📅 ${t.time}</div>
-            <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
+            <div class="popup-coord">${t.latNautical} | ${lngNautical}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
             <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
           </div>
@@ -2712,6 +2712,7 @@
         let now = pos.timestamp || Date.now();
         
         let calculatedSpeedKts = 0;
+        let distMeters = 0;
 
         if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) {
           calculatedSpeedKts = pos.coords.speed * 1.94384;
@@ -2721,7 +2722,7 @@
           let timeDeltaSec = (now - lastPositionTime) / 1000.0;
           if (timeDeltaSec > 0.5 && timeDeltaSec < 15.0) {
             let distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
-            let distMeters = distNM * 1852.0;
+            distMeters = distNM * 1852.0;
 
             if (distMeters > 0.5) {
               let computedSpeedKts = (distNM / (timeDeltaSec / 3600.0));
@@ -2748,28 +2749,30 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
+        // 1. ஸ்பீடு ஃபில்டர் (Moving Average)
         speedBufferArray.push(calculatedSpeedKts);
         if (speedBufferArray.length > 5) speedBufferArray.shift();
         let avgSpeed = speedBufferArray.reduce((a, b) => a + b, 0) / speedBufferArray.length;
 
-        if (avgSpeed < 0.4) {
+        // 2. 🛑 3 கி.மீ/மணி (1.62 kts) டெட்-ஜோன் லாக் (Deadzone Lock)
+        // படகு 3 km/h (1.62 kts) வேகத்தைத் தாண்டும் வரை வேகம் 0.0 kts ஆகவே நிற்கும்
+        if (avgSpeed < 1.62 || distMeters < 2.0) {
           currentSpeedKts = 0;
         } else {
           currentSpeedKts = avgSpeed;
         }
 
-        // 🛑 இலக்கு (Navigation) இல்லாமலோ அல்லது வேகம் குறைவாகவோ இருந்தால் அம்பு/காம்பஸ் சுற்றுவதைத் தடுக்கவும்
-        if (currentSpeedKts >= 0.8 && (targetTarget !== null || (pos.coords.heading !== null && !isNaN(pos.coords.heading)))) {
+        // 3. 🧭 அம்பு மற்றும் காம்பஸ் சுத்துவதைத் தடுக்கும் லாக்
+        // படகு 3 km/h (1.62 kts) வேகத்திற்கு மேல் சென்றால் மட்டுமே அம்பு/காம்பஸ் திரும்பும்
+        // அதுவரை அம்பு மற்றும் முள் சுற்றாமல் நிலையாக பழைய திசையிலேயே லாக் ஆகும்
+        if (currentSpeedKts >= 1.62) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             lastValidHeading = pos.coords.heading;
           }
           let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
-          smoothedHeading = (smoothedHeading + diff * 0.25 + 360) % 360;
+          smoothedHeading = (smoothedHeading + diff * 0.2 + 360) % 360;
         } else {
-          // வேகம் குறைவாக இருந்தால் அல்லது இலக்கு இல்லாவிட்டால் முள் அசைக்காமல் நிலையாக வைத்திருக்க
-          if (targetTarget === null) {
-            smoothedHeading = lastValidHeading;
-          }
+          smoothedHeading = lastValidHeading;
         }
 
         currentHeading = Math.round(smoothedHeading);
@@ -2837,7 +2840,7 @@
             navVoiceStep.spoke0_50 = true;
           } 
           else if (dist <= 0.10 && dist > 0.005 && !navVoiceStep.spoke0_10) {
-            startSensorAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
+            startSirenAlarm("🚨 10 பாயிண்ட்! ஜீரோ வரப்போகிறது!");
             navVoiceStep.spoke0_10 = true;
           } 
           else if (dist <= 0.005) {
