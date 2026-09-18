@@ -91,7 +91,7 @@
 
     .compass-needle {
       width: 4px; height: 26px; position: absolute; display: flex; flex-direction: column; align-items: center;
-      transition: transform 0.2s ease-out;
+      transition: none; /* சுழல் தடுப்பு */
     }
     .arrow-head {
       width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #ff6600;
@@ -171,7 +171,7 @@
     .fs-compass-dial-large {
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       background: #ffffff;
-      transition: transform 0.25s ease-out;
+      transition: none; /* 360° திடீர் சுழல் தடுப்பு */
       z-index: 1;
     }
 
@@ -203,7 +203,7 @@
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       z-index: 5; pointer-events: none;
       display: flex; align-items: center; justify-content: center;
-      transition: transform 0.25s ease-out;
+      transition: none; /* திடீர் அம்பு சுழல் தடுப்பு */
     }
 
     .garmin-orange-arrow {
@@ -336,7 +336,7 @@
       width: 42px;
       height: 42px;
       transform-origin: center center;
-      transition: transform 0.2s ease-out;
+      transition: none; /* மேப்பிலும் சுழல் தடுப்பு */
       filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.95));
     }
 
@@ -1761,7 +1761,7 @@
       }
     }
 
-    // 🧭 பெரிய காம்பஸ் மற்றும் அம்பு சுழற்சி பிக்ஸ் (Shortest Path Turn - சுற்றாமல் நேராக நிற்கும்)
+    // 🧭 சரியான மெரைன் வழிகாட்டி லாஜிக் (Marine Garmin Pointer Mode)
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -1777,7 +1777,7 @@
       let roundedHeading = Math.round(smoothedHeading);
       let boatDir = getHeadingDir(roundedHeading);
 
-      // காம்பஸ் டயல் நேராக நிற்கும்
+      // படகு செல்லும் திசைக்கேற்ப காம்பஸ் டயல் சுழலும்
       if (dial) {
         dial.style.transform = `rotate(${-roundedHeading}deg)`;
       }
@@ -1788,20 +1788,21 @@
         let dirName = getHeadingDir(targetBear);
         
         distCard.innerText = `${dist} NM`;
-        headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | இலக்கு: ${targetBear}° (${dirName})`;
+        headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | பார் கோணம்: ${targetBear}° (${dirName})`;
 
-        // அம்பு முழு சுத்து சுற்றாமல் இருக்க (-180 முதல் +180) கோணக் கணக்கீடு
+        // படகின் முகப்பிலிருந்து பார்க்கும் போது பார் இருக்கும் சரியான சார்பு கோணம் (Relative Angle)
         let relativeAngle = (targetBear - roundedHeading + 540) % 360 - 180;
 
+        // ஆரஞ்சு அம்பு பார் இருக்கும் இடத்தை மட்டுமே நோக்கும்
         if (pointerLayer) {
           pointerLayer.style.display = 'flex';
           pointerLayer.style.transform = `rotate(${relativeAngle}deg)`;
         }
 
         let directionDesc = "";
-        if (Math.abs(relativeAngle) <= 4) {
-          directionDesc = "🎯 அம்பு குறிக்கு நேராகச் செல்கிறீர்கள்!";
-        } else if (relativeAngle > 4) {
+        if (Math.abs(relativeAngle) <= 3) {
+          directionDesc = "🎯 அம்பு குறிக்கு நேராகப் போங்கள்!";
+        } else if (relativeAngle > 3) {
           directionDesc = `👉 வலதுபக்கம் ${Math.round(relativeAngle)}° திருப்புங்கள்`;
         } else {
           directionDesc = `👈 இடதுபக்கம் ${Math.round(Math.abs(relativeAngle))}° திருப்புங்கள்`;
@@ -2779,43 +2780,39 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // 1. ஜிபிஎஸ் சிக்னல் துல்லியம் மற்றும் நகர்வு தூரச் சோதனை (வீட்டில் துள்ளுவதைத் தடுக்கும் லாஜிக்)
+        // 1. ஜிபிஎஸ் சிக்னல் துல்லியம் மற்றும் நகர்வு தூரச் சோதனை
         let accuracy = pos.coords.accuracy || 10;
         let isActuallyMoving = false;
 
-        // படகு உண்மையிலேயே 3.5 மீட்டருக்கு மேல் நகர்ந்தால் மட்டுமே நகர்வாக ஏற்கும்
         if (distMeters >= 3.5 && accuracy < 25) {
           isActuallyMoving = true;
         }
 
         let rawSpeed = 0;
-        // மொபைலின் நேரடி ஜிபிஎஸ் வேகம் 0.4 kts-க்கு மேல் இருந்தால் எடுக்கும்
         if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed > 0.4) {
           rawSpeed = pos.coords.speed * 1.94384;
         } else if (isActuallyMoving) {
           rawSpeed = calculatedSpeedKts;
         }
 
-        // ஸ்பீடு பஃபர் ஃபில்டர்
         speedBufferArray.push(rawSpeed);
         if (speedBufferArray.length > 4) speedBufferArray.shift();
         let avgSpeed = speedBufferArray.reduce((a, b) => a + b, 0) / speedBufferArray.length;
 
-        // 2. வீட்டில் இருக்கும்போது அல்லது சும்மா நிற்கும் போது வேகம் 0.0-ல் லாக் ஆகும்
-        // படகு புறப்பட்டு 0.8 kts எட்டும்போது மட்டுமே வேகம் உயரும்
+        // 2. வீட்டில் இருக்கும்போது 0.0 kts லாக்
         if (avgSpeed < 0.8 || !isActuallyMoving) {
           currentSpeedKts = 0.0;
         } else {
           currentSpeedKts = avgSpeed;
         }
 
-        // 3. 🧭 அம்பு மற்றும் போட் ஐகான் ஒரு சுத்து சுற்றாமல் நேராக நிற்கும் பிக்ஸ் (Shortest Path Lock)
+        // 3. 🧭 அம்பு சுழல் தடுப்பு: குறுகிய பாதையில் மட்டுமே திரும்பும்
         if (currentSpeedKts >= 0.8) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
             lastValidHeading = pos.coords.heading;
           }
           let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
-          smoothedHeading = (smoothedHeading + diff * 0.25 + 360) % 360;
+          smoothedHeading = (smoothedHeading + diff * 0.35 + 360) % 360;
         } else {
           smoothedHeading = lastValidHeading;
         }
