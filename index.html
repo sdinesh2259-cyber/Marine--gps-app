@@ -189,7 +189,7 @@
     .fs-mark-s { bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 20px; }
     .fs-mark-w { left: 14px; top: 50%; transform: translateY(-50%); font-size: 20px; }
 
-    .fs-mark-num { font-size: 13px; font-weight: bold; color: #222222; }
+    .fs-mark-num font-size: 13px; font-weight: bold; color: #222222; }
     .num-3  { top: 28px; right: 54px; }
     .num-6  { top: 56px; right: 26px; }
     .num-12 { bottom: 56px; right: 24px; }
@@ -322,11 +322,22 @@
       white-space: nowrap;
     }
 
-    .boat-marker-container { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-    .boat-heading-arrow {
-      width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 30px solid #00ffcc;
-      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9)); transform-origin: center center;
+    /* புதிய ரியலிஸ்டிக் கடல் படகு ஐகான் ஸ்டைல் */
+    .boat-marker-container {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      position: relative;
+    }
+    .boat-real-svg {
+      width: 42px;
+      height: 42px;
+      transform-origin: center center;
       transition: transform 0.2s ease-out;
+      filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.95));
     }
 
     .border-alert-banner {
@@ -1394,7 +1405,7 @@
           <div class="popup-box">
             <b>🕸️ [கூண்டு #${t.seq}] ${t.name}</b>
             <div style="font-size:10px; color:#ffcc00;">📅 ${t.time}</div>
-            <div class="popup-coord">${t.latNautical} | ${lngNautical}</div>
+            <div class="popup-coord">${t.latNautical} | ${t.lngNautical}</div>
             <button class="popup-btn popup-nav-btn" onclick="startNavigation(${t.lat}, ${t.lng})">🚀 செல்</button>
             <button class="popup-del-btn popup-btn" onclick="deleteTrapItem(${t.id})">🗑️ நீக்கு</button>
           </div>
@@ -1934,10 +1945,27 @@
 
       map.on('load', initMapLayers);
 
+      // நவீன படகு ஐகான் (Realistic Top-down Boat SVG)
       const boatContainer = document.createElement('div');
       boatContainer.className = 'boat-marker-container';
       arrowInnerEl = document.createElement('div');
-      arrowInnerEl.className = 'boat-heading-arrow';
+      arrowInnerEl.className = 'boat-real-svg';
+      arrowInnerEl.innerHTML = `
+        <svg viewBox="0 0 100 100" width="42" height="42" style="display:block; overflow:visible;">
+          <!-- படகு அவுட்லைன் (Hull) -->
+          <path d="M50,2 C65,18 76,46 72,84 C70,93 60,98 50,98 C40,98 30,93 28,84 C24,46 35,18 50,2 Z" 
+                fill="#001a33" stroke="#00ffcc" stroke-width="3.5" stroke-linejoin="round"/>
+          <!-- உள்பகுதி டெக் (Deck) -->
+          <path d="M50,11 C61,24 69,47 66,78 C65,85 58,89 50,89 C42,89 35,85 34,78 C31,47 39,24 50,11 Z" 
+                fill="#0a3254"/>
+          <!-- கேபின் ரூஃப் (Cabin) -->
+          <rect x="41" y="38" width="18" height="24" rx="4" fill="#ffcc00" stroke="#ffffff" stroke-width="1.8"/>
+          <!-- கண்ணாடி விண்ட்ஷீல்டு (Windshield) -->
+          <path d="M43,42 L57,42 L55,47 L45,47 Z" fill="#000000"/>
+          <!-- வழிகாட்டும் முன் முனை மார்க்கர் (Bow Pointer) -->
+          <polygon points="50,12 55,24 50,20 45,24" fill="#ff0044"/>
+        </svg>
+      `;
       boatContainer.appendChild(arrowInnerEl);
 
       boatMarker = new maplibregl.Marker({ element: boatContainer, anchor: 'center', rotationAlignment: 'map' })
@@ -2735,7 +2763,7 @@
 
               if (distMeters > 1.0) {
                 let derivedHeading = Math.round(calcBearing(lastSpeedLat, lastSpeedLng, lat, lng));
-                if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+                if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
                   lastValidHeading = pos.coords.heading;
                 } else {
                   lastValidHeading = derivedHeading;
@@ -2749,28 +2777,31 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // 1. ஸ்பீடு ஃபில்டர் (Moving Average)
-        speedBufferArray.push(calculatedSpeedKts);
-        if (speedBufferArray.length > 5) speedBufferArray.shift();
+        // 1. நேரடி ஜிபிஎஸ் வேகம் அல்லது தூரக் கணக்கீடு
+        let rawSpeed = calculatedSpeedKts;
+        if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed > 0) {
+          rawSpeed = pos.coords.speed * 1.94384;
+        }
+
+        // ஸ்பீடு பஃபர் ஃபில்டர்
+        speedBufferArray.push(rawSpeed);
+        if (speedBufferArray.length > 3) speedBufferArray.shift();
         let avgSpeed = speedBufferArray.reduce((a, b) => a + b, 0) / speedBufferArray.length;
 
-        // 2. 🛑 3 கி.மீ/மணி (1.62 kts) டெட்-ஜோன் லாக் (Deadzone Lock)
-        // படகு 3 km/h (1.62 kts) வேகத்தைத் தாண்டும் வரை வேகம் 0.0 kts ஆகவே நிற்கும்
-        if (avgSpeed < 1.62 || distMeters < 2.0) {
-          currentSpeedKts = 0;
+        // 2. படகு நகர ஆரம்பித்தாலே (0.3 kts தாண்டியதும்) துல்லிய வேகம் காட்டும்
+        if (avgSpeed < 0.3) {
+          currentSpeedKts = 0.0;
         } else {
           currentSpeedKts = avgSpeed;
         }
 
-        // 3. 🧭 அம்பு மற்றும் காம்பஸ் சுத்துவதைத் தடுக்கும் லாக்
-        // படகு 3 km/h (1.62 kts) வேகத்திற்கு மேல் சென்றால் மட்டுமே அம்பு/காம்பஸ் திரும்பும்
-        // அதுவரை அம்பு மற்றும் முள் சுற்றாமல் நிலையாக பழைய திசையிலேயே லாக் ஆகும்
-        if (currentSpeedKts >= 1.62) {
-          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+        // 3. படகு 0.5 kts வேகத்தில் சென்றாலே அம்பு சரியான திசையைக் காட்டும்
+        if (currentSpeedKts >= 0.5) {
+          if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
             lastValidHeading = pos.coords.heading;
           }
           let diff = (lastValidHeading - smoothedHeading + 540) % 360 - 180;
-          smoothedHeading = (smoothedHeading + diff * 0.2 + 360) % 360;
+          smoothedHeading = (smoothedHeading + diff * 0.3 + 360) % 360;
         } else {
           smoothedHeading = lastValidHeading;
         }
