@@ -91,7 +91,7 @@
 
     .compass-needle {
       width: 4px; height: 26px; position: absolute; display: flex; flex-direction: column; align-items: center;
-      transition: none; /* சுழல் தடுப்பு */
+      transition: none;
     }
     .arrow-head {
       width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 12px solid #ff6600;
@@ -171,7 +171,7 @@
     .fs-compass-dial-large {
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       background: #ffffff;
-      transition: none; /* 360° திடீர் சுழல் தடுப்பு */
+      transition: none;
       z-index: 1;
     }
 
@@ -203,7 +203,7 @@
       position: absolute; width: 100%; height: 100%; border-radius: 50%;
       z-index: 5; pointer-events: none;
       display: flex; align-items: center; justify-content: center;
-      transition: none; /* திடீர் அம்பு சுழல் தடுப்பு */
+      transition: none;
     }
 
     .garmin-orange-arrow {
@@ -336,7 +336,7 @@
       width: 42px;
       height: 42px;
       transform-origin: center center;
-      transition: none; /* மேப்பிலும் சுழல் தடுப்பு */
+      transition: none;
       filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.95));
     }
 
@@ -2302,14 +2302,49 @@
       return dirs[Math.round(deg / 45) % 8];
     }
 
+    // 🎯 கார்மின் 12H துல்லிய WGS-84 நீள்வட்ட கடல் தூரக் கணக்கீடு (Garmin 12H Accurate Formula)
     function calcDistanceNM(lat1, lon1, lat2, lon2) {
-      const R = 3440.065;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      let dist = R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-      if (dist < 0.005) return "0.00";
-      return dist.toFixed(2);
+      const a = 6378137.0; // WGS-84 Semi-major axis (மீட்டர்)
+      const b = 6356752.314245; // WGS-84 Semi-minor axis (மீட்டர்)
+      const f = 1 / 298.257223563; // WGS-84 Flattening
+
+      const L = (lon2 - lon1) * Math.PI / 180;
+      const U1 = Math.atan((1 - f) * Math.tan(lat1 * Math.PI / 180));
+      const U2 = Math.atan((1 - f) * Math.tan(lat2 * Math.PI / 180));
+      const sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
+      const sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
+
+      let lambda = L;
+      let lambdaP = 2 * Math.PI;
+      let iterLimit = 20;
+      let cosSqAlpha = 0, sinSigma = 0, cos2SigmaM = 0, cosSigma = 0, sigma = 0;
+
+      while (Math.abs(lambda - lambdaP) > 1e-12 && --iterLimit > 0) {
+        let sinLambda = Math.sin(lambda), cosLambda = Math.cos(lambda);
+        sinSigma = Math.sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) +
+          (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
+        if (sinSigma === 0) return "0.00";
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
+        sigma = Math.atan2(sinSigma, cosSigma);
+        let sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma;
+        cosSqAlpha = 1 - sinAlpha * sinAlpha;
+        cos2SigmaM = (cosSqAlpha !== 0) ? (cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha) : 0;
+        let C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+        lambdaP = lambda;
+        lambda = L + (1 - C) * f * sinAlpha *
+          (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+      }
+
+      let uSq = cosSqAlpha * (a * a - b * b) / (b * b);
+      let A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+      let B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+      let deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
+        B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+      let s = b * A * (sigma - deltaSigma); // துல்லிய தூரம் (மீட்டரில்)
+
+      let distNM = s / 1852.0; // சர்வதேச மெரைன் நாட்டிக்கல் மைல் (1 NM = 1852m)
+      if (distNM < 0.005) return "0.00";
+      return distNM.toFixed(2);
     }
 
     function calcBearing(lat1, lon1, lat2, lon2) {
