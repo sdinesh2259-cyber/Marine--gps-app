@@ -1761,6 +1761,7 @@
       }
     }
 
+    // 🧭 பெரிய காம்பஸ் மற்றும் அம்பு சுழற்சி பிக்ஸ் (Shortest Path Turn - சுற்றாமல் நேராக நிற்கும்)
     function updateFsCompassElements() {
       const modal = document.getElementById('fsCompassModal');
       if (!modal || modal.style.display !== 'flex') return;
@@ -1776,6 +1777,7 @@
       let roundedHeading = Math.round(smoothedHeading);
       let boatDir = getHeadingDir(roundedHeading);
 
+      // காம்பஸ் டயல் நேராக நிற்கும்
       if (dial) {
         dial.style.transform = `rotate(${-roundedHeading}deg)`;
       }
@@ -1788,21 +1790,21 @@
         distCard.innerText = `${dist} NM`;
         headingText.innerText = `படகு: ${roundedHeading}° (${boatDir}) | இலக்கு: ${targetBear}° (${dirName})`;
 
-        let relativeAngle = (targetBear - roundedHeading + 360) % 360;
+        // அம்பு முழு சுத்து சுற்றாமல் இருக்க (-180 முதல் +180) கோணக் கணக்கீடு
+        let relativeAngle = (targetBear - roundedHeading + 540) % 360 - 180;
 
         if (pointerLayer) {
           pointerLayer.style.display = 'flex';
           pointerLayer.style.transform = `rotate(${relativeAngle}deg)`;
         }
 
-        let diff = relativeAngle;
         let directionDesc = "";
-        if (diff <= 4 || diff >= 356) {
+        if (Math.abs(relativeAngle) <= 4) {
           directionDesc = "🎯 அம்பு குறிக்கு நேராகச் செல்கிறீர்கள்!";
-        } else if (diff > 4 && diff <= 180) {
-          directionDesc = `👉 வலதுபக்கம் ${diff}° திருப்புங்கள்`;
+        } else if (relativeAngle > 4) {
+          directionDesc = `👉 வலதுபக்கம் ${Math.round(relativeAngle)}° திருப்புங்கள்`;
         } else {
-          directionDesc = `👈 இடதுபக்கம் ${360 - diff}° திருப்புங்கள்`;
+          directionDesc = `👈 இடதுபக்கம் ${Math.round(Math.abs(relativeAngle))}° திருப்புங்கள்`;
         }
 
         targetBearingText.innerText = `${dist} NM | ${directionDesc}`;
@@ -2807,7 +2809,7 @@
           currentSpeedKts = avgSpeed;
         }
 
-        // 3. படகு கிளம்பிச் செல்லும்போது மட்டுமே போட் ஐகான் திரும்பும் (நிற்கும் போது சுற்றாது)
+        // 3. 🧭 அம்பு மற்றும் போட் ஐகான் ஒரு சுத்து சுற்றாமல் நேராக நிற்கும் பிக்ஸ் (Shortest Path Lock)
         if (currentSpeedKts >= 0.8) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
             lastValidHeading = pos.coords.heading;
