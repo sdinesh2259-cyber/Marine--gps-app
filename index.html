@@ -259,7 +259,7 @@
       display: none; position: absolute; top: 28px; right: 0;
       background: rgba(4, 15, 30, 0.98); border: 1.5px solid #ffcc00; border-radius: 8px;
       padding: 6px; flex-direction: column; gap: 5px; z-index: 10001; box-shadow: 0 4px 15px rgba(0,0,0,0.9);
-      min-width: 185px;
+      min-width: 195px;
     }
     .map-controls-dropdown.show { display: flex; }
     .map-menu-item-btn {
@@ -653,9 +653,9 @@
             <div class="fs-dial-mark fs-mark-s">S</div>
             <div class="fs-dial-mark fs-mark-num num-21">21</div>
             <div class="fs-dial-mark fs-mark-num num-24">24</div>
-            <div class="fs-dial-mark fs-mark-w">W</div>
             <div class="fs-dial-mark fs-mark-num num-30">30</div>
             <div class="fs-dial-mark fs-mark-num num-33">33</div>
+            <div class="fs-dial-mark fs-mark-w">W</div>
           </div>
 
           <div class="garmin-pointer-container" id="garminPointerLayer" style="display: none;">
@@ -719,6 +719,14 @@
               <button class="map-menu-item-btn" id="menuIslandToggleBtn" onclick="toggleIslandsVisibility();">
                 <span>🏝️ தீவு & போயா</span>
                 <span id="islandStatusBadge" style="color:#00ffcc; font-size:9.5px;">ON</span>
+              </button>
+              <button class="map-menu-item-btn" id="menuTrackToggleBtn" onclick="toggleBoatTrackDisplay();">
+                <span>🛤️ படகு பாதை (Track)</span>
+                <span id="trackStatusBadge" style="color:#ffcc00; font-size:9.5px;">ON</span>
+              </button>
+              <button class="map-menu-item-btn" onclick="clearBoatTrackLine(); closeMapControls();">
+                <span>🧹 பாதையை அழி (Clear Track)</span>
+                <span style="color:#ff0055; font-size:9.5px;">DEL</span>
               </button>
               <button class="map-menu-item-btn" id="menuSonarReefToggleBtn" onclick="toggleSonarReefAutoSave();">
                 <span>🪨 சோனார் ஆட்டோ பார்</span>
@@ -1297,6 +1305,46 @@
     let showAllTrapsOnMapFlag = localStorage.getItem('dm_show_traps_master') === 'true';
     let activeTrapMarkers = [];
 
+    // 🛤️ படகு பாதை (Track Line) அமைப்புகள்
+    let showBoatTrackFlag = localStorage.getItem('dm_show_boat_track') !== 'false';
+    let boatTrackHistory = JSON.parse(localStorage.getItem('marine_boat_track_pts') || '[]');
+
+    function updateTrackLineOnMap() {
+      if (!map || !map.getSource('boatTrackSource')) return;
+      try {
+        if (!showBoatTrackFlag) {
+          map.getSource('boatTrackSource').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+          return;
+        }
+        map.getSource('boatTrackSource').setData({
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: boatTrackHistory
+          }
+        });
+      } catch(e) {}
+    }
+
+    function toggleBoatTrackDisplay() {
+      showBoatTrackFlag = !showBoatTrackFlag;
+      localStorage.setItem('dm_show_boat_track', showBoatTrackFlag ? 'true' : 'false');
+      updateMapMenuBadges();
+      updateTrackLineOnMap();
+      closeMapControls();
+      alert(showBoatTrackFlag ? "🛤️ படகு பாதை காட்டப்படும் (ON)" : "🛤️ படகு பாதை மறைக்கப்பட்டது (OFF)");
+    }
+
+    function clearBoatTrackLine() {
+      let conf = confirm("🧹 படகு சென்ற பழைய பாதையை முற்றிலும் அழிக்கவா?");
+      if (conf) {
+        boatTrackHistory = [];
+        localStorage.removeItem('marine_boat_track_pts');
+        updateTrackLineOnMap();
+        alert("✅ படகு பாதை அழிக்கப்பட்டது!");
+      }
+    }
+
     function updateTrapCounters() {
       let traps = JSON.parse(localStorage.getItem('marineTrapsList') || '[]');
       const badge = document.getElementById('trapInlineCounterBadge');
@@ -1833,11 +1881,16 @@
       const sonarReefBadge = document.getElementById('sonarReefStatusBadge');
       const spotAlarmBadge = document.getElementById('spotAlarmStatusBadge');
       const voiceBadge = document.getElementById('voiceAlertStatusBadge');
+      const trackBadge = document.getElementById('trackStatusBadge');
       
       if (typeBadge) typeBadge.innerText = currentLayerType === 'satellite' ? "சாட்டிலைட்" : "சாதா மேப்";
       if (islBadge) {
         islBadge.innerText = showIslandsAndBuoys ? "ON" : "OFF";
         islBadge.style.color = showIslandsAndBuoys ? "#00ffcc" : "#ff0055";
+      }
+      if (trackBadge) {
+        trackBadge.innerText = showBoatTrackFlag ? "ON" : "OFF";
+        trackBadge.style.color = showBoatTrackFlag ? "#ffcc00" : "#ff0055";
       }
       if (sonarReefBadge) {
         sonarReefBadge.innerText = autoSonarReefSaveEnabled ? "ON" : "OFF";
@@ -1926,6 +1979,32 @@
       
       function initMapLayers() {
         try {
+          // 🛤️ படகு சென்ற மஞ்சள் நிற பாதை (Boat Track Layer)
+          if (!map.getSource('boatTrackSource')) {
+            map.addSource('boatTrackSource', {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: boatTrackHistory
+                }
+              }
+            });
+            map.addLayer({
+              id: 'boatTrackLayer',
+              type: 'line',
+              source: 'boatTrackSource',
+              layout: { 'line-join': 'round', 'line-cap': 'round' },
+              paint: {
+                'line-color': '#ffcc00', // படகு சென்ற பாதைக்கான தெளிவான மஞ்சள் நிறம்
+                'line-width': 3,
+                'line-opacity': 0.85
+              }
+            });
+          }
+
+          // 🚀 வழிகாட்டும் நேர்கோடு (சிவப்பு புள்ளிக் கோடு)
           if (!map.getSource('navSource')) {
             map.addSource('navSource', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] } } });
             map.addLayer({ 
@@ -1944,6 +2023,7 @@
         renderPermanentMarineEntities();
         loadSavedReefs();
         renderAllTrapsOnMap();
+        updateTrackLineOnMap();
       }
 
       map.on('load', initMapLayers);
@@ -2856,6 +2936,27 @@
         
         currentLat = Math.round(lat * 1000000.0) / 1000000.0; 
         currentLng = Math.round(lng * 1000000.0) / 1000000.0;
+
+        // 🛤️ படகு நகரும்போது பாதையைச் சேமித்து மேப்பில் வரைதல் (Track Line Recording)
+        if (currentSpeedKts >= 0.8) {
+          let lastPt = boatTrackHistory[boatTrackHistory.length - 1];
+          let recordNewPt = false;
+          if (!lastPt) {
+            recordNewPt = true;
+          } else {
+            let movedFromLastPtNM = parseFloat(calcDistanceNM(lastPt[1], lastPt[0], currentLat, currentLng));
+            if (movedFromLastPtNM >= 0.005) { // சுமார் 9 மீட்டருக்கு மேல் நகர்ந்தால் புதிய பாயிண்ட் சேரும்
+              recordNewPt = true;
+            }
+          }
+
+          if (recordNewPt) {
+            boatTrackHistory.push([currentLng, currentLat]);
+            if (boatTrackHistory.length > 2500) boatTrackHistory.shift(); // மெமரி அதிகமாவதைத் தடுக்க
+            localStorage.setItem('marine_boat_track_pts', JSON.stringify(boatTrackHistory));
+            updateTrackLineOnMap();
+          }
+        }
 
         if (currentSpeedKts > 0.3 && lastLatForFuel !== null && lastLngForFuel !== null) {
           let stepNM = parseFloat(calcDistanceNM(lastLatForFuel, lastLngForFuel, currentLat, currentLng));
