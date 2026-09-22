@@ -368,7 +368,7 @@
     }
 
     .sonar-panel {
-      position: absolute; bottom: 62px; left: 0; right: 0; height: 105px;
+      position: absolute bottom: 62px; left: 0; right: 0; height: 105px;
       background: #020b14; border-top: 2px solid #00ffcc; z-index: 9999; display: flex;
       pointer-events: auto !important; cursor: pointer;
       transition: height 0.3s ease;
@@ -653,7 +653,7 @@
             <div class="fs-dial-mark fs-mark-s">S</div>
             <div class="fs-dial-mark fs-mark-num num-21">21</div>
             <div class="fs-dial-mark fs-mark-num num-24">24</div>
-            <div class="fs-dial-mark fs-mark-num num-30">30</div>
+            <div class="fs-dial-mark fs-mark-30">30</div>
             <div class="fs-dial-mark fs-mark-num num-33">33</div>
             <div class="fs-dial-mark fs-mark-w">W</div>
           </div>
@@ -2851,6 +2851,7 @@
 
     let speedBufferArray = [];
 
+    // 🌊 ஜிபிஎஸ் மற்றும் நேரலை வேகக் கணக்கீடு (Garmin 12H Live Speed Fix)
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(pos => {
         let lat = pos.coords.latitude;
@@ -2858,34 +2859,25 @@
         let now = pos.timestamp || Date.now();
         
         let calculatedSpeedKts = 0;
+        let distNM = 0;
         let distMeters = 0;
-
-        if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed >= 0) {
-          calculatedSpeedKts = pos.coords.speed * 1.94384;
-        }
 
         if (lastPositionTime !== null && lastSpeedLat !== null && lastSpeedLng !== null) {
           let timeDeltaSec = (now - lastPositionTime) / 1000.0;
-          if (timeDeltaSec > 0.5 && timeDeltaSec < 15.0) {
-            let distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
+          if (timeDeltaSec > 0.4 && timeDeltaSec < 15.0) {
+            distNM = parseFloat(calcDistanceNM(lastSpeedLat, lastSpeedLng, lat, lng));
             distMeters = distNM * 1852.0;
 
-            if (distMeters > 0.5) {
-              let computedSpeedKts = (distNM / (timeDeltaSec / 3600.0));
-              
-              if (calculatedSpeedKts <= 0.1) {
-                calculatedSpeedKts = computedSpeedKts;
-              } else {
-                calculatedSpeedKts = (calculatedSpeedKts * 0.7) + (computedSpeedKts * 0.3);
-              }
+            // நேரம் மற்றும் தூரத்தைக் கொண்டு கணக்கிடப்படும் வேகம்
+            calculatedSpeedKts = (distNM / (timeDeltaSec / 3600.0));
 
-              if (distMeters > 1.0) {
-                let derivedHeading = Math.round(calcBearing(lastSpeedLat, lastSpeedLng, lat, lng));
-                if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
-                  lastValidHeading = pos.coords.heading;
-                } else {
-                  lastValidHeading = derivedHeading;
-                }
+            // படகு 1.5 மீட்டருக்கு மேல் நகர்ந்தால் அதன் திசையைக் கணக்கிடுதல்
+            if (distMeters >= 1.5) {
+              let derivedHeading = Math.round(calcBearing(lastSpeedLat, lastSpeedLng, lat, lng));
+              if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
+                lastValidHeading = pos.coords.heading;
+              } else {
+                lastValidHeading = derivedHeading;
               }
             }
           }
@@ -2895,34 +2887,28 @@
         lastSpeedLng = lng;
         lastPositionTime = now;
 
-        // 1. ஜிபிஎஸ் சிக்னல் துல்லியம் மற்றும் நகர்வு தூரச் சோதனை
-        let accuracy = pos.coords.accuracy || 10;
-        let isActuallyMoving = false;
-
-        if (distMeters >= 3.5 && accuracy < 25) {
-          isActuallyMoving = true;
-        }
-
+        // நேரடி மொபைல் ஜிபிஎஸ் வேகம் அல்லது தூரக் கணக்கீட்டு வேகம்
         let rawSpeed = 0;
-        if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed > 0.4) {
+        if (pos.coords.speed !== null && !isNaN(pos.coords.speed) && pos.coords.speed > 0) {
           rawSpeed = pos.coords.speed * 1.94384;
-        } else if (isActuallyMoving) {
+        } else if (calculatedSpeedKts > 0) {
           rawSpeed = calculatedSpeedKts;
         }
 
+        // சடன் ஜம்ப்களைத் தவிர்க்க 3-சாம்பிள் பஃபர்
         speedBufferArray.push(rawSpeed);
-        if (speedBufferArray.length > 4) speedBufferArray.shift();
+        if (speedBufferArray.length > 3) speedBufferArray.shift();
         let avgSpeed = speedBufferArray.reduce((a, b) => a + b, 0) / speedBufferArray.length;
 
-        // 2. வீட்டில் இருக்கும்போது 0.0 kts லாக்
-        if (avgSpeed < 0.8 || !isActuallyMoving) {
+        // படகு நிற்கும்போது நடுக்கத்தைத் தவிர்க்க 0.3 kts டெட்-ஜோன் மட்டும்
+        if (avgSpeed < 0.3) {
           currentSpeedKts = 0.0;
         } else {
           currentSpeedKts = avgSpeed;
         }
 
-        // 3. 🧭 அம்பு சுழல் தடுப்பு: குறுகிய பாதையில் மட்டுமே திரும்பும்
-        if (currentSpeedKts >= 0.8) {
+        // படகு 0.5 kts வேகத்தில் சென்றாலே அம்பு மற்றும் போட் ஐகான் சீராகத் திரும்பும்
+        if (currentSpeedKts >= 0.5) {
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
             lastValidHeading = pos.coords.heading;
           }
@@ -2938,21 +2924,21 @@
         currentLng = Math.round(lng * 1000000.0) / 1000000.0;
 
         // 🛤️ படகு நகரும்போது பாதையைச் சேமித்து மேப்பில் வரைதல் (Track Line Recording)
-        if (currentSpeedKts >= 0.8) {
+        if (currentSpeedKts >= 0.4) {
           let lastPt = boatTrackHistory[boatTrackHistory.length - 1];
           let recordNewPt = false;
           if (!lastPt) {
             recordNewPt = true;
           } else {
             let movedFromLastPtNM = parseFloat(calcDistanceNM(lastPt[1], lastPt[0], currentLat, currentLng));
-            if (movedFromLastPtNM >= 0.005) { // சுமார் 9 மீட்டருக்கு மேல் நகர்ந்தால் புதிய பாயிண்ட் சேரும்
+            if (movedFromLastPtNM >= 0.003) { // 5-6 மீட்டர் நகர்ந்தாலே பாயிண்ட் சேரும்
               recordNewPt = true;
             }
           }
 
           if (recordNewPt) {
             boatTrackHistory.push([currentLng, currentLat]);
-            if (boatTrackHistory.length > 2500) boatTrackHistory.shift(); // மெமரி அதிகமாவதைத் தடுக்க
+            if (boatTrackHistory.length > 3000) boatTrackHistory.shift();
             localStorage.setItem('marine_boat_track_pts', JSON.stringify(boatTrackHistory));
             updateTrackLineOnMap();
           }
@@ -2974,6 +2960,7 @@
         document.getElementById('lat-coord').innerText = `Lat: ${latStr}`;
         document.getElementById('lng-coord').innerText = `Lng: ${lngStr}`;
         
+        // லைவ் வேகம் டேஷ்போர்டில் அப்டேட் ஆகுதல்
         document.getElementById('boat-speed').innerText = `வேகம்: ${currentSpeedKts.toFixed(1)} kts`;
         document.getElementById('heading-val').innerText = `${currentHeading}° ${getHeadingDir(currentHeading)}`;
         
@@ -3028,7 +3015,7 @@
 
         updateFsCompassElements();
 
-      }, (err) => {}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+      }, (err) => {}, { enableHighAccuracy: true, maximumAge: 500, timeout: 10000 });
     }
 
     setInterval(() => {
